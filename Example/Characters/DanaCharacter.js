@@ -1,6 +1,6 @@
 //@ts-check
 
-import { CharacterModel } from "../../Core/Common/CharacterModel.js";
+import { CharacterModel } from "../../WOpenWorldJs/Core/Common/CharacterModel.js";
 
 class DanaCharacterModel extends CharacterModel {
 }

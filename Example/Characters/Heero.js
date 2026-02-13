@@ -1,5 +1,5 @@
 //@ts-check
-import { CharacterModel } from "../../Core/Common/CharacterModel";
+import { CharacterModel } from "../../WOpenWorldJs/Core/Common/CharacterModel";
 
 
 export class HeeroModel extends CharacterModel{

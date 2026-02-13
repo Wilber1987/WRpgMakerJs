@@ -11,12 +11,13 @@ export class CharacterContainer extends HTMLElement {
     constructor(character, imageUrl, position = "center") {
         super();
         this.append(this.CustomStyle);
+        this.className = this.className + " character-container character-" + character;
         this.Draw(character, imageUrl, position);
     }
     connectedCallback() {
         ComponentsManager.modalFunction(this);
     }
-    disconnectedCallback() {
+    close() {
         ComponentsManager.modalFunction(this);
         setTimeout(() => {
             this.parentNode?.removeChild(this);

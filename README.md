@@ -49,10 +49,10 @@ Iniciar el Proyecto
 En app.js:
 
 ```javascript
-import { vnEngine } from "./Core/VisualNovelEngine.js";
-import { Scene, Flow, Dialogue } from "./Core/VisualNovelModules.js";
+import { vnEngine } from "./WOpenWorldJs/Core/VisualNovelEngine.js";
+import { Scene, Flow, Dialogue } from "./WOpenWorldJs/Core/VisualNovelModules.js";
 import { Dana } from "./Characters/Dana.js";
-import { saveSystem } from "./Core/SaveSystem.js";
+import { saveSystem } from "./WOpenWorldJs/Core/SaveSystem.js";
 
 // Escena inicial
 vnEngine.defineScene('start', [
@@ -71,7 +71,7 @@ vnEngine.startScene('start');
 Crear Personajes Personalizados
 Define tus personajes extendiendo CharacterModel.
 ```javascript
-import { CharacterModel } from "../Core/VisualNovelModules.js";
+import { CharacterModel } from "../WOpenWorldJs/Core/VisualNovelModules.js";
 
 export class DanaModel extends CharacterModel {
   Name = "Dana";
@@ -114,7 +114,7 @@ Este método permite mostrar un fondo con opciones posicionadas.
 Ejemplo de uso:
 
 ```javascript
-import { RoomScene } from "../Core/VisualNovelModules.js";
+import { RoomScene } from "../WOpenWorldJs/Core/VisualNovelModules.js";
 import { Dana } from "../Characters/Dana.js";
 import { HomeMenu } from "../Menus/HomeMenu.js";
 

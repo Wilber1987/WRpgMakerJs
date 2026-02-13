@@ -650,8 +650,8 @@ vnEngine.startScene('Home');</code></pre>
                 <h3>1. Inicio del juego – `app.js`</h3>
                 <p>En el archivo principal `app.js`, defines la escena inicial y el menú de opciones:</p>
                 <pre><code class="language-javascript">// app.js
-import { saveSystem, vnEngine } from "./Core/VisualNovelEngine.js";
-import { Flow, Scene } from "./Core/VisualNovelModules.js";
+import { saveSystem, vnEngine } from "./WOpenWorldJs/Core/VisualNovelEngine.js";
+import { Flow, Scene } from "./WOpenWorldJs/Core/VisualNovelModules.js";
 import "./Maps/MainMap.js";
 
 // Escena de inicio
@@ -690,8 +690,8 @@ vnEngine.startScene('start');
                     permitiendo definir un fondo y
                     opciones posicionadas sobre él.</p>
                 <pre><code class="language-javascript">// ./Maps/MainMap.js
-import { MapScene, Flow, Scene } from "../Core/VisualNovelModules.js";
-import { MainMenu } from "../Core/core.js";
+import { MapScene, Flow, Scene } from "../WOpenWorldJs/Core/VisualNovelModules.js";
+import { MainMenu } from "../WOpenWorldJs/Core/core.js";
 
 // Definir MainMap
 vnEngine.defineScene('MainMap',
@@ -856,14 +856,14 @@ vnEngine.defineScene('MainMap',
             <h2>Creación de Personajes Personalizados</h2>
             <p>El motor permite crear personajes personalizados extendiendo la clase base <code
                     class="language-javascript">CharacterModel</code>, definida en <code
-                    class="language-javascript">./Core/VisualNovelModules.js</code>.</p>
+                    class="language-javascript">./WOpenWorldJs/Core/VisualNovelModules.js</code>.</p>
 
             <!-- Paso 1: Estructura de un personaje -->
             <div class="guide-step">
                 <h3>1. Estructura básica de un personaje</h3>
                 <p>Crea un archivo en la carpeta <code class="language-javascript">./Characters/Dana.js</code>:</p>
                 <pre><code class="language-javascript">// ./Characters/Dana.js
-import { CharacterModel } from "../Core/VisualNovelModules.js";
+import { CharacterModel } from "../WOpenWorldJs/Core/VisualNovelModules.js";
 
 export class DanaModel extends CharacterModel {
   Name = "Dana";
@@ -925,8 +925,8 @@ vnEngine.defineScene('Dana_Home_0', [
                 <p>Puedes integrar personajes dentro de escenas con menús automáticos usando <code
                         class="language-javascript">RoomScene.Go(...)</code>:</p>
                 <pre><code class="language-javascript">// En HomeHistory.js
-import { vnEngine } from "../Core/VisualNovelEngine.js";
-import { RoomScene, Scene, Dialogue, Flow } from "../Core/VisualNovelModules.js";
+import { vnEngine } from "../WOpenWorldJs/Core/VisualNovelEngine.js";
+import { RoomScene, Scene, Dialogue, Flow } from "../WOpenWorldJs/Core/VisualNovelModules.js";
 import { Dana } from "../Characters/Dana.js";
 
 const HomeMenu = [

@@ -16,7 +16,7 @@ import { VisualNovelView } from "./VidualNovelView.js";
  * @property {boolean} [isFemale] - Indica si el personaje que habla es femenino (para el tipo 'say').
  * @property {string} [who] - El nombre del personaje a mostrar u ocultar (para los tipos 'show', 'hide').
  * @property {string} [image] - La ruta de la imagen del personaje o fondo (para los tipos 'show', 'scene').
- * @property {'left'|'center'|'right'} [position] - La posición del personaje en pantalla (e.g., 'left', 'center', 'right') (para el tipo 'show').
+ * @property {string} [position] - La posición del personaje en pantalla (e.g., 'left', 'center', 'right') (para el tipo 'show').
  * @property {boolean} [loopAudio] - Indica si el audio debe repetirse (para el tipo 'audio').
  * @property {string} [target] - El nombre de la escena a la que saltar (para el tipo 'jump').
  * @property {Array<ChoiceOption>} [options] - Opciones para el comando 'choice'.
@@ -492,7 +492,7 @@ export class VisualNovelEngine {
      * Muestra un personaje en la pantalla con una transición.
      * @param {string} character - El nombre o identificador del personaje.
      * @param {string} image - La ruta de la imagen o video del personaje.
-     * @param {'left'|'center'|'right'} [position='center'] - La posición del personaje en la pantalla.
+     * @param {string} [position='center'] - La posición del personaje en la pantalla.
      */
     async showCharacter(character, image, position = "center") {
         if (!this.uiElements.characterSprites) return;
@@ -501,16 +501,8 @@ export class VisualNovelEngine {
         if (!imageUrl) {
             console.warn(`No se pudo cargar la imagen para el personaje: ${character} con base: ${image}`);
             return;
-        }
-        /*if (this.activeCharacters.has(character)) {
-            const existing = this.UI.shadowRoot?.querySelector(`.character[data-character="${character}"]`);
-            if (existing) {
-                // @ts-ignore
-                existing.src = imageUrl;
-                existing.className = `character visible ${position}`;
-                return;
-            }
-        }*/
+        }       
+        this.hideCharacter(character)
         // Crear elemento nuevo
         let element = new CharacterContainer(character, imageUrl, position);
       
@@ -565,23 +557,14 @@ export class VisualNovelEngine {
      * @param {string} character - El nombre o identificador del personaje a ocultar.
      */
     async hideCharacter(character) {
-        const elements = this.uiElements.characterSprites?.querySelectorAll(`.character[data-character="${character}"]`);
+        /**@type {Array<CharacterContainer>} */
+        // @ts-ignore
+        const elements = this.uiElements.characterSprites?.querySelectorAll(`.character-${character}`);
 
         if (!elements || elements.length === 0) return;
-
         for (const el of elements) {
-            el.classList.remove("visible");
-            el.classList.add("hiding");
-
-            // Esperar a que termine la transición antes de remover
-            await new Promise(resolve => {
-                el.addEventListener("transitionend", () => {
-                    el.remove();
-                    resolve(true);
-                }, { once: true });
-            });
+            el.close();
         }
-
         this.activeCharacters.delete(character);
     }
 
@@ -589,7 +572,7 @@ export class VisualNovelEngine {
      * Oculta todos los personajes actualmente visibles en la pantalla.
      */
     async hideAllCharacter() {
-        const elements = this.uiElements.characterSprites?.querySelectorAll(`.character`);
+        const elements = this.uiElements.characterSprites?.querySelectorAll(`.character-container`);
 
         if (!elements || elements.length === 0) return;
 

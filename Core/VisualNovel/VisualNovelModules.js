@@ -24,6 +24,10 @@ export class Scene {
 }
 
 export class Character {
+    /**
+     * @param {any} who
+     * @param {any} image
+     */
     static Show(who, image, position = "center") {
         return {
             type: "show", who,
@@ -32,36 +36,58 @@ export class Character {
         };
     }
 
+    /**
+     * @param {any} who
+     * @param {any} image
+     */
     static ShowR(who, image) {
         return this.Show(who, image, "right");
     }
 
+    /**
+     * @param {any} who
+     * @param {any} image
+     */
     static ShowL(who, image) {
         return this.Show(who, image, "left");
     }
 
+    /**
+     * @param {any} who
+     */
     static Hide(who) {
         return { type: "hide", who };
     }
 }
 
 export class Dialogue {
+    /**
+     * @param {string} name
+     * @param {string} text
+     * @param {null | undefined} [audio]
+     */
     static Say(name, text, audio, isFemale = false) {
         return { type: "say", name, text, audio: audio ? `${domainUrl}/${audio}` : null, isFemale };
     }
 
+    /**
+     * @param {string} text
+     */
     static Narrate(text, audio = null) {
         return this.Say("", text, audio);
     }
 }
 
 export class Flow {
+    /**
+     * @param {string} target
+     */
     static Jump(target) {
         return { type: "jump", target };
     }
     /**
     * @param {string} text
-    * @param {Array} action
+    * @param {Array<any>} action
     * @param {{ icon?: string, typeMenu?: string, render?: { type?: string, var?: string, operator?: string , value?: any } , position?: { xpos: number, ypos: number, heightPercent?: number, widthPercent?: number} }} [config] 
     * @returns {any}
     */
@@ -83,10 +109,16 @@ export class Flow {
         };
     }
 
+    /**
+     * @param {({ type: string; who: any; image: string; position: string; } | (() => { type: string; target: string; }))[] | ({ type: string; image: string; audio: string | null; isAffectedByTime: boolean; loopAudio: boolean; } | { type: string; name: string; text: string; audio: string | null; isFemale: boolean; } | { type: string; target: string; } | { type: string; var: any; value: any; } | (() => { type: string; target: string; }))[] | ({ type: string; who: any; image: string; position: string; } | (() => { type: string; options: any; }))[] | ({ type: string; image: string; audio: string | null; isAffectedByTime: boolean; loopAudio: boolean; } | { type: string; name: string; text: string; audio: string | null; isFemale: boolean; } | { type: string; options: any; })[]} commands
+     */
     static Block(commands) {
         return { type: "block", commands: commands };
     }
 
+    /**
+     * @param {any[]} options
+     */
     static Choice(options) {
         return { type: "choice", options };
     }
@@ -95,10 +127,17 @@ export class Flow {
         return { type: "if", condition, then: thenBlock, else: elseBlock };
     }
 
+    /**
+     * @param {string | number} variable
+     * @param {string | number | boolean | undefined} [value]
+     */
     static Set(variable, value) {
         return { type: "set", var: variable, value };
     }
 
+    /**
+     * @param {any} duration
+     */
     static Wait(duration) {
         return { type: "wait", duration };
     }
@@ -132,17 +171,29 @@ export class Flow {
         return { type: "substrac", var: name, operator: "-", value: value ?? 1 };
     }
 
+    /**
+     * @param {{ type: string; operator: any; value: any; var?: string; }[]} conditions
+     */
     static And(...conditions) {
         return { type: "and", conditions };
     }
-
+/**
+     * @param {{ type: string; operator: any; value: any; var?: string; }[]} conditions
+     */
     static Or(...conditions) {
         return { type: "or", conditions };
     }
 
+    /**
+     * @param {{ type: string; var: string; operator: string; value: any; }} condition
+     */
     static Not(condition) {
         return { type: "not", condition };
     }
+    /**
+     * @param {any[]} options
+     * @param {Object<string, any>} config
+     */
     static Menu(options, config = {}) {
         return {
             type: 'choice',
@@ -152,9 +203,16 @@ export class Flow {
             }))
         };
     }
+    /**
+     * @param {string} hourOperator
+     * @param {number} hourValue
+     */
     static Time(hourOperator, hourValue) {
         return { type: "time", operator: hourOperator, value: hourValue };
     }
+    /**
+     * @param {string} audio
+     */
     static PlayAudio(audio, loopAudio = true) {
         return {
             type: "audio",
@@ -166,6 +224,11 @@ export class Flow {
 const mapBack = Flow.Action("", [Flow.Jump('MainMap')], { typeMenu: "TAB", icon: "Icons/map" });
 
 export class MapScene {
+    /**
+     * @param {string} MapName
+     * @param {any[]} Options
+     * @param {{ type: string; audio: string | null; loopAudio: boolean; }} audio
+     */
     static Go(MapName, Options, OptionalsMenus = [], audio, isAffectedByTime = false, aditionalBlocks = []) {
         //Options?.forEach();
         return [

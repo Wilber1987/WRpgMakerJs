@@ -1,6 +1,8 @@
 //@ts-check
-import { saveSystem, vnEngine } from "../Core/VisualNovel/VisualNovelEngine.js";
-import { Flow, Scene } from "../Core/VisualNovel/VisualNovelModules.js";
+
+import { saveSystem, vnEngine } from "./VisualNovel/VisualNovelEngine.js";
+import { Flow, Scene } from "./VisualNovel/VisualNovelModules.js";
+
 
 export const MainMenu = Flow.Menu([
     Flow.Action("Guardar Partida", [
