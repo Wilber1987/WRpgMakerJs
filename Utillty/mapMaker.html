@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Map Maker</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #1a2a6c, #2c3e50);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.92);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            padding: 25px;
+            display: grid;
+            grid-template-columns: calc(100% - 500px) 480px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #3498db;
+            grid-column: span 2;
+        }
+
+        h1 {
+            font-size: 2.8rem;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2);
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            color: #7f8c8d;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 25px;
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        input,
+        select {
+            padding: 10px 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        input:focus,
+        select:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+        }
+
+        button {
+            background: linear-gradient(to right, #3498db, #2980b9);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            font-size: 16px;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background: linear-gradient(to right, #2980b9, #1a69a4);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button#generateCode {
+            background: linear-gradient(to right, #27ae60, #219653);
+            margin-top: 20px;
+            padding: 14px 30px;
+            font-size: 18px;
+            width: 100%;
+        }
+
+        button#generateCode:hover {
+            background: linear-gradient(to right, #219653, #1e8449);
+        }
+
+        button#downloadBtn {
+            background: linear-gradient(to right, #9b59b6, #8e44ad);
+            margin-top: 15px;
+            padding: 10px 20px;
+            font-size: 16px;
+            width: 100%;
+        }
+
+        button#downloadBtn:hover {
+            background: linear-gradient(to right, #8e44ad, #7d3c98);
+        }
+
+        .grid-container-viewer {
+            overflow: auto;
+            height: 750px;
+        }
+
+        .grid-container {
+            position: relative;
+            margin: 25px auto;
+            background-color: #f1f2f6;
+            border: 2px solid #bdc3c7;
+            border-radius: 8px;
+            overflow: auto;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            width: fit-content;
+            user-select: none;
+            /* Previene selección de texto al arrastrar */
+        }
+
+        table.grid {
+            border-collapse: collapse;
+            position: relative;
+            z-index: 10;
+        }
+
+        td.cell {
+            width: 70px !important;
+            height: 70px !important;
+            border: 1px solid #bdc3c7;
+            position: relative;
+            padding: 0;
+            text-align: center;
+            background: transparent;
+            min-width: 70px;
+            cursor: pointer;
+        }
+
+        .checkbox-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 2px;
+            pointer-events: none;
+        }
+
+        /* Corrección de CSS inválido - regla separada para los divs internos */
+        .checkbox-container>div {
+            font-size: 9px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            background-color: rgba(0, 0, 0, 0.3);
+            color: #f1f2f6;
+            padding: 2px;
+            border-radius: 2px;
+        }
+
+        .checkbox-container input {
+            pointer-events: auto;
+            width: 18px;
+            height: 18px;
+            margin: 0;
+            cursor: pointer;
+        }
+
+        .npc-checkbox {
+            align-self: flex-start;
+        }
+
+        .block-checkbox {
+            align-self: flex-end;
+        }
+
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 25px;
+            margin: 20px 0;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 500;
+        }
+
+        .npc-marker {
+            width: 18px;
+            height: 18px;
+            background: rgba(52, 152, 219, 0.3);
+            border-radius: 50%;
+            display: inline-block;
+            border: 2px solid #3498db;
+        }
+
+        .block-marker {
+            width: 18px;
+            height: 18px;
+            background: rgba(231, 76, 60, 0.3);
+            border-radius: 4px;
+            display: inline-block;
+            border: 2px solid #e74c3c;
+        }
+
+        .output-container {
+            margin-top: 30px;
+            background: #2c3e50;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            display: flex;
+            flex-direction: column;
+            height: 750px;
+        }
+
+        .output-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .output-container h2 {
+            color: white;
+            margin-bottom: 15px;
+            text-align: center;
+            font-size: 1.8rem;
+        }
+
+        textarea#output {
+            width: 100%;
+            height: 100%;
+            padding: 15px;
+            border-radius: 8px;
+            border: 2px solid #34495e;
+            background: #1a252f;
+            color: #f1c40f;
+            font-family: 'Courier New', monospace;
+            font-size: 15px;
+            resize: vertical;
+            box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.3);
+            flex-grow: 1;
+        }
+
+        .instructions {
+            background: #e3f2fd;
+            border-left: 4px solid #3498db;
+            padding: 15px;
+            margin: 25px 0;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .instructions h3 {
+            color: #2980b9;
+            margin-bottom: 10px;
+        }
+
+        .instructions ul {
+            padding-left: 20px;
+            margin-top: 10px;
+        }
+
+        .instructions li {
+            margin-bottom: 8px;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+            color: #7f8c8d;
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 1024px) {
+            .container {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto auto 1fr;
+            }
+
+            .grid-container-viewer {
+                height: 500px;
+            }
+
+            .output-container {
+                height: 300px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .controls {
+                grid-template-columns: 1fr;
+            }
+
+            .container {
+                padding: 15px;
+            }
+
+            h1 {
+                font-size: 2.2rem;
+            }
+
+            td.cell {
+                width: 25px;
+                height: 25px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>Map Maker</h1>           
+            <div class="controls">
+                <div class="control-group">
+                    <label for="gridWidth">Ancho del Mapa (celdas):</label>
+                    <input type="number" id="gridWidth" min="5" max="100" value="32">
+                </div>
+                <div class="control-group">
+                    <label for="gridHeight">Alto del Mapa (celdas):</label>
+                    <input type="number" id="gridHeight" min="5" max="100" value="18">
+                </div>
+                <div class="control-group">
+                    <label for="mapName">Nombre del Mapa:</label>
+                    <input type="text" id="mapName" value="Ciudad1">
+                </div>
+                <div class="control-group">
+                    <label for="backgroundImage">Imagen de Fondo (opcional):</label>
+                    <input type="file" id="backgroundImage" accept="image/*">
+                </div>
+                <div class="legend">
+                    <div class="legend-item">
+                        <div class="npc-marker"></div>
+                        <span>NPC (Personaje)</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="block-marker"></div>
+                        <span>Objeto/Bloque</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+        <div class="grid-container-viewer">
+            <div id="gridContainer" class="grid-container">
+                <!-- La cuadrícula se generará aquí con JavaScript -->
+            </div>
+        </div>
+
+        <div class="output-container">
+            <div class="output-header">
+                <h2>Código</h2>
+                <button id="downloadBtn">Descargar como .js</button>
+            </div>
+            <textarea id="output" readonly
+                placeholder="El código generado aparecerá aquí"></textarea>
+        </div>
+    </div>
+    <div class="instructions">
+        <h3>Instrucciones de uso:</h3>
+        <ul>
+            <li>Define el tamaño de tu mapa (ancho × alto) y el nombre del mapa</li>
+            <li>Sube una imagen de fondo para visualizar mejor las posiciones (opcional)</li>
+            <li>Genera la cuadrícula con los tamaños definidos</li>
+            <li><strong>Para seleccionar bloques:</strong> Mantén presionado el clic y arrastra sobre las celdas</li>
+            <li><strong>Para NPCs:</strong> Haz clic individual en el checkbox de NPC en cada celda</li>
+            <li>El código se genera automáticamente al modificar selecciones</li>
+            <li>Usa el botón "Descargar como .js" para guardar el archivo</li>
+        </ul>
+    </div>
+    <footer>
+        <p>Map Maker</p>
+         <p class="subtitle">Crea mapas definiendo posiciones de NPCs y objetos.
+                 Sube una imagen de fondo y selecciona las celdas ocupadas.</p>
+    </footer>
+
+    <script>
+        let bgImage = '';
+        let isDragging = false;
+        let dragType = null; // 'npc' o 'block'
+        let lastCell = null;
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const gridContainer = document.getElementById('gridContainer');
+            const backgroundImageInput = document.getElementById('backgroundImage');
+            const outputTextarea = document.getElementById('output');
+            const downloadBtn = document.getElementById('downloadBtn');
+            const mapNameInput = document.getElementById('mapName');
+
+            // Generar cuadrícula inicial con valores por defecto
+            generateGrid();
+
+            // Eventos para dimensiones de la cuadrícula
+            document.getElementById('gridWidth').addEventListener('change', generateGrid);
+            document.getElementById('gridHeight').addEventListener('change', generateGrid);
+            mapNameInput.addEventListener('input', generateCode);
+
+            // Evento para cargar imagen de fondo
+            backgroundImageInput.addEventListener('change', function (e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function (event) {
+                        bgImage = `url(${event.target.result})`;
+                        gridContainer.style.backgroundImage = bgImage;
+                        gridContainer.style.backgroundSize = "100% 100%";
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+
+            // Evento para descargar el archivo
+            downloadBtn.addEventListener('click', downloadCode);
+
+            // Eventos para selección por arrastre en el contenedor de la cuadrícula
+            gridContainer.addEventListener('mousedown', handleMouseDown);
+            gridContainer.addEventListener('mousemove', handleMouseMove);
+            gridContainer.addEventListener('mouseup', handleMouseUp);
+            gridContainer.addEventListener('mouseleave', handleMouseUp);
+
+            // Prevenir comportamiento predeterminado de selección de texto
+            gridContainer.addEventListener('selectstart', (e) => e.preventDefault());
+
+            let flag = 0;
+            function handleMouseDown(e) {
+                // Ignorar si se hace clic en un checkbox específicamente                
+                if (e.target.classList.contains('npc-checkbox') || e.target.classList.contains('block-checkbox')) {
+                    return;
+                }
+                // Prevenir el menú contextual del botón derecho
+                e.preventDefault();
+                switch (e.button) {
+                    case 0:
+                        flag = 0;
+                        // Botón izquierdo
+                        break;
+                    case 1:
+                        console.log('Click central (rueda)');
+                        // Botón central
+                        break;
+                    case 2:
+                        flag = 2;
+                        // Botón derecho
+                        break;
+                }
+                const cell = e.target.closest('.cell');
+                if (cell) {
+                    isDragging = true;
+                    lastCell = cell;
+
+                    // Determinar el tipo basado en la posición del clic dentro de la celda
+                    const rect = cell.getBoundingClientRect();
+                    const yRel = e.clientY - rect.top;
+                    dragType = (yRel < rect.height / 2) ? 'npc' : 'block';
+
+                    // Alternar el estado de la celda inicial
+                    toggleCellState(cell, dragType);
+                    generateCode();
+                }
+            }
+
+            function handleMouseMove(e) {
+                if (!isDragging) return;
+
+                const cell = e.target.closest('.cell');
+                if (cell && cell !== lastCell) {
+                    lastCell = cell;
+                    toggleCellState(cell, dragType);
+                }
+            }
+
+            function handleMouseUp() {
+                if (isDragging) {
+                    isDragging = false;
+                    lastCell = null;
+                    dragType = null;
+                    generateCode(); // Generar código final después de soltar
+                }
+            }
+
+            function toggleCellState(cell, type) {
+                if (!cell) return;
+                const x = cell.dataset.x;
+                const y = cell.dataset.y;
+                const blockCheckbox = cell.querySelector('.block-checkbox');
+                if (blockCheckbox) {
+                    switch (flag) {
+                        case 0:
+                            // Botón izquierdo
+                            blockCheckbox.checked = true;
+                            break;
+                        case 2:
+                            // Botón derecho
+                            blockCheckbox.checked = false;
+                            break;
+                    }
+                    updateCellBackground(cell);
+                }
+            }
+
+            function updateCellBackground(cell) {
+                const npcCheckbox = cell.querySelector('.npc-checkbox');
+                const blockCheckbox = cell.querySelector('.block-checkbox');
+
+                if (npcCheckbox.checked && blockCheckbox.checked) {
+                    cell.style.backgroundColor = 'linear-gradient(135deg, rgb(31 200 220 / 40%), rgb(251 96 17 / 40%))';
+                } else if (npcCheckbox.checked) {
+                    cell.style.backgroundColor = 'rgb(31 200 220 / 40%)';
+                } else if (blockCheckbox.checked) {
+                    cell.style.backgroundColor = 'rgb(251 96 17 / 40%)';
+                } else {
+                    cell.style.backgroundColor = 'unset';
+                }
+            }
+
+            function generateGrid() {
+                const gridWidth = parseInt(document.getElementById('gridWidth').value) || 40;
+                const gridHeight = parseInt(document.getElementById('gridHeight').value) || 40;
+                const currentMapName = document.getElementById('mapName').value.trim() || 'Ciudad1';
+
+                // Guardar estados actuales antes de limpiar
+                const savedStates = [];
+                document.querySelectorAll('.cell').forEach(cell => {
+                    const x = cell.dataset.x;
+                    const y = cell.dataset.y;
+                    const npcChecked = cell.querySelector('.npc-checkbox')?.checked;
+                    const blockChecked = cell.querySelector('.block-checkbox')?.checked;
+                    if (npcChecked || blockChecked) {
+                        savedStates.push({ x, y, npc: npcChecked, block: blockChecked });
+                    }
+                });
+
+                // Limpiar contenedor
+                gridContainer.innerHTML = '';
+                gridContainer.style.backgroundImage = bgImage;
+                gridContainer.style.backgroundSize = bgImage ? "100% 100%" : "contain";
+
+                // Crear tabla
+                const table = document.createElement('table');
+                table.className = 'grid';
+                table.style.width = '100%';
+                table.style.height = '100%';
+
+                // Crear filas y celdas
+                for (let y = 0; y < gridHeight; y++) {
+                    const row = table.insertRow();
+                    for (let x = 0; x < gridWidth; x++) {
+                        const cell = row.insertCell();
+                        cell.className = 'cell';
+                        cell.dataset.x = x + 1; // Coordenadas 1-indexadas
+                        cell.dataset.y = y + 1;
+
+                        // Contenedor para checkboxes
+                        const checkboxContainer = document.createElement('div');
+                        checkboxContainer.className = 'checkbox-container';
+
+                        // Checkbox para NPC
+                        const npcCheckbox = document.createElement('input');
+                        const npcCheckboxWrapper = document.createElement('div');
+                        npcCheckboxWrapper.innerHTML = "NPC";
+                        npcCheckbox.type = 'checkbox';
+                        npcCheckbox.className = 'npc-checkbox';
+                        npcCheckbox.dataset.x = x + 1;
+                        npcCheckbox.dataset.y = y + 1;
+
+                        // Checkbox para Bloque/Objeto
+                        const blockCheckbox = document.createElement('input');
+                        const blockCheckboxWrapper = document.createElement('div');
+                        blockCheckboxWrapper.innerHTML = "block";
+                        blockCheckbox.type = 'checkbox';
+                        blockCheckbox.className = 'block-checkbox';
+                        blockCheckbox.dataset.x = x + 1;
+                        blockCheckbox.dataset.y = y + 1;
+
+                        // Eventos para checkboxes individuales
+                        npcCheckbox.addEventListener('change', (ev) => {
+                            updateCellBackground(cell);
+                            generateCode();
+                        });
+
+                        blockCheckbox.addEventListener('change', (ev) => {
+                            updateCellBackground(cell);
+                            generateCode();
+                        });
+
+                        npcCheckboxWrapper.appendChild(npcCheckbox);
+                        blockCheckboxWrapper.appendChild(blockCheckbox);
+                        checkboxContainer.append(npcCheckboxWrapper, blockCheckboxWrapper);
+                        cell.appendChild(checkboxContainer);
+                    }
+                }
+
+                gridContainer.appendChild(table);
+
+                // Restaurar estados previos
+                savedStates.forEach(state => {
+                    const selectorBase = `.cell[data-x="${state.x}"][data-y="${state.y}"]`;
+                    const npcCheckbox = document.querySelector(`${selectorBase} .npc-checkbox`);
+                    const blockCheckbox = document.querySelector(`${selectorBase} .block-checkbox`);
+                    const cell = document.querySelector(selectorBase);
+
+                    if (npcCheckbox && state.npc !== undefined) npcCheckbox.checked = state.npc;
+                    if (blockCheckbox && state.block !== undefined) blockCheckbox.checked = state.block;
+                    if (cell) updateCellBackground(cell);
+                });
+
+                // Generar código inicial
+                generateCode();
+            }
+
+            function generateCode() {
+                const mapName = document.getElementById('mapName').value.replaceAll(" ", "" ).trim() || 'Ciudad1';
+                const npcCheckboxes = document.querySelectorAll('.npc-checkbox:checked');
+                const blockCheckboxes = document.querySelectorAll('.block-checkbox:checked');
+                let codeOutput = `// --- Crear el mapa Ciudad1 ---
+const ${mapName} = new GameMap('${mapName}', ${gridWidth.value}, ${gridHeight.value}, {
+    spawnX: 1,   // Punto de inicio del jugador
+    spawnY: 1,
+    //bgColor: '#666', // Calle gris
+    NPCs: [], // <-- Aquí se pasan los NPCs desde la creación
+    backgroundImage: "mapRoute"
+});
+
+`;
+
+                // Generar código para NPCs
+                if (npcCheckboxes.length > 0) {
+                    codeOutput += '// --- NPCs Generados ---\n';
+                    npcCheckboxes.forEach((checkbox, index) => {
+                        const x = checkbox.dataset.x;
+                        const y = checkbox.dataset.y;
+                        const npcName = `npc${index + 1}`;
+                        codeOutput += `const ${npcName} = new CharacterModel({
+    Name: "NPC en (${x}, ${y})",
+    MapData: [
+        {
+            name: "${mapName}", 
+            posX: ${x}, 
+            posY: ${y}, 
+            action: () => {
+                vnEngine.startScene("${npcName}Chat");
+            }
+        }
+    ]
+});
+${mapName}.NPCs.add(${npcName});\n\n
+`;
+                    });
+                }
+
+                // Generar código para Bloques/Objetos
+                if (blockCheckboxes.length > 0) {
+                    if (codeOutput) codeOutput += '\n';
+                    codeOutput += `// --- Objetos/Bloques para ${mapName} ---\n`;
+
+                    blockCheckboxes.forEach(checkbox => {
+                        const x = checkbox.dataset.x;
+                        const y = checkbox.dataset.y;
+
+                        codeOutput += `// Objeto en (${x}, ${y})
+${mapName}.addObject(new BlockObject(${x}, ${y}, 1, 1, {
+    //color: '#8B4513', 
+}));\n`;
+                    });
+                }
+
+                // Mensaje si no hay elementos seleccionados
+                if (!codeOutput) {
+                    codeOutput = `// No se han seleccionado NPCs ni Objetos en el mapa "${mapName}"\n\n`;
+                    codeOutput += `// Para agregar elementos:\n`;
+                    codeOutput += `// 1. Para Bloques: Mantén presionado el clic y arrastra sobre las celdas (parte inferior)\n`;
+                    codeOutput += `// 2. Para NPCs: Haz clic en el checkbox "NPC" en la esquina superior de cada celda\n`;
+                    codeOutput += `// 3. El código se genera automáticamente al modificar selecciones`;
+                }
+
+                outputTextarea.value = codeOutput;
+            }
+
+            function downloadCode() {
+                const code = outputTextarea.value;
+                const mapName = document.getElementById('mapName').value.trim() || 'mapa';
+                const fileName = `${mapName}.js`;
+
+                // Crear blob y enlace de descarga
+                const blob = new Blob([code], { type: 'text/javascript' });
+                const url = URL.createObjectURL(blob);
+
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = fileName;
+                document.body.appendChild(a);
+                a.click();
+
+                // Limpiar
+                setTimeout(() => {
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                }, 0);
+            }
+        });
+    </script>
+</body>
+
+</html>
