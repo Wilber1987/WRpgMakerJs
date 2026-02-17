@@ -489,28 +489,89 @@ export class VisualNovelEngine {
 
 
     /**
-     * Muestra un personaje en la pantalla con una transición.
-     * @param {string} character - El nombre o identificador del personaje.
-     * @param {string} image - La ruta de la imagen o video del personaje.
-     * @param {string} [position='center'] - La posición del personaje en la pantalla.
-     */
-    async showCharacter(character, image, position = "center") {
+  * Muestra un personaje en la pantalla con una transición.
+  * @param {string} character - El nombre o identificador del personaje.
+  * @param {string | string[]} image - La ruta de la imagen/video o array de rutas para sprites animados.
+  * @param {string} [position='center'] - La posición del personaje en la pantalla.
+  * @param {Object} [options] - Opciones adicionales para animación.
+  * @param {number} [options.fps] - Frames por segundo para animación (default: 6).
+  * @param {boolean} [options.loop] - Si la animación debe repetirse (default: true).
+  * @param {string} [options.state] - Estado del personaje (idle, walk, etc.).
+  */
+    async showCharacter(character, image, position = "center", options = {}) {
         if (!this.uiElements.characterSprites) return;
-        // Si ya está visible, solo actualizamos la imagen o video
-        let imageUrl = await this.loadImageWithExtensions(image);
-        if (!imageUrl) {
-            console.warn(`No se pudo cargar la imagen para el personaje: ${character} con base: ${image}`);
-            return;
-        }       
-        this.hideCharacter(character)
-        // Crear elemento nuevo
-        let element = new CharacterContainer(character, imageUrl, position);
-      
+
+        let imageSource;
+        let isAnimated = Array.isArray(image);
+
+        // Manejar carga de imagen(s)
+        if (isAnimated) {
+            // Cargar múltiples frames para animación
+            // @ts-ignore
+            imageSource = await this.loadAnimatedSprites(image);
+            if (!imageSource || imageSource.length === 0) {
+                console.warn(`No se pudieron cargar los sprites para el personaje: ${character}`);
+                return;
+            }
+        } else {
+            // Cargar imagen estática
+            // @ts-ignore
+            imageSource = await this.loadImageWithExtensions(image);
+            if (!imageSource) {
+                console.warn(`No se pudo cargar la imagen para el personaje: ${character} con base: ${image}`);
+                return;
+            }
+        }
+
+        this.hideCharacter(character);
+
+        // Crear elemento con soporte para animación
+        // @ts-ignore
+        let element = new CharacterContainer(character, imageSource, position, {
+            fps: options.fps ?? 6,
+            loop: options.loop ?? true,
+            state: options.state ?? 'idle'
+        });
+
         this.uiElements.characterSprites.appendChild(element);
         this.activeCharacters.add(character);
+
         // Esperar transición
         await new Promise(resolve => setTimeout(resolve, this.transitionDuration));
     }
+    /**
+     * Carga múltiples sprites para animación
+     * @param {string[]} spritePaths - Array de rutas de imágenes
+     * @param {number} [maxConcurrent] - Máximo de cargas simultáneas
+     * @returns {Promise<(string | HTMLImageElement)[]>}
+     */
+    async loadAnimatedSprites(spritePaths, maxConcurrent = 5) {
+        /**
+         * @type {(string | null)[]}
+         */
+        const loadedSprites = [];
+
+        // Carga en lotes para no saturar
+        for (let i = 0; i < spritePaths.length; i += maxConcurrent) {
+            const batch = spritePaths.slice(i, i + maxConcurrent);
+            const results = await Promise.allSettled(
+                batch.map(path => this.loadImageWithExtensions(path))
+            );
+
+            results.forEach((result, index) => {
+                if (result.status === 'fulfilled' && result.value) {
+                    loadedSprites.push(result.value);
+                } else {
+                    console.warn(`Failed to load sprite: ${batch[index]}`);
+                    loadedSprites.push(null); // Mantener índice para animación
+                }
+            });
+        }
+
+        // Filtrar nulls si prefieres, o mantenerlos para sincronización de frames
+        return loadedSprites.filter(s => s !== null);
+    }
+
 
     /**
      * Intenta cargar una imagen o video probando con diferentes extensiones.

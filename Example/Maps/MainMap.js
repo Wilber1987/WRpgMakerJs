@@ -46,7 +46,7 @@ const npc2 = new CharacterModel({
 });
 
 // --- Crear el mapa Ciudad1 ---
-const ciudad1 = new GameMap('Ciudad1', 24, 24, {
+const ciudad1 = new GameMap('Ciudad1', 48, 48, {
     //const ciudad1 = new GameMap('Ciudad1', 46, 27, {
     //const ciudad1 = new GameMap('Ciudad1', 46, 27, {
     spawnX: 1,   // Punto de inicio del jugador
