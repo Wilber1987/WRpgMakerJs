@@ -371,15 +371,15 @@
             <div class="controls">
                 <div class="control-group">
                     <label for="gridWidth">Ancho del Mapa (celdas):</label>
-                    <input type="number" id="gridWidth" min="5" max="100" value="32">
+                    <input type="number" id="gridWidth" min="5" max="100" value="64">
                 </div>
                 <div class="control-group">
                     <label for="gridHeight">Alto del Mapa (celdas):</label>
-                    <input type="number" id="gridHeight" min="5" max="100" value="18">
+                    <input type="number" id="gridHeight" min="5" max="100" value="36">
                 </div>
                 <div class="control-group">
                     <label for="mapName">Nombre del Mapa:</label>
-                    <input type="text" id="mapName" value="Ciudad1">
+                    <input type="text" id="mapName" value="ciudad1">
                 </div>
                 <div class="control-group">
                     <label for="backgroundImage">Imagen de Fondo (opcional):</label>
@@ -580,7 +580,7 @@
                     const x = cell.dataset.x;
                     const y = cell.dataset.y;
                     const npcChecked = cell.querySelector('.npc-checkbox')?.checked;
-                    const blockChecked = cell.querySelector('.block-checkbox')?.checked;
+                    const blockChecked = cell.querySelector('.block-checkbox')?.checked;                    
                     if (npcChecked || blockChecked) {
                         savedStates.push({ x, y, npc: npcChecked, block: blockChecked });
                     }
@@ -603,8 +603,8 @@
                     for (let x = 0; x < gridWidth; x++) {
                         const cell = row.insertCell();
                         cell.className = 'cell';
-                        cell.dataset.x = x + 1; // Coordenadas 1-indexadas
-                        cell.dataset.y = y + 1;
+                        cell.dataset.x = x ; // Coordenadas 1-indexadas
+                        cell.dataset.y = y ;
 
                         // Contenedor para checkboxes
                         const checkboxContainer = document.createElement('div');
@@ -616,8 +616,8 @@
                         npcCheckboxWrapper.innerHTML = "NPC";
                         npcCheckbox.type = 'checkbox';
                         npcCheckbox.className = 'npc-checkbox';
-                        npcCheckbox.dataset.x = x + 1;
-                        npcCheckbox.dataset.y = y + 1;
+                        npcCheckbox.dataset.x = x ;
+                        npcCheckbox.dataset.y = y ;
 
                         // Checkbox para Bloque/Objeto
                         const blockCheckbox = document.createElement('input');
@@ -625,8 +625,8 @@
                         blockCheckboxWrapper.innerHTML = "block";
                         blockCheckbox.type = 'checkbox';
                         blockCheckbox.className = 'block-checkbox';
-                        blockCheckbox.dataset.x = x + 1;
-                        blockCheckbox.dataset.y = y + 1;
+                        blockCheckbox.dataset.x = x ;
+                        blockCheckbox.dataset.y = y ;
 
                         // Eventos para checkboxes individuales
                         npcCheckbox.addEventListener('change', (ev) => {
@@ -641,6 +641,7 @@
 
                         npcCheckboxWrapper.appendChild(npcCheckbox);
                         blockCheckboxWrapper.appendChild(blockCheckbox);
+                        blockCheckboxWrapper.style.display = "none";
                         checkboxContainer.append(npcCheckboxWrapper, blockCheckboxWrapper);
                         cell.appendChild(checkboxContainer);
                     }
@@ -685,7 +686,7 @@ const ${mapName} = new GameMap('${mapName}', ${gridWidth.value}, ${gridHeight.va
                     npcCheckboxes.forEach((checkbox, index) => {
                         const x = checkbox.dataset.x;
                         const y = checkbox.dataset.y;
-                        const npcName = `npc${index + 1}`;
+                        const npcName = `npc${index }`;
                         codeOutput += `const ${npcName} = new CharacterModel({
     Name: "NPC en (${x}, ${y})",
     MapData: [

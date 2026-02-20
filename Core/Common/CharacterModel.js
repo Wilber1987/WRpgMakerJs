@@ -14,39 +14,54 @@ export class CharacterModel {
         /**
          * @type {any[]}
          */
-        this.MapData = []
-        Object.assign(this, props);
+        this.MapData = props?.MapData ?? []
+        //Object.assign(this, props);
         // @ts-ignore
-        this.Name = this.Name ?? this.__proto__.constructor.name.replace("Model", "");
+        /**@type {String} */
+        this.Name = props?.Name ?? this.constructor.name.replace("Model", "");
         //esta propiedad refleja la ruta imagen que debe usar segun cada estado
         /**@type {Object.<string, any>} */
         this.Sprites = {
-            Angry: `Scene/sprites/${this.Name}/Angry.png`,
-            Fear: `Scene/sprites/${this.Name}/Fear.png`,
-            Happy: `Scene/sprites/${this.Name}/Happy.png`,
-            Normal: `Scene/sprites/${this.Name}/Normal.png`,
+            Angry: props?.Sprites?.Angry ?? `Scene/sprites/${this.Name}/Angry.png`,
+            Fear: props?.Sprites?.Fear ?? `Scene/sprites/${this.Name}/Fear.png`,
+            Happy: props?.Sprites?.Happy ?? `Scene/sprites/${this.Name}/Happy.png`,
+            Normal: props?.Sprites?.Normal ?? `Scene/sprites/${this.Name}/Normal.png`,
             idle: { down: [], up: [], left: [], right: [] },
             walk: { down: [], up: [], left: [], right: [] },
             attack: { down: [], up: [], left: [], right: [] }
         };
+
+        /**@type {Object.<string, any>} */
+        this.SpritesFrames = {
+            idle: props?.SpritesFrames?.idle ?? 101,
+            walk: props?.SpritesFrames?.walk ?? 53,
+            attack: props?.SpritesFrames?.attack ?? 53,
+        }
         //estado del personaje
-        this.x = 2;
-        this.y = 2;
-        this.speed = 6;
-        this.state = 'idle'; // idle, walk, attack, etc.
-        this.direction = 'down'; // up, down, left, right
-        this.scale = 3; // factor de tamaño (1 = 1 bloque)
+        /**@type {Number} */
+        this.x = props?.x ?? 2;
+        /**@type {Number} */
+        this.y = props?.y ?? 2;
+        /**@type {Number} */
+        this.speed = props?.speed ?? 6;
+        /**@type {String} */
+        this.state = props?.state ?? 'idle'; // idle, walk, attack, etc.
+        /**@type {String} */
+        this.direction = props?.direction ?? 'down'; // up, down, left, right
+        /**@type {Number} */
+        this.scale = props?.scale ?? 3; // factor de tamaño (1 = 1 bloque)
         //estadisticas del persaonaje
         /**@type {Object.<string, any>} */
-        this.Stats = {
+        this.Stats = props?.Stats ?? {
             hp: 30,
             maxHp: 30,
             strength: 5,
             speed: 5 // Para batalla
         }
-
-        this.animFrame = 0;
-        this.animTimer = 0;
+        /**@type {Number} */
+        this.animFrame = props?.animFrame ?? 0;
+        /**@type {Number} */
+        this.animTimer = props?.animTimer ?? 0;
 
         // Habilidades del personaje
         this.Skills = [
@@ -56,14 +71,18 @@ export class CharacterModel {
         ];
 
         // Historia del personaje
-        this.Backstory = `Este es ${name}, un ${this.isFemale ? 'valiente heroína' : 'valiente héroe'} con una historia fascinante. Ha recorrido muchos lugares y enfrentado numerosos desafíos para llegar hasta donde está ahora.`;
+        /**@type {String} */
+        this.Backstory = props?.Backstory ??
+            `Este es ${name}, un ${this.isFemale ? 'valiente heroína' : 'valiente héroe'} con una historia fascinante. Ha recorrido muchos lugares y enfrentado numerosos desafíos para llegar hasta donde está ahora.`;
         // Estado actual
-        this.currentState = "Normal";
+        /**@type {String} */
+        this.currentState = props?.currentState ?? "Normal";
         // Nivel y experiencia
         this.Level = Math.floor(Math.random() * 50) + 1;
         this.Experience = Math.floor(Math.random() * 1000);
         // Inventario simulado
-        this.Inventory = [
+        /**@type {Array<Object>} */
+        this.Inventory = props?.Inventory ?? [
             { name: "Espada", type: "Arma", rarity: "Común" },
             { name: "Poción de Vida", type: "Consumible", rarity: "Común" },
             { name: "Amuleto Mágico", type: "Accesorio", rarity: "Raro" }
@@ -71,29 +90,33 @@ export class CharacterModel {
         /**
          * @type {number | undefined}
          */
-        this.tileHeight = undefined;
-        this.isNPC = false;
-        this.Action = () => { } //TODO action de mapa;
-        this.width = 1;
-        this.height = 1.5;
-        Object.assign(this, props);
-        vnEngine.RegisterCharacter(this);        
+        this.tileHeight = props?.tileHeight ?? 3;
+        /**@type {Boolean} */
+        this.isNPC = props?.isNPC ?? false;
+        /**@type {Function} */
+        this.Action = props?.Action ?? (() => { }) //TODO action de mapa;
+        /**@type {Number} */
+        this.width = props?.width ?? 2;
+        /**@type {Number} */
+        this.height = props?.height ?? 3;
+        //Object.assign(this, props);
+        vnEngine.RegisterCharacter(this);
     }
 
     RegisterWordMapCharacter = async () => {
         this.ChargeBasicSprites()
         this.Sprites.walk = {
             down: this._loadSpriteSequence(
-                `Media/Scene/sprites/${this.Name}/walk_down`, 36
+                `Media/Scene/sprites/${this.Name}/walk_down/`, this.SpritesFrames.walk
             ),
             up: this._loadSpriteSequence(
-                `Media/Scene/sprites/${this.Name}/walk_up`, 36
+                `Media/Scene/sprites/${this.Name}/walk_up/`, this.SpritesFrames.walk
             ),
             left: this._loadSpriteSequence(
-                `Media/Scene/sprites/${this.Name}/walk_left`, 36
+                `Media/Scene/sprites/${this.Name}/walk_left/`, this.SpritesFrames.walk
             ),
             right: this._loadSpriteSequence(
-                `Media/Scene/sprites/${this.Name}/walk_right`, 36
+                `Media/Scene/sprites/${this.Name}/walk_right/`, this.SpritesFrames.walk
             ),
         };
 
@@ -116,16 +139,16 @@ export class CharacterModel {
     ChargeBasicSprites = async () => {
         this.Sprites.idle = {
             down: this._loadSpriteSequence(
-                `Media/Scene/sprites/${this.Name}/idle_down`, 1
+                `Media/Scene/sprites/${this.Name}/idle_down/`, this.SpritesFrames.idle
             ),
             up: this._loadSpriteSequence(
-                `Media/Scene/sprites/${this.Name}/idle_up`, 1
+                `Media/Scene/sprites/${this.Name}/idle_up/`, this.SpritesFrames.idle
             ),
             left: this._loadSpriteSequence(
-                `Media/Scene/sprites/${this.Name}/idle_left`, 1
+                `Media/Scene/sprites/${this.Name}/idle_left/`,  this.SpritesFrames.idle
             ),
             right: this._loadSpriteSequence(
-                `Media/Scene/sprites/${this.Name}/idle_right`, 1
+                `Media/Scene/sprites/${this.Name}/idle_right/`, this.SpritesFrames.idle
             ),
         };
     }
@@ -145,7 +168,7 @@ export class CharacterModel {
         const frames = [];
         for (let i = 0; i < frameCount; i++) {
             const img = new Image();
-            img.src = `${basePath} (${startIndex + i}).${ext}`;
+            img.src = `${basePath}${startIndex + i}.${ext}`;
             frames.push(img);
         }
         return frames;
@@ -223,9 +246,9 @@ export class CharacterModel {
         return img;
     }
     animFPS = {
-        idle: 2,
-        walk: 24,
-        attack: 10
+        idle: 60,
+        walk: 60,
+        attack: 60
     };
     /**
      * @param {number} dt
@@ -273,7 +296,7 @@ export class CharacterModel {
         ctx.drawImage(
             img,
             px - drawW / 2,
-            py - drawH / 2,
+            py - drawH + (drawH * 0.15),
             drawW,
             drawH
         );

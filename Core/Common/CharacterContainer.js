@@ -21,7 +21,7 @@ export class CharacterContainer extends HTMLElement {
             loop: options.loop ?? true,
             state: options.state ?? 'idle'
         };
-        
+
         // Configuración de animación
         this.isAnimated = Array.isArray(imageUrl);
         this.spriteFrames = this.isAnimated ? imageUrl : [imageUrl];
@@ -30,7 +30,8 @@ export class CharacterContainer extends HTMLElement {
         this.frameTime = 1 / this.options.fps;
         this.animationId = null;
         this.isPlaying = false;
-        
+        this.lastTimestamp = 0;
+
         this.append(this.CustomStyle);
         this.className = this.className + " character-container character-" + character;
         // @ts-ignore
@@ -76,14 +77,14 @@ export class CharacterContainer extends HTMLElement {
         this.stopAnimation();
         this.spriteFrames = frames;
         this.isAnimated = frames.length > 1;
-        
+
         if (fps !== null) {
             this.options.fps = fps;
             this.frameTime = 1 / fps;
         }
-        
+
         this.currentFrame = 0;
-        
+
         if (this.isAnimated && this.isConnected) {
             this.startAnimation();
         } else if (frames.length > 0) {
@@ -109,10 +110,10 @@ export class CharacterContainer extends HTMLElement {
      */
     startAnimation() {
         if (!this.isAnimated || this.isPlaying) return;
-        
+
         this.isPlaying = true;
         this.lastTimestamp = 0;
-        this._animate();
+        this._animate(this.lastTimestamp);
     }
 
     /**
@@ -139,7 +140,7 @@ export class CharacterContainer extends HTMLElement {
     resumeAnimation() {
         if (this.isAnimated) {
             this.isPlaying = true;
-            this._animate();
+            this._animate(this.lastTimestamp);
         }
     }
 
@@ -148,13 +149,15 @@ export class CharacterContainer extends HTMLElement {
      * @param {number} timestamp
      */
     _animate = (timestamp) => {
+        console.log("_animate");
+
         if (!this.isPlaying) return;
 
         if (!this.lastTimestamp) this.lastTimestamp = timestamp;
         const deltaTime = (timestamp - this.lastTimestamp) / 1000;
         this.lastTimestamp = timestamp;
 
-        this.animTimer += deltaTime;
+        this.animTimer = (this.animTimer ?? 0) + (deltaTime ?? 0);
 
         if (this.animTimer >= this.frameTime) {
             this.animTimer -= this.frameTime;

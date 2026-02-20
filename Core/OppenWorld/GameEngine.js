@@ -89,7 +89,7 @@ export class GameEngine {
         /** @type {Set<MapObject>} */
         this.overlaps = new Set(); // objects currently overlapped  
 
-        /** @type {HTMLElement} */        
+        /** @type {HTMLElement} */
         // @ts-ignore
         this.hud = this.OpenWorldInstance.shadowRoot?.querySelector('#hud');
         /** @type {HTMLCanvasElement} */
@@ -118,7 +118,7 @@ export class GameEngine {
         /** @type {AlertTarget | null} */
         this.alertTarget = null;
         /** @type {number} */
-        this.alertRadius = 2;  // Aumentar radio para probar
+        this.alertRadius = 0.5;  // Aumentar radio para probar
         /** @type {{x: number, y: number}} */
         this.alertOffset = { x: 0, y: -20 };
     }
@@ -157,7 +157,7 @@ export class GameEngine {
         // 👇 Actualizar límites de zoom según el mapa
         this.minZoom = 1.2
         console.log(`this.minZoom ${this.minZoom}`);
-        this.maxZoom = 2.5;
+        this.maxZoom = 10;
         // Asegurar que el zoom actual esté dentro de los nuevos límites
         this.cam.zoom = clamp(this.cam.zoom, this.minZoom, this.maxZoom);
 
@@ -404,10 +404,10 @@ export class GameEngine {
         const Character = this.SelectedCharacter;
         const ppx = (Character.x - this.cam.x) * TILE_SIZE * this.cam.zoom + this.cam.screenW / 2;
         const ppy = (Character.y - this.cam.y) * TILE_SIZE * this.cam.zoom + this.cam.screenH / 2;
-       
-        ctx.fillStyle = '#4af'; ctx.beginPath(); ctx.arc(ppx, ppy, 8 * this.cam.zoom, 0, Math.PI * 2);
+
+        ctx.fillStyle = 'rgba(0,0,0,0.3)'; ctx.beginPath(); ctx.arc(ppx, ppy, 12 * this.cam.zoom, 0, Math.PI * 2);
         ctx.fill();
-        this.SelectedCharacter.draw(ctx, this.cam);        
+        this.SelectedCharacter.draw(ctx, this.cam);
         // HUD text
         if (this.hud) { // Add null check for hud
             this.hud.innerText = `Pos: ${Character.x.toFixed(2)}, ${Character.y.toFixed(2)}
@@ -427,7 +427,7 @@ export class GameEngine {
                     Overlaps: ${this.overlaps.size}
                     ${this.alertVisible ? '💡 Z para interactuar' : ''}`;
         }
-    }   
+    }
 
     // Método BuildNPCs actualizado - usa solo MapData, nunca las propiedades x/y del personaje
     // En GameEngine.js - método BuildNPCs() actualizado
@@ -461,6 +461,7 @@ export class GameEngine {
                 ctx.fill();
                 continue;
             }
+            
 
             // Estado y dirección actual
             const currentState = npc.state || 'idle';
@@ -469,10 +470,11 @@ export class GameEngine {
             if (npc.Sprites[currentState] && npc.Sprites[currentState][currentDirection]) {
                 const spriteList = npc.Sprites[currentState][currentDirection];
                 const animFrame = npc.animFrame || 0;
-
+                
                 if (spriteList[animFrame]) {
                     const img = spriteList[animFrame];
                     if (img && img.complete && img.naturalWidth > 0) {
+                        // Posición del centro del tile en pantalla
                         const px = (npcX - this.cam.x) * TILE_SIZE * this.cam.zoom + this.cam.screenW / 2;
                         const py = (npcY - this.cam.y) * TILE_SIZE * this.cam.zoom + this.cam.screenH / 2;
 
@@ -481,16 +483,27 @@ export class GameEngine {
                         const aspect = img.naturalWidth / img.naturalHeight;
                         const drawW = drawH * aspect;
 
-                        // ✅ CORRECTO: Pies centrados en el tile
+
+                        ctx.fillStyle = 'rgba(0,0,0,0.3)';
+                        ctx.beginPath();
+                        ctx.arc(
+                            px + drawW / 6,
+                            py + drawH - 5,                              
+                            13 * this.cam.zoom,
+                            0, 
+                            Math.PI * 2);
+                        ctx.fill();
+
+                        // ✅ CENTRADO: Restar la mitad de las dimensiones para alinear el centro de la imagen con (px, py)
                         ctx.drawImage(
                             img,
-                            px + drawW / 3 ,  // Centrado horizontal
-                            py,      // Anclado por pies
+                            px - drawW / 3,  // ← Centro horizontal (equivalente a translateX(-50%))
+                            py,  // ← Centro vertical
                             drawW,
                             drawH
                         );
                     }
-                } 
+                }
             }
         }
     }
@@ -524,7 +537,7 @@ export class GameEngine {
         let mapData = null;
         if (npc.MapData) {
             // @ts-ignore // this.name is not defined in GameEngine
-            mapData = npc.MapData.find(data => data.name === this.name); 
+            mapData = npc.MapData.find(data => data.name === this.name);
         }
 
         if (mapData && this.currentMap) { // Add null check for currentMap
@@ -552,18 +565,12 @@ export class GameEngine {
         }
         // @ts-ignore // NPCs property is not defined on GameEngine, likely belongs to GameMap
         this.NPCs.push(npcInstance); // This is likely an error. NPCs should be part of currentMap
-        
+
         // Inicializar el estado de animación para el NPC
         npcInstance.state = 'idle';
         npcInstance.direction = 'down';
         npcInstance.animFrame = 0;
         npcInstance.animTimer = 0;
-       
-        // Sistema de alertas (integrado, sin clases separadas)
-        this.alertVisible = false;
-        this.alertTarget = null; // BlockObject o NPC con acción
-        this.alertRadius = 1.5;  // Radio en tiles para mostrar alerta
-        this.alertOffset = { x: 0, y: -20 }; // Posición relativa al jugador (arriba)
     }
 
     /**
@@ -677,6 +684,10 @@ export class GameEngine {
      * Verifica la proximidad del personaje a objetos o NPCs interactivos y actualiza el estado de la alerta.
      * @private
      */
+    /**
+     * Verifica la proximidad del personaje a objetos o NPCs interactivos y actualiza el estado de la alerta.
+     * @private
+     */
     _checkAlertProximity() {
         if (!this.currentMap || !this.SelectedCharacter) {
             this.alertVisible = false;
@@ -687,18 +698,51 @@ export class GameEngine {
         const playerY = this.SelectedCharacter.y;
         let closestTarget = null;
         let closestDist = this.alertRadius;
-        // 1. Verificar BlockObjects con Action/ActionQuestion
+
+        // ────────────────────────────────────────────────────────────────
+        // 1. Helper: distancia desde jugador al rectángulo MÁS CERCANO
+        // ────────────────────────────────────────────────────────────────
+        /**
+         * Calcula distancia mínima desde (px, py) al rectángulo (rx, ry, rw, rh)
+         * @param {number} px
+         * @param {number} py
+         * @param {number} rx
+         * @param {number} ry
+         * @param {number} rw
+         * @param {number} rh
+         * @returns {number}
+         */
+        const distanceToRect = (px, py, rx, ry, rw, rh) => {
+            // Punto más cercano en el rectángulo al jugador
+            const closestX = clamp(px, rx, rx + rw);
+            const closestY = clamp(py, ry, ry + rh);
+
+            // Distancia euclidiana al punto más cercano
+            const dx = px - closestX;
+            const dy = py - closestY;
+            return Math.sqrt(dx * dx + dy * dy);
+        };
+
+        // ────────────────────────────────────────────────────────────────
+        // 2. Verificar BlockObjects con Action/ActionQuestion
+        // ────────────────────────────────────────────────────────────────
         for (const obj of this.currentMap.objects) {
             if (obj.Action || obj.ActionQuestion) {
-                const dx = obj.x - playerX;
-                const dy = obj.y - playerY;
-                const dist = Math.sqrt(dx * dx + dy * dy);
+                // Calcular distancia al RECTÁNGULO del objeto (no solo a su esquina)
+                const dist = distanceToRect(
+                    playerX,
+                    playerY,
+                    obj.x,
+                    obj.y,
+                    obj.w,   // ancho del objeto
+                    obj.h    // alto del objeto
+                );
 
                 if (dist <= this.alertRadius && dist < closestDist) {
                     closestDist = dist;
                     closestTarget = {
-                        x: obj.x,
-                        y: obj.y,
+                        x: obj.x + obj.w / 2,  // Centro visual para posición de alerta
+                        y: obj.y + obj.h / 2,
                         Action: obj.Action,
                         ActionQuestion: obj.ActionQuestion,
                         isNPC: false,
@@ -708,21 +752,35 @@ export class GameEngine {
             }
         }
 
-        // 2. Verificar NPCs con acciones en MapData
+        // ────────────────────────────────────────────────────────────────
+        // 3. Verificar NPCs con acciones en MapData
+        // ────────────────────────────────────────────────────────────────
         if (this.currentMap.NPCs) {
             for (const npc of this.currentMap.NPCs) {
                 const mapData = npc.MapData?.find(data => data.name === this.currentMap?.name);
                 if (mapData && (mapData.action || mapData.ActionQuestion)) {
+                    // Obtener posición actual del NPC (usando MapData)
                     const npcPos = this.currentMap._getNPCPosition(npc, this.currentMap);
-                    const dx = npcPos.x - playerX;
-                    const dy = npcPos.y - playerY;
-                    const dist = Math.sqrt(dx * dx + dy * dy);
+
+                    // Dimensiones del NPC (por defecto 1 tile de ancho, 1.5 de alto)
+                    const npcWidth = npc.width ?? 1;
+                    const npcHeight = npc.height ?? 1.5;
+
+                    // Calcular distancia al RECTÁNGULO del NPC
+                    const dist = distanceToRect(
+                        playerX,
+                        playerY,
+                        npcPos.x,
+                        npcPos.y,
+                        npcWidth,
+                        npcHeight
+                    );
 
                     if (dist <= this.alertRadius && dist < closestDist) {
                         closestDist = dist;
                         closestTarget = {
-                            x: npcPos.x,
-                            y: npcPos.y,
+                            x: npcPos.x + npcWidth / 2,  // Centro visual
+                            y: npcPos.y + npcHeight / 2,
                             Action: mapData.action,
                             ActionQuestion: mapData.ActionQuestion,
                             isNPC: true,
@@ -732,7 +790,10 @@ export class GameEngine {
                 }
             }
         }
-        // Actualizar estado
+
+        // ────────────────────────────────────────────────────────────────
+        // 4. Actualizar estado de alerta
+        // ────────────────────────────────────────────────────────────────
         this.alertVisible = !!closestTarget;
         this.alertTarget = closestTarget;
     }

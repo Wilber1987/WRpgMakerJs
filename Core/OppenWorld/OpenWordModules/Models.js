@@ -112,7 +112,7 @@ export class GameMap {
         }
 
         return false;
-    }    
+    }
     /**
     * @param {CharacterModel} npc
     */
@@ -246,11 +246,11 @@ export class GameMap {
     }
 
     /**
- * Obtiene la posición real del NPC desde MapData
- * @param {CharacterModel} npc
- * @param {GameMap} map
- * @returns {{ x: number, y: number, action: Function|null, ActionQuestion: Function|null }}
- */
+     * Obtiene la posición real del NPC desde MapData
+     * @param {CharacterModel} npc
+     * @param {GameMap} map
+     * @returns {{ x: number, y: number, action: Function|null, ActionQuestion: Function|null }}
+     */
     // En GameEngine.js - método _getNPCPosition() actualizado
     _getNPCPosition(npc, map) {
         // Buscar datos del mapa para este NPC

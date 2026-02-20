@@ -31,7 +31,7 @@ export class Character {
     static Show(who, image, position = "center") {
         return {
             type: "show", who,
-            image: `${domainUrl}/${image}`,
+            image: typeof image === "string" ? `${domainUrl}/${image}` : image.map((/** @type {String} */ img) => `${domainUrl}/${img}`),
             position
         };
     }

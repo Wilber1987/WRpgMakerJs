@@ -8,7 +8,12 @@ export class Camera {
      * @param {number} viewH
      */
     constructor(viewW, viewH) {
-        this.x = 0; this.y = 0; this.screenW = viewW; this.screenH = viewH; this.smooth = 0.12; this.zoom = 2.5;
+        this.x = 0;
+        this.y = 0;
+        this.screenW = viewW;
+        this.screenH = viewH;
+        this.smooth = 0.12;
+        this.zoom = 5;
     }
     /**
      * @param {{ x: any; y: any; }} target
@@ -17,7 +22,7 @@ export class Camera {
     follow(target, map) {
         const halfW = (this.screenW / TILE_SIZE) / (2 * this.zoom);
         const halfH = (this.screenH / TILE_SIZE) / (2 * this.zoom);
-        let tx = target.x, ty = target.y;
+        let tx = target.x, ty = target.y - 1;
         tx = clamp(tx, halfW, map.w - halfW);
         ty = clamp(ty, halfH, map.h - halfH);
         this.x = lerp(this.x, tx, this.smooth);

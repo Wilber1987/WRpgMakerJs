@@ -516,7 +516,7 @@ export class VisualNovelEngine {
         } else {
             // Cargar imagen estática
             // @ts-ignore
-            imageSource = await this.loadImageWithExtensions(image);
+            imageSource = await this.loadImageWithExtensions(image);            
             if (!imageSource) {
                 console.warn(`No se pudo cargar la imagen para el personaje: ${character} con base: ${image}`);
                 return;
@@ -528,7 +528,7 @@ export class VisualNovelEngine {
         // Crear elemento con soporte para animación
         // @ts-ignore
         let element = new CharacterContainer(character, imageSource, position, {
-            fps: options.fps ?? 6,
+            fps: options.fps ?? imageSource.length,
             loop: options.loop ?? true,
             state: options.state ?? 'idle'
         });
