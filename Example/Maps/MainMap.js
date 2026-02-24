@@ -5,6 +5,7 @@ import { BlockObject, GameMap } from "../../Core/OppenWorld/OpenWordModules/Mode
 import { OpenWorldEngineView } from "../../Core/OppenWorld/OpenWorldEngineView.js";
 import { vnEngine } from "../../Core/VisualNovel/VisualNovelEngine.js";
 import { Dialogue, Flow, Scene } from "../../Core/VisualNovel/VisualNovelModules.js";
+import { Alexandra } from "../Characters/AlexandraCharacter.js";
 import { DanaCharacter } from "../Characters/DanaCharacter.js";
 
 const getAsset = (/** @type {string} */ asset) => "./Media/assets/Maps/" + asset;
@@ -13,11 +14,20 @@ const getAsset = (/** @type {string} */ asset) => "./Media/assets/Maps/" + asset
 const npc1 = new CharacterModel({
     Name: "Mage",
     Sprites: {
-        Normal: Array.from({ length: 33 }, (_, i) => `Scene/sprites/Mage/Normal/${i}.png`)
+        Normal: Array.from({ length: 33 }, (_, i) => `assets/sprites/Mage/Normal/${i}.png`)
     },
     SpritesFrames: {
-        idle: 33
+        //idle: 33,
+        battle: 25,
+        attack: 89,
+        death: 25
     },
+    /*Stats: {
+        hp: 1500,
+        maxHp: 1500,
+        strength: 100,
+        speed: 30,
+    },*/
     MapData: [
         {
             name: "Ciudad1", posX: 24, posY: 14, action: () => {
@@ -26,6 +36,8 @@ const npc1 = new CharacterModel({
         }
     ]
 });
+
+
 
 vnEngine.defineScene("npc1Chat", [
     Scene.Show("assets/Maps/City1/scene1.png"),
@@ -46,7 +58,7 @@ vnEngine.defineScene("npc1Chat", [
 ]);
 
 const oppenWorld = new OpenWorldEngineView({
-    character: DanaCharacter
+    character: Alexandra
 });
 
 // --- Crear el mapa Ciudad1 ---
@@ -69,11 +81,12 @@ const ciudad1 = new GameMap('Ciudad1', 64, 36, {
 // }));
 
 // Puerta del edificio 1 (amarilla)
-ciudad1.addObject(new BlockObject(24, 12, 1, 1, {
+ciudad1.addObject(new BlockObject(23, 15, 1, 1, {
     color: '#FFD700', // Amarillo
     //autoTrigger: true,
     Action: () => {
         console.log("Prueba de proximidad auto disparada");
+        battle()
     }
 }));
 
@@ -999,13 +1012,13 @@ const battle = () => {
     // Crear grupo de prueba
     const party = [
         DanaCharacter,
-        npc1
+        npc1,
+        Alexandra
     ];
-
     // Crear enemigos de prueba
     const enemies = [
-        {
-            Name: "Goblin",
+        new CharacterModel({
+            Name: "goblin",
             Stats: {
                 hp: 15,
                 maxHp: 15,
@@ -1013,19 +1026,33 @@ const battle = () => {
                 speed: 3,
             },
             isEnemy: true,
+            SpritesFrames: { attack: 25 },
             Skills: [oppenWorld.GameEngine.battleSystem.createBasicAttack()]
-        },
-        {
-            Name: "Orco",
+        }),
+        new CharacterModel({
+            Name: "goblin",
             Stats: {
                 hp: 20,
                 maxHp: 20,
                 strength: 4,
                 speed: 2,
             },
+            SpritesFrames: { attack: 25 },
             isEnemy: true,
             Skills: [oppenWorld.GameEngine.battleSystem.createBasicAttack()]
-        }
+        }),
+        new CharacterModel({
+            Name: "goblin",
+            Stats: {
+                hp: 20,
+                maxHp: 20,
+                strength: 4,
+                speed: 2,
+            },
+            SpritesFrames: { attack: 25 },
+            isEnemy: true,
+            Skills: [oppenWorld.GameEngine.battleSystem.createBasicAttack()]
+        })
     ];
 
     // Iniciar batalla

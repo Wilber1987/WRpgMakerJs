@@ -68,6 +68,7 @@ export class GameStartScreen extends HTMLElement {
     }
 
     handleContinueGame() {
+        this.gameEngine.handleContinueGame()
     }
 
     handleSaveGame() {

@@ -1,9 +1,9 @@
 //@ts-check
 import { CharacterModel } from "../Common/CharacterModel.js";
-import { BattleSystem } from "./OpenWordModules/BattleSystem.js";
 import { clamp, DPR, OpenWorldEngineView, TILE_SIZE } from "./OpenWorldEngineView.js";
 import { Camera } from "./Camera.js";
 import { GameMap } from "./OpenWordModules/Models.js";
+import { BattleSystem } from "./BattleModule/BattleSystem.js";
 
 /**
  * @typedef {Object} MapObject
@@ -69,6 +69,7 @@ import { GameMap } from "./OpenWordModules/Models.js";
 // Engine
 // --------------------------------------------------
 export class GameEngine {
+   
     /**
     * @param {OpenWorldEngineView} openWorldInstance
     */
@@ -132,6 +133,10 @@ export class GameEngine {
      * @param {GameMap} map - El objeto GameMap a agregar.
      */
     addMap(map) { this.maps[map.name] = map; }
+
+    handleContinueGame() {
+        throw new Error("Method not implemented.");
+    }
 
     /**
      * Cambia al mapa especificado y posiciona al personaje. Actualiza la cámara.
@@ -534,6 +539,7 @@ export class GameEngine {
      * @param {NPC} npc - El objeto NPC a agregar.
      */
     addNPC(npc) {
+        
         // Importante: NO crear una copia superficial, usar el mismo objeto NPC
         // o crear una instancia adecuada que mantenga las referencias a sprites
         const npcInstance = npc;
@@ -895,11 +901,10 @@ export class GameEngine {
      */
     resume(resetTimestamp = true) {
         if (this.active) return; // Ya está activo
-
+        this.keys = {}
         if (resetTimestamp) {
             this.lastTs = 0; // Fuerza reinicio de dt en el próximo frame
         }
-
         this.active = true;
         requestAnimationFrame(this.update.bind(this));
     }

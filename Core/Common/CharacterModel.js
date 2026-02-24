@@ -2,6 +2,7 @@
 
 import { vnEngine } from "../VisualNovel/VisualNovelEngine.js";
 import { Character, Dialogue, Flow } from "../VisualNovel/VisualNovelModules.js";
+import { SkillModel } from "./SkillModel.js";
 
 const translate = JSON.parse(localStorage.getItem("translate") ?? "[]");
 
@@ -18,24 +19,28 @@ export class CharacterModel {
         //Object.assign(this, props);
         // @ts-ignore
         /**@type {String} */
-        this.Name = props?.Name ?? this.constructor.name.replace("Model", "");
+        this.Name = props?.Name ?? this.constructor.name.replace("Model", "").replace("Character", "");
         //esta propiedad refleja la ruta imagen que debe usar segun cada estado
         /**@type {Object.<string, any>} */
         this.Sprites = {
-            Angry: props?.Sprites?.Angry ?? `Scene/sprites/${this.Name}/Angry.png`,
-            Fear: props?.Sprites?.Fear ?? `Scene/sprites/${this.Name}/Fear.png`,
-            Happy: props?.Sprites?.Happy ?? `Scene/sprites/${this.Name}/Happy.png`,
-            Normal: props?.Sprites?.Normal ?? `Scene/sprites/${this.Name}/Normal.png`,
+            Angry: props?.Sprites?.Angry ?? `assets/sprites/${this.Name}/Angry.png`,
+            Fear: props?.Sprites?.Fear ?? `assets/sprites/${this.Name}/Fear.png`,
+            Happy: props?.Sprites?.Happy ?? `assets/sprites/${this.Name}/Happy.png`,
+            Normal: props?.Sprites?.Normal ?? `assets/sprites/${this.Name}/Normal.png`,
             idle: { down: [], up: [], left: [], right: [] },
             walk: { down: [], up: [], left: [], right: [] },
-            attack: { down: [], up: [], left: [], right: [] }
+            battle: { down: [], up: [], left: [], right: [] },
+            attack: { down: [], up: [], left: [], right: [] },
+            death: { down: [], up: [], left: [], right: [] },
         };
 
         /**@type {Object.<string, any>} */
         this.SpritesFrames = {
-            idle: props?.SpritesFrames?.idle ?? 66,
+            idle: props?.SpritesFrames?.idle ?? 25,
             walk: props?.SpritesFrames?.walk ?? 22,
-            attack: props?.SpritesFrames?.attack ?? 22,
+            battle: props?.SpritesFrames?.battle ?? 25,
+            attack: props?.SpritesFrames?.attack ?? 88,
+            death: props?.SpritesFrames?.death ?? 25,
         }
         //estado del personaje
         /**@type {Number} */
@@ -59,6 +64,9 @@ export class CharacterModel {
             speed: 5 // Para batalla
         }
 
+        /**
+         * @type {SkillModel[]}
+         */
         this.Skills = []
         /**@type {Number} */
         this.animFrame = props?.animFrame ?? 0;
@@ -66,11 +74,11 @@ export class CharacterModel {
         this.animTimer = props?.animTimer ?? 0;
 
         // Habilidades del personaje
-        this.Skills = [
+        /*this.Skills = [
             { name: "Ataque Fuerte", description: "Un ataque poderoso que inflige daño extra", level: Math.floor(Math.random() * 5) + 1 },
             { name: "Defensa", description: "Aumenta la defensa temporalmente", level: Math.floor(Math.random() * 5) + 1 },
             { name: "Curación", description: "Restaura puntos de vida", level: Math.floor(Math.random() * 5) + 1 }
-        ];
+        ];*/
 
         // Historia del personaje
         /**@type {String} */
@@ -101,39 +109,34 @@ export class CharacterModel {
         this.width = props?.width ?? 1;
         /**@type {Number} */
         this.height = props?.height ?? 3;
+
+        // @ts-ignore
+        this.isEnemy = props?.isEnemy ?? false
         //Object.assign(this, props);
         vnEngine.RegisterCharacter(this);
+        /**
+         * @type {string | undefined}
+         */
+        this.BattleState = undefined;
+
+        this.ChargeBattleSprites()
     }
 
     RegisterWordMapCharacter = async () => {
         this.ChargeBasicSprites()
+
         this.Sprites.walk = {
             down: this._loadSpriteSequence(
-                `Media/Scene/sprites/${this.Name}/walk_down/`, this.SpritesFrames.walk
+                `Media/assets/sprites/${this.Name}/walk_down/`, this.SpritesFrames.walk
             ),
             up: this._loadSpriteSequence(
-                `Media/Scene/sprites/${this.Name}/walk_up/`, this.SpritesFrames.walk
+                `Media/assets/sprites/${this.Name}/walk_up/`, this.SpritesFrames.walk
             ),
             left: this._loadSpriteSequence(
-                `Media/Scene/sprites/${this.Name}/walk_left/`, this.SpritesFrames.walk
+                `Media/assets/sprites/${this.Name}/walk_left/`, this.SpritesFrames.walk
             ),
             right: this._loadSpriteSequence(
-                `Media/Scene/sprites/${this.Name}/walk_right/`, this.SpritesFrames.walk
-            ),
-        };
-
-        this.Sprites.attack = {
-            down: this._loadSpriteSequence(
-                `Media/Scene/sprites/${this.Name}/attack_down`, 1
-            ),
-            up: this._loadSpriteSequence(
-                `Media/Scene/sprites/${this.Name}/attack_up`, 1
-            ),
-            left: this._loadSpriteSequence(
-                `Media/Scene/sprites/${this.Name}/attack_left`, 1
-            ),
-            right: this._loadSpriteSequence(
-                `Media/Scene/sprites/${this.Name}/attack_right`, 1
+                `Media/assets/sprites/${this.Name}/walk_right/`, this.SpritesFrames.walk
             ),
         };
     }
@@ -141,18 +144,51 @@ export class CharacterModel {
     ChargeBasicSprites = async () => {
         this.Sprites.idle = {
             down: this._loadSpriteSequence(
-                `Media/Scene/sprites/${this.Name}/idle_down/`, this.SpritesFrames.idle
+                `Media/assets/sprites/${this.Name}/idle_down/`, this.SpritesFrames.idle
             ),
             up: this._loadSpriteSequence(
-                `Media/Scene/sprites/${this.Name}/idle_up/`, this.SpritesFrames.idle
+                `Media/assets/sprites/${this.Name}/idle_up/`, this.SpritesFrames.idle
             ),
             left: this._loadSpriteSequence(
-                `Media/Scene/sprites/${this.Name}/idle_left/`,  this.SpritesFrames.idle
+                `Media/assets/sprites/${this.Name}/idle_left/`, this.SpritesFrames.idle
             ),
             right: this._loadSpriteSequence(
-                `Media/Scene/sprites/${this.Name}/idle_right/`, this.SpritesFrames.idle
+                `Media/assets/sprites/${this.Name}/idle_right/`, this.SpritesFrames.idle
             ),
         };
+    }
+
+    ChargeBattleSprites = async () => {
+        this.Sprites.attack = {
+            left: this.isEnemy ? this._loadSpriteSequence(
+                `Media/assets/sprites/${this.Name}/attack_left/`, this.SpritesFrames.attack
+            ) : [],
+            right: this.isEnemy == false ? this._loadSpriteSequence(
+                `Media/assets/sprites/${this.Name}/attack_right/`, this.SpritesFrames.attack
+            ) : [],
+        };
+        this.Sprites.battle = {
+            left: this.isEnemy ? this._loadSpriteSequence(
+                `Media/assets/sprites/${this.Name}/battle_left/`, this.SpritesFrames.battle
+            ) : [],
+            right: !this.isEnemy ? this._loadSpriteSequence(
+                `Media/assets/sprites/${this.Name}/battle_right/`, this.SpritesFrames.battle
+            ) : [],
+        };
+        /*this.Sprites.death = {
+            down: this._loadSpriteSequence(
+                `Media/assets/sprites/${this.Name}/death_down/`, this.SpritesFrames.death
+            ),
+            up: this._loadSpriteSequence(
+                `Media/assets/sprites/${this.Name}/death_up/`, this.SpritesFrames.death
+            ),
+            left: this._loadSpriteSequence(
+                `Media/assets/sprites/${this.Name}/death_left/`, this.SpritesFrames.death
+            ),
+            right: this._loadSpriteSequence(
+                `Media/assets/sprites/${this.Name}/death_right/`, this.SpritesFrames.death
+            ),
+        };*/
     }
 
     isFemale = false
@@ -250,14 +286,19 @@ export class CharacterModel {
     animFPS = {
         idle: 25,
         walk: 25,
-        attack: 25
+        attack: 25,
+        battle: 25
     };
     /**
      * @param {number} dt
      * @param {boolean} moving
+     * @param {boolean} [isBattle]
      */
-    updateAnimation(dt, moving) {
-        const nextState = moving ? 'walk' : 'idle';
+    updateAnimation(dt, moving, isBattle = false) {
+        let nextState = moving ? 'walk' : 'idle';
+        if (isBattle) {
+            nextState = this.BattleState ?? nextState;
+        }
 
         if (this.state !== nextState) {
             this.state = nextState;
@@ -270,11 +311,17 @@ export class CharacterModel {
         const frameTime = 1 / fps;
 
         this.animTimer += dt;
-        while (this.animTimer >= frameTime) {
-            this.animTimer -= frameTime;
-            const frames = this.Sprites[this.state][this.direction];
-            this.animFrame = (this.animFrame + 1) % frames.length;
+        try {
+            while (this.animTimer >= frameTime) {
+                this.animTimer -= frameTime;
+                const frames = this.Sprites[this.state][this.direction];
+                this.animFrame = (this.animFrame + 1) % frames.length;
+            }
+        } catch (error) {
+            console.error(error);
+            console.table(this);
         }
+
     }
 
 

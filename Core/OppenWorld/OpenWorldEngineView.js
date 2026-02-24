@@ -43,6 +43,9 @@ class OpenWorldEngineView extends HTMLElement {
         /**@type {HTMLCanvasElement} */
         // @ts-ignore
         this.MinimapCanvas = html`<canvas id="minimap"></canvas>`;
+        /**@type {HTMLCanvasElement} */
+        // @ts-ignore
+        this.BattleCanvas = html`<canvas id="battle-canvas"></canvas>`
         this.Draw();
         this.GameEngine = new GameEngine(this);
 
@@ -59,16 +62,7 @@ class OpenWorldEngineView extends HTMLElement {
                     style="position:absolute;left:8px;top:8px;color:#fff;font-family:monospace;background:rgba(0,0,0,0.35);padding:6px;border-radius:6px;font-size:13px">
                 </div>
                 <div id="battle-overlay">
-                    <div id="battle-ui">
-                        <div class="battle-header">¡COMBATE!</div>
-                        <div class="battle-log" id="battle-log"></div>
-                        <div class="turn-indicator" id="turn-indicator"></div>
-                        <div class="combatants">
-                            <div class="party" id="party-combatants"></div>
-                            <div class="enemies" id="enemy-combatants"></div>
-                        </div>
-                        <div class="skills" id="skill-buttons"></div>
-                    </div>
+                  
                 </div>
             </div>
             <div id="ui">                
@@ -223,6 +217,8 @@ class OpenWorldEngineView extends HTMLElement {
             right: 10px;
             top: 10px;
         }
+        /* En OpenWorldEngineView.js - CustomStyle */
+
 
         .panel {
             background: rgba(0, 0, 0, .3);
@@ -271,132 +267,7 @@ class OpenWorldEngineView extends HTMLElement {
         .stat {
             font-size: 12px
         }
-
-        /* Estilos para el sistema de batalla */
-        #battle-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.85);
-            z-index: 100;
-            display: none;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            border-radius: 6px;
-        }
-
-        #battle-ui {
-            width: 100%;
-            max-width: 100%;
-            height: 100%;
-            background: #222;
-            border-radius: 8px;
-            padding: 20px;
-            box-shadow: 0 0 20px rgba(0, 100, 255, 0.3);
-        }
-
-        .battle-header {
-            text-align: center;
-            margin-bottom: 20px;
-            font-size: 24px;
-            color: #4af;
-        }
-
-        .battle-log {
-            height: 120px;
-            overflow-y: auto;
-            background: #111;
-            padding: 10px;
-            border-radius: 6px;
-            margin-bottom: 15px;
-            font-size: 14px;
-        }
-
-        .combatants {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 20px;
-        }
-
-        .party,
-        .enemies {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .combatant {
-            padding: 8px;
-            border-radius: 6px;
-            background: #333;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .combatant.active {
-            box-shadow: 0 0 0 2px #4af;
-        }
-
-        .combatant.dead {
-            opacity: 0.5;
-            background: #522;
-        }
-
-        .hp-bar {
-            height: 6px;
-            background: #333;
-            border-radius: 3px;
-            overflow: hidden;
-            flex-grow: 1;
-        }
-
-        .hp-fill {
-            height: 100%;
-            background: #4af;
-            transition: width 0.3s;
-        }
-
-        .hp-fill.low {
-            background: #f44;
-        }
-
-        .skills {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 8px;
-            margin-top: 10px;
-        }
-
-        .skill-btn {
-            padding: 8px;
-            background: #333;
-            border: none;
-            border-radius: 4px;
-            color: white;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-
-        .skill-btn:hover {
-            background: #444;
-        }
-
-        .skill-btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        .turn-indicator {
-            text-align: center;
-            margin: 10px 0;
-            font-weight: bold;
-            color: #4af;
-        }          
+                
      `
 }
 customElements.define('w-oppenworld-component', OpenWorldEngineView);
