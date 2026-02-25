@@ -10,6 +10,7 @@ export class SkillModel {
         this.actualColdown = 0;
         this.coldown = this.coldown ?? 0;
         this.calculateDamage = props.calculateDamage ?? this.basicSkill();
+        /**@type {Number} */
         this.numberTargets = props.numberTargets ?? 1; 
         /**@type {HTMLImageElement[]} */
         this.spriteSkillAnimation = props.spriteSkillAnimation ?? [];

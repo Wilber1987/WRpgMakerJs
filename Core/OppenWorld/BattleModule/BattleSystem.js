@@ -805,34 +805,40 @@ export class BattleSystem extends HTMLElement {
 
         if (aliveParty.length > 0 && aliveEnemies.length === 0) {
             this.logBattleMessage("¡Victoria! Todos los enemigos han sido derrotados.");
-            const battleMessage = this.showBattleEndMessage("Victory");
             setTimeout(() => {
-                this._stopAnimationLoop();
-                this.hideBattleEndMessage(battleMessage);
-                this.close()
-            }, 3000);
+                const battleMessage = this.showBattleEndMessage("Victory");
+                setTimeout(() => {
+                    this._stopAnimationLoop();
+                    this.hideBattleEndMessage(battleMessage);
+                    this.close()
+                }, 3000);
+            }, 500);
+
             return false;
         } else if (aliveParty.length === 0 && aliveEnemies.length > 0) {
             this.logBattleMessage("Derrota... Todos los miembros del grupo han caído.");
-
-            const battleMessage = this.showBattleEndMessage("Defeat", "defeat");
             setTimeout(() => {
-                this._stopAnimationLoop();
-                this.hideBattleEndMessage(battleMessage);
-                this.close()
-            }, 3000);
+                const battleMessage = this.showBattleEndMessage("Defeat", "defeat");
+                setTimeout(() => {
+                    this._stopAnimationLoop();
+                    this.hideBattleEndMessage(battleMessage);
+                    this.close()
+                }, 3000);
+            }, 500);
             this.combatants.forEach(combatant => {
                 combatant.BattleState = undefined;
             });
             return false;
         } else if (aliveParty.length === 0 && aliveEnemies.length === 0) {
             this.logBattleMessage("La batalla ha terminado en empate.");
-            const battleMessage = this.showBattleEndMessage("Draw", "draw");
             setTimeout(() => {
-                this._stopAnimationLoop();
-                this.hideBattleEndMessage(battleMessage);
-                this.close()
-            }, 3000);
+                const battleMessage = this.showBattleEndMessage("Draw", "draw");
+                setTimeout(() => {
+                    this._stopAnimationLoop();
+                    this.hideBattleEndMessage(battleMessage);
+                    this.close()
+                }, 3000);
+            }, 500);
             return false;
         }
         this.logBattleMessage("La batalla continua");

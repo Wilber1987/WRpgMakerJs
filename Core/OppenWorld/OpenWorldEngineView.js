@@ -78,12 +78,6 @@ class OpenWorldEngineView extends HTMLElement {
                     </div>
                     <div id="stateBox" class="small stat">Cargando...</div>
                 </div>
-                <div class="panel">
-                    <div class="row">
-                        <label>Iniciar Batalla de Prueba</label>
-                    </div>
-                    <button id="testBattle">Probar Batalla</button>
-                </div>
             </div>
         </div>`;
         this.shadowRoot?.append(layout);
