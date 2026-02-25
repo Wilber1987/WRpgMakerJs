@@ -10,18 +10,16 @@ class AlexandraCharacter extends CharacterModel {
     constructor(props = {}) {
         // @ts-ignore
         props.SpritesFrames = { attack : 100 }
-        super(props)
-        this.Skills = [
-            new SkillModel({ numberTargets: 10 })
-        ]
-        
-        
-        /*Stats: {
+        props.Stats = {
             hp: 1500,
             maxHp: 1500,
             strength: 100,
-            speed: 30,
-        },*/
+            speed: 3000,
+        }
+        super(props)
+        this.Skills = [
+            new SkillModel({ numberTargets: 100 })
+        ]
     }
 }
 

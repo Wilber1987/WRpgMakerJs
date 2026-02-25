@@ -214,5 +214,8 @@ export const battleStyle = css`
             background-color: rgba(0, 0, 0, 0.3);
             margin-bottom: 10px;
         }  
+        .message-container {
+            position: relative;
+        }
 
 `

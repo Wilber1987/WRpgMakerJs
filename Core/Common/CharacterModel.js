@@ -175,20 +175,14 @@ export class CharacterModel {
                 `Media/assets/sprites/${this.Name}/battle_right/`, this.SpritesFrames.battle
             ) : [],
         };
-        /*this.Sprites.death = {
-            down: this._loadSpriteSequence(
-                `Media/assets/sprites/${this.Name}/death_down/`, this.SpritesFrames.death
-            ),
-            up: this._loadSpriteSequence(
-                `Media/assets/sprites/${this.Name}/death_up/`, this.SpritesFrames.death
-            ),
-            left: this._loadSpriteSequence(
+        this.Sprites.death = {
+            left: this.isEnemy ? this._loadSpriteSequence(
                 `Media/assets/sprites/${this.Name}/death_left/`, this.SpritesFrames.death
-            ),
-            right: this._loadSpriteSequence(
+            ) : [],
+            right: !this.isEnemy ? this._loadSpriteSequence(
                 `Media/assets/sprites/${this.Name}/death_right/`, this.SpritesFrames.death
-            ),
-        };*/
+            ) : [],
+        };
     }
 
     isFemale = false
@@ -370,6 +364,10 @@ export class CharacterModel {
         // Verificar si la posición está dentro del área del NPC
         return tx >= npcTileX && tx < npcTileX + width &&
             ty >= npcTileY && ty < npcTileY + height;
+    }
+
+    isDeath = () => {
+        return this.Stats.hp == 0;
     }
 
 

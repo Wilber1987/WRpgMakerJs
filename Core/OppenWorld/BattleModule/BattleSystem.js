@@ -30,15 +30,28 @@ export class BattleSystem extends HTMLElement {
         this.BasicSprite = "battle";      // Sprite por defecto (animado)
         this.AttackSprite = "attack";   // Sprite para ataque (animado)
         this.DeathSprite = "death";      // Sprite para muerte (estático)
-        this.SpriteFPS = 25;            // FPS para animaciones de batalla
+        this.SpriteFPS = 25;// FPS para animaciones de batalla
 
         // === CÁMARA DE BATALLA ===
         this.battleCamera = new Camera(100, 100)
 
 
+        // Referencias UI
+        this.overlay = engine.shadowRoot?.querySelector('#battle-overlay');
+        this.battleLogEl = html`<div class="battle-log" id="battle-log"></div>`;
+        this.turnIndicator = html`<div class="turn-indicator" id="turn-indicator"></div>`;
+        this.battleMessageContainer = html`<div class="message-container" id="turn-indicator"></div>`;
+        this.partyCombatantsEl = html`<div class="party" id="party-combatants"></div>`;
+        this.enemyCombatantsEl = html`<div class="enemies" id="enemy-combatants"></div>`;
+        this.skillButtonsEl = html`<div class="skills" id="skill-buttons"></div>`;
+        // Canvas para batalla
+        this.Canvas = engine.BattleCanvas;
 
         /** @type {CharacterModel[]} */
         this.combatants = [];
+        /**
+         * @type {{ target?: CharacterModel; damage: number; isCritical: boolean; startTime: number | null; spriteSkillAnimation?: HTMLImageElement[]; }[]}
+         */
         this.targetDamage = [];
         /**
          * @type {string | any[]}
@@ -50,23 +63,14 @@ export class BattleSystem extends HTMLElement {
          */
         this.battleLog = [];
 
-        // Referencias UI
-        this.overlay = engine.shadowRoot?.querySelector('#battle-overlay');
-        this.battleLogEl = html`<div class="battle-log" id="battle-log"></div>`;
-        this.turnIndicator = html`<div class="turn-indicator" id="turn-indicator"></div>`;
-        this.partyCombatantsEl = html`<div class="party" id="party-combatants"></div>`;
-        this.enemyCombatantsEl = html`<div class="enemies" id="enemy-combatants"></div>`;
-        this.skillButtonsEl = html`<div class="skills" id="skill-buttons"></div>`;
-
         // Canvas para batalla
         this.Canvas = engine.BattleCanvas;
-
         /** @type {CanvasRenderingContext2D | null} */
         this.ctx = null;
-
         // Loop de animación
         this.lastFrameTime = 0;
         this.animationFrameId = null;
+
         this.Draw();
 
         // Inicializar canvas
@@ -93,10 +97,23 @@ export class BattleSystem extends HTMLElement {
                         ${this.enemyCombatantsEl}
                     </div>
                     ${this.skillButtonsEl}
+                    ${this.battleMessageContainer}
                 </div>
             </div>
         </div>`;
         this.shadowRoot?.append(layout);
+    }
+
+
+    InitProps() {
+        this.currentTurnIndex = 0;
+        /**
+         * @type {any[]}
+         */
+        this.battleLog = [];
+        // Loop de animación
+        this.lastFrameTime = 0;
+        this.animationFrameId = null;
     }
 
     /**
@@ -276,8 +293,9 @@ export class BattleSystem extends HTMLElement {
                         );
 
                         if (this.targetDamage) {
-                            const targetDamage = this.targetDamage.find(t => t.target == npc )
+                            const targetDamage = this.targetDamage.find(t => t.target == npc)
                             if (targetDamage) {
+                                // @ts-ignore
                                 this._drawSelectionDamage(ctx, targetDamage, !npc.isEnemy, cam);
                             }
                         }
@@ -405,8 +423,8 @@ export class BattleSystem extends HTMLElement {
         ctx.setLineDash([]);
 
         // Separar aliados y enemigos VIVOS
-        const allies = this.combatants.filter(c => !c.isEnemy && c.Stats.hp > 0);
-        const enemies = this.combatants.filter(c => c.isEnemy && c.Stats.hp > 0);
+        const allies = this.combatants.filter(c => !c.isEnemy);
+        const enemies = this.combatants.filter(c => c.isEnemy);
 
         // Debug: mostrar conteo
         //console.log('🎨 Render:', { allies: allies.length, enemies: enemies.length, total: this.combatants.length });
@@ -415,6 +433,9 @@ export class BattleSystem extends HTMLElement {
         allies.slice(0, 6).forEach((ally, index) => {
             const { col, row } = this._getGridPosition(index, true);
             ally.direction = "right"
+            if (ally.Stats.hp == 0) {
+                ally.BattleState = this.DeathSprite
+            }
             this._drawCharacter(ctx, ally, col + 1, row + 1, "right");
         });
 
@@ -422,6 +443,9 @@ export class BattleSystem extends HTMLElement {
         enemies.slice(0, 6).forEach((enemy, index) => {
             const { col, row } = this._getGridPosition(index, false);
             enemy.direction = "left"
+            if (enemy.Stats.hp == 0) {
+                enemy.BattleState = this.DeathSprite
+            }
             this._drawCharacter(ctx, enemy, col + 1, row + 1, "left");
         });
     }
@@ -431,7 +455,7 @@ export class BattleSystem extends HTMLElement {
      * @param {{ (): void; (): void; }} onComplete
      * @param {string} direction
      */
-    _startAnimation(character, spriteKey, fps = 25, onComplete, direction) {
+    _startAnimation(character, spriteKey, fps = this.SpriteFPS, onComplete, direction) {
 
         //spriteKey = "walk"
         const spriteData = character.Sprites[spriteKey];
@@ -517,6 +541,7 @@ export class BattleSystem extends HTMLElement {
      * @param {CharacterModel[]} enemies
      */
     async startBattle(party, enemies) {
+        this.InitProps();
         this.isActive = true;
         this.combatants = [...party, ...enemies];
         this.battleLog = [];
@@ -558,12 +583,22 @@ export class BattleSystem extends HTMLElement {
 
     calculateTurnOrder() {
         this.turnOrder = [...this.combatants].sort((a, b) => b.Stats.speed - a.Stats.speed);
+        console.log(this.turnOrder);
+
     }
 
     startNextTurn() {
         let nextIndex = this.currentTurnIndex;
         let attempts = 0;
-
+        const currentCombatant = this.turnOrder[this.currentTurnIndex];
+        this.updateBattleUI();
+        this.logBattleMessage(`Turno de ${currentCombatant.Name}`);
+        this._renderBattleScene();
+        if (currentCombatant.isEnemy) {
+            setTimeout(() => this.executeEnemyTurn(currentCombatant), 1000);
+        } else {
+            this.showSkills(currentCombatant);
+        }
         do {
             nextIndex = (nextIndex + 1) % this.turnOrder.length;
             attempts++;
@@ -572,19 +607,7 @@ export class BattleSystem extends HTMLElement {
                 return;
             }
         } while (this.turnOrder[nextIndex].Stats.hp <= 0);
-
         this.currentTurnIndex = nextIndex;
-        const currentCombatant = this.turnOrder[this.currentTurnIndex];
-
-        this.updateBattleUI();
-        this.logBattleMessage(`Turno de ${currentCombatant.Name}`);
-        this._renderBattleScene();
-
-        if (currentCombatant.isEnemy) {
-            setTimeout(() => this.executeEnemyTurn(currentCombatant), 1000);
-        } else {
-            this.showSkills(currentCombatant);
-        }
     }
 
     /**
@@ -650,9 +673,10 @@ export class BattleSystem extends HTMLElement {
                         }
                     }
                 } else {
+                    const combatants = this.combatants.filter(c => c.isEnemy && c.Stats.hp > 0);
                     //const targetsToApplyDamage = [];
                     for (let index = 0; index < skill.numberTargets; index++) {
-                        const elementTarget = this.combatants.filter(c => c.isEnemy && c.Stats.hp > 0)[index];
+                        const elementTarget = combatants[index]
                         if (elementTarget) {
                             this.setSkillDamage(elementTarget, user, skill, direction);
                         }
@@ -661,11 +685,14 @@ export class BattleSystem extends HTMLElement {
             }
             this.updateBattleUI();
             this._renderBattleScene();
-            this.verifyBattleState();
-            setTimeout(() => {
-                user.Skills.forEach(skill => skill.reduceColdDown());
-                this.startNextTurn();
-            }, 1000);
+            const verify = this.verifyBattleState();
+            if (verify) {
+                setTimeout(() => {
+                    user.Skills.forEach(skill => skill.reduceColdDown());
+                    this.startNextTurn();
+                }, 1000);
+            }
+
         }, direction);
     }
 
@@ -683,6 +710,7 @@ export class BattleSystem extends HTMLElement {
             this.targetDamage.push({
                 target: target,
                 damage: damage,
+                spriteSkillAnimation: skill.spriteSkillAnimation,
                 isCritical: false,              // Opcional: golpe crítico
                 startTime: null                 // Se asigna automáticamente en el primer frame
             })
@@ -708,7 +736,7 @@ export class BattleSystem extends HTMLElement {
 
         // Mostrar aliados VIVOS
         this.combatants
-            .filter(c => !c.isEnemy && c.Stats.hp > 0)
+            .filter(c => !c.isEnemy)
             .forEach(combatant => {
                 const combatantEl = this.createCombatantElement(combatant);
                 this.partyCombatantsEl.appendChild(combatantEl);
@@ -716,7 +744,7 @@ export class BattleSystem extends HTMLElement {
 
         // Mostrar enemigos VIVOS
         this.combatants
-            .filter(c => c.isEnemy && c.Stats.hp > 0)
+            .filter(c => c.isEnemy)
             .forEach(combatant => {
                 const combatantEl = this.createCombatantElement(combatant);
                 combatantEl.classList.add("enemyBlock");
@@ -777,23 +805,38 @@ export class BattleSystem extends HTMLElement {
 
         if (aliveParty.length > 0 && aliveEnemies.length === 0) {
             this.logBattleMessage("¡Victoria! Todos los enemigos han sido derrotados.");
-            // Detener animaciones
-            this._stopAnimationLoop();
-            this.close()
+            const battleMessage = this.showBattleEndMessage("Victory");
+            setTimeout(() => {
+                this._stopAnimationLoop();
+                this.hideBattleEndMessage(battleMessage);
+                this.close()
+            }, 3000);
+            return false;
         } else if (aliveParty.length === 0 && aliveEnemies.length > 0) {
             this.logBattleMessage("Derrota... Todos los miembros del grupo han caído.");
-            // Detener animaciones
-            this._stopAnimationLoop();
-            this.close()
+
+            const battleMessage = this.showBattleEndMessage("Defeat", "defeat");
+            setTimeout(() => {
+                this._stopAnimationLoop();
+                this.hideBattleEndMessage(battleMessage);
+                this.close()
+            }, 3000);
             this.combatants.forEach(combatant => {
                 combatant.BattleState = undefined;
             });
+            return false;
         } else if (aliveParty.length === 0 && aliveEnemies.length === 0) {
             this.logBattleMessage("La batalla ha terminado en empate.");
-            this._stopAnimationLoop();
-            this.close()
+            const battleMessage = this.showBattleEndMessage("Draw", "draw");
+            setTimeout(() => {
+                this._stopAnimationLoop();
+                this.hideBattleEndMessage(battleMessage);
+                this.close()
+            }, 3000);
+            return false;
         }
         this.logBattleMessage("La batalla continua");
+        return true;
     }
     /**
  * Maneja el click en el canvas para seleccionar objetivos
@@ -956,13 +999,12 @@ export class BattleSystem extends HTMLElement {
     }
 
     /**
- * Dibuja indicador visual de daño recibido (número flotante + efecto de impacto)
- * @param {CanvasRenderingContext2D} ctx
- * @param {Object} targetDamage - Posición de los PIES del personaje (referencia)
- * @param {boolean} isAlly - true para aliado, false para enemigo
- * @param {Camera} cam - Cámara para aplicar zoom
- * @private
- */
+     * Dibuja indicador visual de daño recibido (número flotante + efecto de impacto)
+     * @param {CanvasRenderingContext2D} ctx
+     * @param {boolean} isAlly - true para aliado, false para enemigo
+     * @param {Camera} cam - Cámara para aplicar zoom     * 
+     * @param {{ startTime: number; damage: number; isCritical: boolean; spriteSkillAnimation: HTMLImageElement[] }} targetDamage
+     */
     _drawSelectionDamage(ctx, targetDamage, isAlly, cam) {
         // ⚠️ Este método se llama DENTRO del contexto transformado del sprite
         // El origen (0,0) corresponde a pos.x, pos.y gracias al translate()
@@ -1121,6 +1163,60 @@ export class BattleSystem extends HTMLElement {
         }
     }
 
+    /**
+     * Muestra un mensaje de fin de batalla centrado en pantalla
+     * @param {string} message - Texto a mostrar
+     * @param {string} type - 'victory', 'defeat' o 'draw' para estilos diferentes
+     */
+    showBattleEndMessage(message, type = 'victory') {
+        // Crear overlay si no existe
+        // Estilos según el tipo de resultado
+        const colors = {
+            victory: { text: '#4ade80', glow: '0 0 30px rgba(74, 222, 128, 0.6)' },
+            defeat: { text: '#f87171', glow: '0 0 30px rgba(248, 113, 113, 0.6)' },
+            draw: { text: '#fbbf24', glow: '0 0 30px rgba(251, 191, 36, 0.6)' }
+        };
+        // @ts-ignore
+        const style = colors[type] || colors.victory;
+        const battleMassage = html`<div class="end-battle-message">
+        <style>
+           .end-battle-message {
+                font-size: 4rem;
+                font-weight: bold;
+                color: ${style.text};
+                text-shadow: ${style.glow};
+                letter-spacing: 8px;
+                animation: pulse 0.5s ease-in-out forwards;
+                Z-INDEX: 10000;
+                position: fixed;
+                top: 50%;                
+                left: 50%;
+            }
+            @keyframes pulse {
+                0% { 
+                    transform: translate(-50%, -50%) scale(0.8); 
+                    opacity: 0;                 
+                }
+                100% { 
+                    transform: translate(-50%, -50%) scale(2); 
+                    opacity: 1;
+                 }
+            }
+        </style>
+        ${message}</div>`;
+        this.battleMessageContainer?.append(battleMassage)
+        return battleMassage;
+    }
+
+    /**
+     * Oculta el mensaje de fin de batalla
+     * @param {HTMLElement} battleMassage
+     */
+    hideBattleEndMessage(battleMassage) {
+        setTimeout(() => {
+            battleMassage.remove()
+        }, 200);
+    }
 
     createBasicAttack() {
         // @ts-ignore
