@@ -1,6 +1,7 @@
 //@ts-check
 
 import { SkillModel } from "../Common/SkillModel.js";
+import { CharacterModel } from "./CharacterModel.js";
 
 /**
  * Registry para serialización/deserialización de habilidades con tipado preservado.

@@ -1,8 +1,6 @@
 //@ts-check
 
 import { VisualNovelEngine } from "../VisualNovel/VisualNovelEngine.js";
-import { Flow } from "../VisualNovel/VisualNovelModules.js";
-import { html } from "../WDevCore/WModules/WComponentsTools.js";
 import { CharacterModel } from "../Common/CharacterModel.js";
 import { GameEngine } from "../OppenWorld/GameEngine.js";
 import { SaveLoadView } from "./UIComponents/SaveLoadView.js";
@@ -37,6 +35,8 @@ import { SkillModel } from "./SkillModel.js";
 /**
  * @typedef {Object} SerializedCharacter
  * @property {string} Name - Nombre identificador del personaje
+ * @property {string} __className - Nombre identificador de la clase
+ * @property {Object.<string, any>} __props
  * @property {boolean} isNPC - Indica si es un personaje no jugador
  * @property {{x: number, y: number}} position - Posición en coordenadas del mapa
  * @property {string} direction - Dirección actual de la animación
@@ -111,7 +111,7 @@ import { SkillModel } from "./SkillModel.js";
  * @property {string} __className - Nombre de la clase para registro/reflexión (ej: 'SkillModel', 'FireballSkill')
  * @property {Object.<string, any>} __props - Props de inicialización para pasar al constructor
  * @property {string} icon
-* @property {string} calculateDamage
+* @property {Function} calculateDamage
 * @property {string} numberTargets
 * @property {string} spriteSkillAnimation
  * === PROPIEDADES BASE DE SKILL (configuración estática) ===
@@ -202,26 +202,22 @@ export class SaveSystem {
     constructor(vnEngine, openWorldEngine) {
         /** 
          * @type {VisualNovelEngine} 
-         * @private
          */
         this.vnEngine = vnEngine;
 
         /** 
          * @type {OpenWorldEngineView} 
-         * @private
          */
         this.openWorldEngine = openWorldEngine;
 
         /** 
          * @type {Storage} 
-         * @private
          * @description Backend de almacenamiento (localStorage por defecto)
          */
         this.storage = localStorage;
 
         /** 
          * @type {string} 
-         * @private
          * @description Prefijo para las keys de localStorage
          */
         this.savePrefix = 'owvn-save-';
@@ -428,7 +424,6 @@ export class SaveSystem {
         // Estado dinámico que se fusiona POST-construcción
         return {
             // === METADATA DE REFLEXIÓN ===
-            // @ts-ignore
             __className: className,
             __props: initProps,
 
@@ -443,7 +438,10 @@ export class SaveSystem {
             Inventory: JSON.parse(JSON.stringify(character.Inventory || [])),
             Skills: this._serializeSkills(character.Skills || []),
             MapData: character.MapData ? JSON.parse(JSON.stringify(character.MapData)) : [],
-
+            Stats: { ...character.Stats },
+            Level: character.Level,
+            Experience: character.Experience,
+            isNPC: character.isNPC ?? false,
             // Props personalizadas serializables
             customProps: this._extractCustomProps(character)
         };
@@ -468,10 +466,11 @@ export class SaveSystem {
                     name: skill.name,
                     description: skill.description,
                     icon: skill.icon,
-                    calculateDamage: skill.calculateDamage,
+                    //calculateDamage: skill.calculateDamage,
                     numberTargets: skill.numberTargets,
                     spriteSkillAnimation: skill.spriteSkillAnimation,
-                    //manaCost: skill.manaCost,
+                    manaCost: skill.manaCost,
+                    level: skill.level,
                     cooldown: skill.cooldown,
                     // Agregar aquí otras props que tu constructor de SkillModel espere
                 };
@@ -482,14 +481,14 @@ export class SaveSystem {
                     __props: initProps,
 
                     // === ESTADO DINÁMICO ===
-                    currentCooldown: skill.actualColdown ?? 0,
                     name: skill.name,
                     description: skill.description,
                     icon: skill.icon,
-                    calculateDamage: skill.calculateDamage,
+                    //calculateDamage: skill.calculateDamage,
                     numberTargets: skill.numberTargets,
                     spriteSkillAnimation: skill.spriteSkillAnimation,
-                    //manaCost: skill.manaCost,
+                    manaCost: skill.manaCost,
+                    level: skill.level,
                     cooldown: skill.cooldown,
                 };
             }
@@ -830,10 +829,11 @@ export class SaveSystem {
                         name: skillData.name,
                         description: skillData.description,
                         icon: skillData.icon,
-                        calculateDamage: skillData.calculateDamage,
+                        //calculateDamage: skillData.calculateDamage,
                         numberTargets: skillData.numberTargets,
                         spriteSkillAnimation: skillData.spriteSkillAnimation,
-                        //manaCost: skill.manaCost,
+                        manaCost: skill.manaCost,
+                        level: skill.level,
                         cooldown: skillData.cooldown,
                     });
 
@@ -964,10 +964,11 @@ export class SaveSystem {
      * - Botón de retorno para cerrar la pantalla
      * 
      * @param {boolean} [isLoadMode=true] - true para modo carga, false para modo guardado
+     * @param {Function} [action]
      * @public
      */
-    showSaveLoadScreen(isLoadMode = true) {
-        this.SaveLoadView = new SaveLoadView(isLoadMode);
+    showSaveLoadScreen(isLoadMode = true, action) {
+        this.SaveLoadView = new SaveLoadView(isLoadMode, action);
         this.SaveLoadView.Connect();
     }
 

@@ -58,12 +58,14 @@ import { vnEngine } from "../VisualNovel/VisualNovelEngine.js";
  * @typedef {Object} AlertTarget
  * @property {number} x - La posición X del objetivo de la alerta.
  * @property {number} y - La posición Y del objetivo de la alerta.
- * @property {function(GameEngine): void | null} [Action] - La función de acción del objetivo.
- * @property {function(GameEngine): (boolean | Promise<boolean>) | null} [ActionQuestion] - La función de pregunta de acción del objetivo.
+ * @property {Function} [Action] - La función de acción del objetivo.
+ * @property {Function} [ActionQuestion] - La función de pregunta de acción del objetivo.
  * @property {boolean} isNPC - Indica si el objetivo es un NPC.
  * @property {MapObject} [objRef] - Referencia al objeto del mapa (si no es NPC).
  * @property {NPC} [npcRef] - Referencia al NPC (si es NPC).
  * @property {boolean} [autoTrigger] 
+ * @property {Function}Action
+ * @property {Function} ActionQuestion
  */
 
 // --------------------------------------------------
@@ -477,6 +479,9 @@ export class GameEngine {
             let npcX = npc.x, npcY = npc.y; // Fallback to npc.x/y if MapData not found/valid
             if (this.currentMap) { // Added null check for currentMap
                 const mapData = npc.MapData?.find(d => d.name === this.currentMap?.name); // Added null check for currentMap
+                if (mapData?.rendered instanceof Function && mapData.rendered() == false) {
+                    continue;
+                }
                 if (mapData) {
                     npcX = mapData.posX;
                     npcY = mapData.posY;
@@ -554,9 +559,8 @@ export class GameEngine {
 
         // Buscar datos del mapa para este NPC
         let mapData = null;
-        if (npc.MapData) {
-            // @ts-ignore // this.name is not defined in GameEngine
-            mapData = npc.MapData.find(data => data.name === this.name);
+        if (npc.MapData) {            
+            mapData = npc.MapData.find(data => data.name === this.currentMap?.name);
         }
 
         if (mapData && this.currentMap) { // Add null check for currentMap
@@ -566,7 +570,9 @@ export class GameEngine {
 
             // Verificar si la posición está bloqueada y recalcular si es necesario
             if (this.currentMap._isPositionBlocked(finalX, finalY)) {
-                finalX = this.currentMap._findAlternativePosition(finalX, finalY);
+                const finalPost = this.currentMap._findAlternativePosition(finalX, finalY);
+                finalX = finalPost.x;
+                finalY = finalPost.y
             }
 
             npcInstance.x = finalX;
@@ -710,6 +716,8 @@ export class GameEngine {
 
         const playerX = this.SelectedCharacter.x;
         const playerY = this.SelectedCharacter.y;
+        /**@type {AlertTarget} */
+        // @ts-ignore
         let closestTarget = null;
         let closestDist = maxRadius;
 

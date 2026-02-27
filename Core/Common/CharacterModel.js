@@ -7,6 +7,16 @@ import { SkillModel } from "./SkillModel.js";
 
 const translate = JSON.parse(localStorage.getItem("translate") ?? "[]");
 
+/**
+ * @typedef {Object} MapData 
+    * @property {()=> false} [rendered] objeto
+    * @property {Function} [action] objeto
+    * @property {Function} [ActionQuestion] objeto
+    * @property {String} name objeto
+    * @property {Number} posX objeto
+    * @property {Number} posY objeto
+**/
+
 let TILE_SIZE = 32;
 export class CharacterModel {
     static _registeredClasses = new Set();
@@ -15,7 +25,7 @@ export class CharacterModel {
      */
     constructor(props) {
         /**
-         * @type {any[]}
+         * @type {MapData[]}
          */
         this.MapData = props?.MapData ?? []
         //Object.assign(this, props);
@@ -112,7 +122,7 @@ export class CharacterModel {
         /**@type {Number} */
         this.height = props?.height ?? 3;
 
-       /**@type {Boolean} */
+        /**@type {Boolean} */
         this.isEnemy = props?.isEnemy ?? false
         //Object.assign(this, props);
         vnEngine.RegisterCharacter(this);
@@ -131,7 +141,11 @@ export class CharacterModel {
             // @ts-ignore
             CharacterRegistry.register(className, this.constructor);
             CharacterModel._registeredClasses.add(className);
-        }
+        };
+        /**
+         * @type {Boolean|undefined}
+         */
+        this.collision = undefined;
     }
 
     RegisterWordMapCharacter = async () => {
@@ -362,7 +376,7 @@ export class CharacterModel {
      * Verifica si el NPC ocupa una posición específica en el grid
      * @param {number} tx - Coordenada X en tiles
      * @param {number} ty - Coordenada Y en tiles
-     * @param {Object<string, any>} mapData
+     * @param {MapData} mapData
      * @returns {boolean}
      */
     occupies(tx, ty, mapData) {
@@ -408,6 +422,5 @@ export class CharacterModel {
     GetLocation() {
         return "TODO";
     }
-
 }
 

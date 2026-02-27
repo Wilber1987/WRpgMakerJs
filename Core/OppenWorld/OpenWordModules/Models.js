@@ -25,7 +25,13 @@ export class BlockObject {
         this.autoTrigger = opts.autoTrigger ?? false; // if true, action runs when player steps on it (onEnter)
         this._lastTriggered = 0;
         this.icon = opts.icon;
+        /**
+         * @type {Number|undefined}
+         */
         this.iconWidth = undefined;
+        /**
+         * @type {Number|undefined}
+         */
         this.iconHeight = undefined;
     }
     /**
@@ -42,6 +48,7 @@ export class GameMap {
      * @param {string} name
      * @param {any} w 64/48/32
      * @param {any} h 36/27/18
+     * @param {Object<string, any>} opts
      */
     constructor(name, w, h, opts = {}) {
         this.name = name;
@@ -55,6 +62,7 @@ export class GameMap {
         this.spawnX = opts.spawnX ?? 2;
         this.spawnY = opts.spawnY ?? 2;
         this.enemies = opts.enemies || []; // Enemigos disponibles en este mapa
+
         /**@type {Array<CharacterModel>} */
         this.NPCs = opts.NPCs ?? []; // Nuevo array independiente para NPCs agregado en options si no esta disponible cra un array vacio
         this.NPCs.forEach(npc => {
@@ -62,7 +70,11 @@ export class GameMap {
         });
         this.backgroundImage = null
         if (opts.backgroundImage) {
-            this.setBackgroundImage(opts.backgroundImage)
+            this.backgroundImage = this.getBackgroundImage(opts.backgroundImage)
+        }
+        this.battleBackgrond = null
+        if (opts.battleBackgrond) {
+            this.battleBackgrond = this.getBackgroundImage(opts.battleBackgrond)
         }
     }
     /**
@@ -97,8 +109,8 @@ export class GameMap {
         // 2. Verificar NPCs con colisión (usando SOLO MapData, sin recursión)
         if (this.NPCs) {
             for (const npc of this.NPCs) {
-                // Skip NPCs sin colisión
-                if (npc.collision === false || npc.noCollision === true) continue;
+                //TODO Skip NPCs sin colisión
+                if (npc.collision === false) continue;
 
                 // Obtener posición DIRECTAMENTE desde MapData
                 let npcX, npcY;
@@ -108,6 +120,7 @@ export class GameMap {
                         npcX = mapData.posX;
                         npcY = mapData.posY;
                     }
+                    // @ts-ignore
                     if (npc.occupies(tx, ty, mapData)) return true;
                 }
             }
@@ -120,8 +133,8 @@ export class GameMap {
     */
     addNPC(npc) {
         // Crear una copia del NPC para este mapa (evitar modificar el original)
-        const npcInstance = { ...npc };
-        npcInstance.isNPC = true;
+        //const npcInstance = { ...npc };
+        npc.isNPC = true;
 
         // Buscar datos del mapa para este NPC
         let mapData = null;
@@ -136,24 +149,27 @@ export class GameMap {
 
             // Verificar si la posición está bloqueada y recalcular si es necesario
             if (this._isPositionBlocked(finalX, finalY)) {
-                finalX = this._findAlternativePosition(finalX, finalY);
+                 const finalPost = this._findAlternativePosition(finalX, finalY);
+                finalX = finalPost.x;
+                finalY = finalPost.y
+                
             }
 
-            npcInstance.x = finalX;
-            npcInstance.y = finalY;
+            npc.x = finalX;
+            npc.y = finalY;
 
             // Asignar la acción si existe
             if (mapData.action) {
-                npcInstance.Action = mapData.action;
+                npc.Action = mapData.action;
             }
         } else {
             // Sin MapData, colocar en posición aleatoria
             const randomPos = this._findRandomUnblockedPosition();
-            npcInstance.x = randomPos.x;
-            npcInstance.y = randomPos.y;
+            npc.x = randomPos.x;
+            npc.y = randomPos.y;
         }
 
-        this.NPCs.push(npcInstance);
+        this.NPCs.push(npc);
     }
 
     /**
@@ -237,14 +253,20 @@ export class GameMap {
         return !this._isPositionBlocked(x, y);
     }
 
-    setBackgroundImage(imgOrUrl) {
+    /**
+     * @param {string|HTMLImageElement} imgOrUrl
+     * @returns {HTMLImageElement?}
+     */
+    getBackgroundImage(imgOrUrl) {
+        if (imgOrUrl instanceof HTMLImageElement) {
+            return imgOrUrl;
+        }
         if (typeof imgOrUrl === 'string') {
             const img = new Image();
             img.src = imgOrUrl;
-            this.backgroundImage = img;
-        } else if (imgOrUrl instanceof HTMLImageElement) {
-            this.backgroundImage = imgOrUrl;
+            return img;
         }
+        return null;
     }
 
     /**
@@ -269,7 +291,6 @@ export class GameMap {
                 y: mapData.posY,
                 action: mapData.action || null,
                 ActionQuestion: mapData.ActionQuestion || null,
-                hasMapData: true
             };
         } else {
             // Sin MapData válido, colocar en posición aleatoria
@@ -278,8 +299,7 @@ export class GameMap {
                 x: randomPos.x,
                 y: randomPos.y,
                 action: null,
-                ActionQuestion: null,
-                hasMapData: false
+                ActionQuestion: null
             };
         }
     }

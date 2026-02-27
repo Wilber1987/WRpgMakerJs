@@ -59,7 +59,7 @@ export class VisualNovelEngine {
     constructor() {
         /** @type {boolean} */
         this.jumpTriggered = false;
-        /** @type {Object.<string, Array<SceneCommand>>} */
+        /** @type {Object.<string, Array<SceneCommand|Function>>} */
         this.scenes = {};
         /** @type {string | number | null} */
         this.currentScene = null;
@@ -106,7 +106,7 @@ export class VisualNovelEngine {
         /** @type {number} */
         this.currentCommandIndex = 0;
         /**
-         * @type {Array<SceneCommand> | undefined} 
+         * @type {Array<SceneCommand|Function> | undefined} 
          */
         this.currentsBlocks = [];
         /** @type {SceneCommand | undefined} */
@@ -158,7 +158,7 @@ export class VisualNovelEngine {
     /**
      * Define una nueva escena con un nombre y un conjunto de comandos.
      * @param {string | number} sceneName - El nombre único de la escena.
-     * @param {Array<SceneCommand>} sceneData - Un arreglo de comandos que componen la escena.
+     * @param {Array<SceneCommand|Function>} sceneData - Un arreglo de comandos que componen la escena.
      */
     defineScene(sceneName, sceneData) {
         this.scenes[sceneName] = sceneData;
@@ -167,9 +167,12 @@ export class VisualNovelEngine {
     // Iniciar una escena
     /**
      * Inicia la ejecución de una escena específica.
-     * @param {string | number} sceneName - El nombre de la escena a iniciar.
+     * @param {string | number |null} sceneName - El nombre de la escena a iniciar.
      */
     startScene(sceneName) {
+        if (sceneName == null) {
+            return;
+        }
         this.active = true;
         this.UI.Connect()
         this.jumpTriggered = true;
@@ -182,8 +185,10 @@ export class VisualNovelEngine {
             return;
         }
         this.currentScene = sceneName;
+        // @ts-ignore
         this.currentsBlocks = this.scenes[/** @type {string | number} */(this.currentScene)]; // Ensured currentScene is not null
         if (this.currentsBlocks) { // Add null/undefined check here
+            // @ts-ignore
             this.executeBlock(this.currentsBlocks, sceneName);
         }
     }
@@ -205,8 +210,10 @@ export class VisualNovelEngine {
                 console.error(`Escena no encontrada: ${this.currentScene}`);
                 return;
             }
+            // @ts-ignore
             this.currentsBlocks = this.scenes[this.currentScene]
             if (this.currentsBlocks) { // Add null/undefined check here
+                // @ts-ignore
                 this.executeBlock(this.currentsBlocks, this.currentScene);
             }
         } catch (error) {
@@ -1264,6 +1271,7 @@ export class VisualNovelEngine {
     }
 }
 const vnEngine = new VisualNovelEngine();
+// @ts-ignore
 const saveSystem = new SaveSystem(vnEngine);
 
 export { vnEngine, saveSystem };

@@ -9,7 +9,7 @@ export class SkillModel {
     * @param {Partial<SkillModel>} props 
     */
     constructor(props) {
-         /**@type {String} */
+        /**@type {String} */
         this.name = props.name ?? "Basic Attack";
         /**@type {String} */
         this.icon = `./Media/assets/sprites/skills/${props.icon ?? "basic_attack"}.png`;
@@ -25,11 +25,15 @@ export class SkillModel {
         this.description = props.description ?? "Ataque";
         // 🔥 Auto-registro UNA VEZ por tipo de clase
         const className = this.constructor.name;
-        if (!SkillModel._registeredClasses.has(className)) {            
+        if (!SkillModel._registeredClasses.has(className)) {
             // @ts-ignore
             SkillRegistry.register(className, this.constructor);
             SkillModel._registeredClasses.add(className);
-        }
+        };
+        /**@type {Number} */
+        this.manaCost = props.manaCost ?? 0;
+        /**@type {Number} */
+        this.level = props.level ?? 1;
     }
 
     excute(

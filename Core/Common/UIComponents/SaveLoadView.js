@@ -8,9 +8,11 @@ export class SaveLoadView extends HTMLElement {
     /**
    * Muestra menú de guardado/carga con slots
    * @param {boolean} isLoadMode 
+   * @param {Function} [loadAction]
    */
-    constructor(isLoadMode) {
+    constructor(isLoadMode, loadAction) {
         super();
+        this.loadAction = loadAction;
         this.attachShadow({ mode: 'open' });       
         this.Draw(isLoadMode);
     }
@@ -61,7 +63,10 @@ export class SaveLoadView extends HTMLElement {
                 div.addEventListener('click', async () => {
                     const success = await saveSystem.loadFromSlot(slotName);
                     if (success) {
-                        screen.style.display = 'none';
+                        if (this.loadAction) {
+                            this.loadAction(this);
+                        }
+                        this.close();
                     }
                 });
             } else if (!isLoadMode) {
@@ -71,7 +76,7 @@ export class SaveLoadView extends HTMLElement {
                     if (confirmed) {
                         saveSystem.saveToSlot(slotName);
                         // @ts-ignore
-                        screen.style.display = 'none';
+                        this.close();
                         // Refrescar vista si es necesario
                         this.showSaveLoadScreen(false);
                     }

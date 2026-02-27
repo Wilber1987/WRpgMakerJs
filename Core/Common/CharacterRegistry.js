@@ -56,9 +56,10 @@ export const CharacterRegistry = {
      * 
      * @param {import("./SaveSystem.js").SerializedCharacter} savedData - Datos del personaje guardado
      * @param {{ engine?: any, openWorldEngine?: any, vnEngine?: any }} [context] - Contexto opcional para inicialización
-     * @returns {Promise<CharacterModel> | CharacterModel | null} Instancia restaurada o null si falla
+     * @returns {Promise<CharacterModel>} Instancia restaurada o null si falla
      */
     async instantiate(savedData, context = {}) {
+        // @ts-ignore
         if (!savedData?.__className) {
             console.warn('⚠️ Datos sin __className, usando CharacterModel base');
             return new CharacterModel(savedData.__props || {});

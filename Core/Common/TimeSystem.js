@@ -8,8 +8,8 @@ import { VisualNovelEngine } from "../VisualNovel/VisualNovelEngine.js";
  * @property {number} hour - Hora del día (0-23)
  * @property {number} day - Número de día desde el inicio (1 = día 1)
  * @property {string} weekDay - Nombre del día de la semana
- * @property {'Monday'|'Tuesday'|'Wednesday'|'Thursday'|'Friday'|'Saturday'|'Sunday'} weekDay - Día de la semana (valores permitidos)
- * @property {'Spring'|'Summer'|'Autumn'|'Winter'} season - Estación actual
+ * @property {string} weekDay - Día de la semana (valores permitidos) 'Monday'|'Tuesday'|'Wednesday'|'Thursday'|'Friday'|'Saturday'|'Sunday'
+ * @property {string} season - Estación actual 'Spring'|'Summer'|'Autumn'|'Winter'
  */
 export class TimeSystem {
     /**

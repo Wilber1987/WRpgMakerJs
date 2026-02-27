@@ -6,7 +6,7 @@ import { CharacterModel } from "../../Common/CharacterModel.js";
 import { SkillModel } from "../../Common/SkillModel.js";
 import { ComponentsManager, html } from "../../WDevCore/WModules/WComponentsTools.js";
 import { Camera } from "../Camera.js";
-import { DPR } from "../OpenWorldEngineView.js";
+import { DPR, TILE_SIZE } from "../OpenWorldEngineView.js";
 import { battleStyle } from "./BattleSystemStyle.js";
 
 export class BattleSystem extends HTMLElement {
@@ -187,7 +187,6 @@ export class BattleSystem extends HTMLElement {
 
         this.cellWidth = rect.width / this.gridCols;
         this.cellHeight = rect.height / this.gridRows;
-
         if (this.isActive) {
             this._renderBattleScene();
         }
@@ -196,7 +195,6 @@ export class BattleSystem extends HTMLElement {
     _setupResizeListener() {
         window.addEventListener('resize', () => this._resizeCanvas());
     }
-
     // === CÁLCULO DE POSICIONES EN GRID ===
     /**
      * @param {number} index
@@ -221,11 +219,8 @@ export class BattleSystem extends HTMLElement {
                 default: break
             }
         }
-
-
         const colInTeam = index % 2;
         const rowInTeam = Math.floor(index / 2);
-
         return {
             col: baseCol + colInTeam,
             row: rowInTeam
@@ -242,7 +237,6 @@ export class BattleSystem extends HTMLElement {
             y: row * this.cellHeight + this.cellHeight * 0.7
         };
     }
-
     /**
      * Dibuja un personaje en el canvas - VERSIÓN SIMPLIFICADA
      * @param {CanvasRenderingContext2D} ctx
@@ -254,13 +248,10 @@ export class BattleSystem extends HTMLElement {
     _drawCharacter(ctx, npc, col, row, direction) {
         const pos = this._gridToCanvas(col, row);
         const cam = this.battleCamera;
-
-
         // Verificar que el NPC tenga sprites cargados
         if (!npc.Sprites || !npc.Sprites.idle || !npc.Sprites.idle[direction]) {
             this._drawCharacterFallback(ctx, npc, pos);
         } else {
-
             const currentState = npc.BattleState ?? this.BasicSprite;
             const currentDirection = direction;
             if (npc.Sprites[currentState] && npc.Sprites[currentState][currentDirection]) {
@@ -274,16 +265,16 @@ export class BattleSystem extends HTMLElement {
                         const aspect = img.naturalWidth / img.naturalHeight;
                         const drawH = maxHeight;
                         const drawW = drawH * aspect;
-
                         // Dibujar con transformaciones de cámara
                         ctx.save();
                         ctx.translate(pos.x, pos.y);
                         ctx.scale(cam.zoom, cam.zoom);
+                        const isAlly = !npc.isEnemy;
                         // === SELECCIÓN: Dibujar anillo en el piso ===
                         if (npc === this.selectedEnemyTarget || npc === this.selectedAllyTarget) {
-                            const isAlly = !npc.isEnemy;
                             this._drawSelectionRing(ctx, pos, isAlly, cam);
                         }
+                        this._drawShadow(ctx, pos, cam);
                         ctx.drawImage(
                             img,
                             -drawW / 2 / cam.zoom,
@@ -291,7 +282,6 @@ export class BattleSystem extends HTMLElement {
                             drawW / cam.zoom,
                             drawH / cam.zoom
                         );
-
                         if (this.targetDamage) {
                             const targetDamage = this.targetDamage.find(t => t.target == npc)
                             if (targetDamage) {
@@ -300,8 +290,6 @@ export class BattleSystem extends HTMLElement {
                             }
                         }
                         ctx.restore();
-
-
                     }
                 }
             }
@@ -406,12 +394,44 @@ export class BattleSystem extends HTMLElement {
         ctx.clearRect(0, 0, this.Canvas.width, this.Canvas.height);
         ctx.scale(DPR, DPR);
 
-        // Fondo con gradiente
-        const bgGradient = ctx.createLinearGradient(0, 0, 0, cssHeight);
-        bgGradient.addColorStop(0, '#1a1a2e');
-        bgGradient.addColorStop(1, '#16213e');
-        ctx.fillStyle = bgGradient;
-        ctx.fillRect(0, 0, cssWidth, cssHeight);
+        if (this.engine.GameEngine.currentMap?.battleBackgrond != null) {
+            const bgImage = this.engine.GameEngine.currentMap.battleBackgrond;
+
+            // Verificar que la imagen esté cargada
+            if (bgImage.complete && bgImage.naturalWidth > 0) {
+                // Calcular dimensiones manteniendo aspect ratio (modo "cover")
+                const imgAspect = bgImage.naturalWidth / bgImage.naturalHeight;
+                const screenAspect = cssWidth / cssHeight;
+
+                let drawW, drawH, drawX, drawY;
+
+                if (imgAspect > screenAspect) {
+                    // Imagen más ancha: ajustar por altura
+                    drawH = cssHeight;
+                    drawW = drawH * imgAspect;
+                    drawX = (cssWidth - drawW) / 2; // Centrar horizontalmente
+                    drawY = 0;
+                } else {
+                    // Imagen más alta: ajustar por ancho
+                    drawW = cssWidth;
+                    drawH = drawW / imgAspect;
+                    drawX = 0;
+                    drawY = (cssHeight - drawH) / 2; // Centrar verticalmente
+                }
+
+                ctx.drawImage(bgImage, drawX, drawY, drawW, drawH);
+            }
+
+        } else {
+            // Fondo con gradiente
+            const bgGradient = ctx.createLinearGradient(0, 0, 0, cssHeight);
+            bgGradient.addColorStop(0, '#1a1a2e');
+            bgGradient.addColorStop(1, '#16213e');
+            ctx.fillStyle = bgGradient;
+            ctx.fillRect(0, 0, cssWidth, cssHeight);
+
+        }
+
 
         // Línea divisoria entre equipos
         ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
@@ -845,10 +865,10 @@ export class BattleSystem extends HTMLElement {
         return true;
     }
     /**
- * Maneja el click en el canvas para seleccionar objetivos
- * @param {MouseEvent} event 
- * @private
- */
+     * Maneja el click en el canvas para seleccionar objetivos
+     * @param {MouseEvent} event 
+     * @private
+     */
     _handleCanvasClick(event) {
         if (!this.ctx || !this.Canvas) return;
 
@@ -1001,6 +1021,40 @@ export class BattleSystem extends HTMLElement {
         ctx.lineWidth = 1 * cam.zoom;
         ctx.stroke();
 
+        ctx.restore();
+    }
+    /**
+     * Dibuja una sombra elíptica debajo del personaje
+     * @param {CanvasRenderingContext2D} ctx
+     * @param {{x: number, y: number}} pos - Posición en canvas (pies del personaje)
+     * @param {Camera} cam - Cámara de batalla para aplicar zoom
+     * @private
+     */
+    _drawShadow(ctx, pos, cam) {
+        ctx.save();
+
+        // === Configuración de la sombra ===
+        const shadowWidth = this.cellWidth  * 0.55 * cam.zoom;
+        const shadowHeight = this.cellHeight  * 0.18 * cam.zoom;
+        
+        // 👉 ESCALAR contexto para que el gradiente radial se adapte a la elipse
+        ctx.scale(1, shadowHeight / shadowWidth); // 👈 Clave: comprime Y para que el radial parezca elíptico
+        
+        // === Gradiente radial AHORA se ve elíptico por el scale ===
+        const gradient = ctx.createRadialGradient(
+            0, 0, 0,
+            0, 0, shadowWidth  // 👈 Radio basado en el ancho (antes del scale)
+        );
+        gradient.addColorStop(0, 'rgba(0, 0, 0, 0.5)');
+        gradient.addColorStop(0.6, 'rgba(0, 0, 0, 0.15)');
+        gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+        
+        // === Dibujar elipse (ahora círculo por el scale, pero visualmente elipse) ===
+        ctx.beginPath();
+        ctx.ellipse(0, 0, shadowWidth, shadowWidth, 0, 0, Math.PI * 2); // 👈 Usar shadowWidth en ambos ejes
+        ctx.fillStyle = gradient;
+        ctx.fill();
+        
         ctx.restore();
     }
 

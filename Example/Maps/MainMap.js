@@ -103,6 +103,7 @@ const ciudad1 = new GameMap('Ciudad1', 64, 36, {
     //const ciudad1 = new GameMap('Ciudad1', 46, 27, {
     spawnX: 23,   // Punto de inicio del jugador
     spawnY: 16,
+    battleBackgrond:  getAsset("City1/battleBg.png"), 
     bgColor: '#666', // Calle gris
     NPCs: [npc1, DanaCharacter], // <-- Aquí se pasan los NPCs desde la creación
     backgroundImage: getAsset("City1/map1.png")
@@ -1114,7 +1115,7 @@ const screanOptions = [
         }
     }, {
         name: "Continuar", startGame: false, action: (/** @type {GameStartScreen} */ screenView) => {
-            saveSystem.showSaveLoadScreen(true);
+            saveSystem.showSaveLoadScreen(true, ()=> { new GameMenu().Connect() });
         }
     }, {
         name: "Test 2", startGame: true, action: () => {

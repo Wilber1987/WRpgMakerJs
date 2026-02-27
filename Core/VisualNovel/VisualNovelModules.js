@@ -3,6 +3,10 @@ const translate = JSON.parse(localStorage.getItem("translate") ?? "[]");
 
 const domainUrl = "./Media";
 export class Scene {
+    /**
+     * @param {string} url
+     * @param {undefined} [audio]
+     */
     static Show(url, audio, loopAudio = true, isAffectedByTime = false) {
         return {
             type: "scene",
@@ -12,6 +16,10 @@ export class Scene {
             loopAudio
         };
     }
+    /**
+     * @param {any} url
+     * @param {any} audio
+     */
     static ShowV(url, audio, loopScene = true, loopAudio = true) {
         return {
             type: "scene",
@@ -95,7 +103,7 @@ export class Flow {
         if (config?.position?.heightPercent) {
             console.log(config);
         }
-        const translated = translate.find(x => x.old == text)?.new;
+        const translated = translate.find((/** @type {{ old: string; }} */ x) => x.old == text)?.new;
         return {
             text: translated ?? text,
             action,
@@ -123,6 +131,11 @@ export class Flow {
         return { type: "choice", options };
     }
 
+    /**
+     * @param {any} condition
+     * @param {any} thenBlock
+     * @param {any} [elseBlock]
+     */
     static If(condition, thenBlock, elseBlock = []) {
         return { type: "if", condition, then: thenBlock, else: elseBlock };
     }
@@ -229,6 +242,7 @@ export class MapScene {
      * @param {any[]} Options
      * @param {{ type: string; audio: string | null; loopAudio: boolean; }} audio
      */
+    // @ts-ignore
     static Go(MapName, Options, OptionalsMenus = [], audio, isAffectedByTime = false, aditionalBlocks = []) {
         //Options?.forEach();
         return [
@@ -244,6 +258,13 @@ export class MapScene {
 const roomBack = Flow.Action("", [Flow.Jump('MainMap')], { typeMenu: "TAB", icon: "Icons/map" });
 
 export class RoomScene {
+    /**
+     * @param {string} RoomName
+     * @param {any} Commands
+     * @param {any[]} Options
+     * @param {undefined} audio
+     * @param {boolean | undefined} isAffectedByTime
+     */
     static Go(RoomName, Commands, Options, audio, isAffectedByTime) {
         Options?.forEach(option => {
             if (!option.position) {
