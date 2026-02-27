@@ -1,9 +1,11 @@
 //@ts-check
-import { CharacterModel } from "./CharacterModel.js";
-import { ComponentsManager, html } from "../WDevCore/WModules/WComponentsTools.js";
-import { css } from "../WDevCore/WModules/WStyledRender.js";
-import { WCarousel } from "../WDevCore/WComponents/UIComponents/WCarousel.js";
+import { CharacterModel } from "../CharacterModel.js";
+import { ComponentsManager, html } from "../../WDevCore/WModules/WComponentsTools.js";
+import { css } from "../../WDevCore/WModules/WStyledRender.js";
+import { WCarousel } from "../../WDevCore/WComponents/UIComponents/WCarousel.js";
+import { CharacterContainer } from "./CharacterContainer.js";
 
+const domainUrl = "./Media";
 class CharacterDetailView extends HTMLElement {
 
     /**
@@ -54,8 +56,9 @@ class CharacterDetailView extends HTMLElement {
                             <div class="skills-list">
                                 ${Skills.map(skill => html`<div class="skill-item">
                                     <div class="skill-header">
+                                        <img src="${skill.icon}"/>
                                         <span class="skill-name">${skill.name}</span>
-                                        <span class="skill-level">Nivel ${skill.level}</span>
+                                        <span class="skill-level">Target: ${skill.numberTargets}</span>
                                     </div>
                                     <div class="skill-description">${skill.description}</div>
                                 </div>`)}
@@ -86,11 +89,13 @@ class CharacterDetailView extends HTMLElement {
 
     GetSprites() {
         return new WCarousel(Object.keys(this.Character.Sprites)
+            .filter(prop => prop == "Normal")
             // @ts-ignore
-            .filter(prop => typeof this.Character.Sprites[prop] === "string")
+            .filter(prop => typeof this.Character.Sprites[prop] === "string" || Array.isArray(this.Character.Sprites[prop]))
             .map(
                 // @ts-ignore
-                prop => html`<img src="Media/${this.Character.Sprites[prop]}.png">`
+                prop => new CharacterContainer(this.Character.Name,
+                     this.Character.Sprites[prop].map((/** @type {String} */ img) => `${domainUrl}/${img}`))
             ));
     }
 
@@ -111,15 +116,17 @@ class CharacterDetailView extends HTMLElement {
             background-color: #fff;
             display: block;
             height:100vh;
+            font-family: system-ui;
         }
         .character-detail-view{
             display: block;
             display: grid;
             position: relative;
-            grid-template-columns:  1fr 2fr;
+            grid-template-columns:  40% 60%;
             .character-sprite {
                 height: 100vh;
                 width: 100%;
+                background-color:#010b10;
             }
         }
         .character-detail {
@@ -203,14 +210,24 @@ class CharacterDetailView extends HTMLElement {
         
         .skill-item {
             background: rgba(255, 255, 255, 0.1);
-            border-radius: 6px;
-            padding: 12px;
+            border-radius: 10px;
+            border: 1px solid #d3d3d3;
+            margin: 5px;
         }
         
         .skill-header {
             display: flex;
-            justify-content: space-between;
-            margin-bottom: 5px;
+            gap: 20px;
+            border-bottom: 1px solid #d3d3d3;
+            padding: 15px;
+            img {
+                min-height: 80px;
+                min-width: 80px;
+                height: 80px;
+                width: 80px;
+                border-radius: 50%;
+                box-shadow: 0 0 5px 0 #292929;
+            }
         }
         
         .skill-name {
@@ -223,7 +240,8 @@ class CharacterDetailView extends HTMLElement {
         }
         
         .skill-description {
-            font-size: 14px;
+            padding: 15px;
+            font-size: 16px;
             color: #293442;
         }
         
@@ -277,8 +295,8 @@ class CharacterDetailView extends HTMLElement {
             right: 15px;
             background: #4a5568;
             color: white;
-            width: 30px;
-            height: 30px;
+            width: 40px;
+            height: 40px;
             border-radius: 50%;
             display: flex;
             align-items: center;

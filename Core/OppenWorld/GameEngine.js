@@ -4,6 +4,7 @@ import { clamp, DPR, OpenWorldEngineView, TILE_SIZE } from "./OpenWorldEngineVie
 import { Camera } from "./Camera.js";
 import { GameMap } from "./OpenWordModules/Models.js";
 import { BattleSystem } from "./BattleModule/BattleSystem.js";
+import { vnEngine } from "../VisualNovel/VisualNovelEngine.js";
 
 /**
  * @typedef {Object} MapObject
@@ -69,7 +70,7 @@ import { BattleSystem } from "./BattleModule/BattleSystem.js";
 // Engine
 // --------------------------------------------------
 export class GameEngine {
-   
+
     /**
     * @param {OpenWorldEngineView} openWorldInstance
     */
@@ -81,7 +82,11 @@ export class GameEngine {
         /**@type {GameMap | null} */
         this.currentMap = null;
         /** @type {CharacterModel} */
-        this.SelectedCharacter = openWorldInstance.Config?.character ?? new CharacterModel();
+        this.SelectedCharacter = openWorldInstance.character ?? new CharacterModel();
+
+        /** @type {CharacterModel[]} */
+        this.Characters = openWorldInstance.Characters ?? [];
+
         /** @type {Camera} */
         this.cam = new Camera(100, 100);
         /** @type {Object.<string, boolean>} */
@@ -144,6 +149,7 @@ export class GameEngine {
      * @param {{x: number, y: number}} [pos] - La posición (x, y) opcional para el personaje en el nuevo mapa. Si no se proporciona, usa el spawn del mapa.
      */
     GoToMap(name, pos) {
+        this.RegisterCharacter(this.SelectedCharacter)
         const target = this.maps[name];
         if (!target) { console.warn('Mapa no encontrado:', name); return; }
         this.currentMap = target;
@@ -175,8 +181,6 @@ export class GameEngine {
         this.cam.y = this.SelectedCharacter.y;
 
         this._setState(`Entró a: ${target.name}`);
-
-
     }
 
     /**
@@ -367,6 +371,7 @@ export class GameEngine {
      */
     draw() {
         const canvas = /** @type {HTMLCanvasElement | null | undefined} */(this.OpenWorldInstance.shadowRoot?.querySelector('#view'));
+        this.OpenWorldInstance.SetTimeClass();
         if (!canvas) return; // Add null check for canvas
 
         const ctx = /** @type {CanvasRenderingContext2D | null | undefined} */(canvas.getContext('2d'));
@@ -436,9 +441,10 @@ export class GameEngine {
         this.SelectedCharacter.draw(ctx, this.cam);
         // HUD text
         if (this.hud) { // Add null check for hud
-            this.hud.innerText = `Pos: ${Character.x.toFixed(2)}, ${Character.y.toFixed(2)}
-                        Map: ${this.currentMap?.name} • Zoom: ${this.cam.zoom.toFixed(2)}
-                        Overlaps: ${this.overlaps.size}`;
+            this.hud.innerText = `Time: ${vnEngine.TimeSystem.currentTime}
+                Pos: ${Character.x.toFixed(2)}, ${Character.y.toFixed(2)}
+                Map: ${this.currentMap?.name} • Zoom: ${this.cam.zoom.toFixed(2)}
+                Overlaps: ${this.overlaps.size}`;
         }
         // minimap
         this._drawMinimap();
@@ -448,7 +454,8 @@ export class GameEngine {
 
         // HUD text (ya existe)
         if (this.hud) { // Add null check for hud
-            this.hud.innerText = `Pos: ${Character.x.toFixed(2)}, ${Character.y.toFixed(2)}
+            this.hud.innerText = `Time: Hora: ${vnEngine.TimeSystem.getFormattedHour()} | Día: ${vnEngine.TimeSystem.currentTime.day} (${vnEngine.TimeSystem.currentTime.weekDay}) |  Temporada: ${vnEngine.TimeSystem.currentTime.season}
+                    Pos: ${Character.x.toFixed(2)}, ${Character.y.toFixed(2)}
                     Map: ${this.currentMap?.name} • Zoom: ${this.cam.zoom.toFixed(2)}
                     Overlaps: ${this.overlaps.size}
                     ${this.alertVisible ? '💡 Z para interactuar' : ''}`;
@@ -539,7 +546,7 @@ export class GameEngine {
      * @param {NPC} npc - El objeto NPC a agregar.
      */
     addNPC(npc) {
-        
+
         // Importante: NO crear una copia superficial, usar el mismo objeto NPC
         // o crear una instancia adecuada que mantenga las referencias a sprites
         const npcInstance = npc;
@@ -920,5 +927,15 @@ export class GameEngine {
             this.keys = {};
             this.resume();
         });
+    }
+
+    /**
+    * @param {CharacterModel} character 
+    */
+    RegisterCharacter(character) {
+        if (this.Characters.some(chara => chara == character)) {
+            return;
+        }
+        this.Characters.push(character);
     }
 }

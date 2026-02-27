@@ -1,7 +1,7 @@
 //@ts-check
-import { CharacterContainer } from "../Common/CharacterContainer.js";
+import { CharacterContainer } from "../Common/UIComponents/CharacterContainer.js";
 import { CharacterModel } from "../Common/CharacterModel.js";
-import { CharacterView } from "../Common/CharacterView.js";
+import { CharacterManagerView } from "../Common/UIComponents/CharacterManagerView.js";
 import { SaveSystem } from "../Common/SaveSystem.js";
 import { TimeSystem } from "../Common/TimeSystem.js";
 import { WAlertMessage } from "../WDevCore/WComponents/WAlertMessage.js";
@@ -170,6 +170,7 @@ export class VisualNovelEngine {
      * @param {string | number} sceneName - El nombre de la escena a iniciar.
      */
     startScene(sceneName) {
+        this.active = true;
         this.UI.Connect()
         this.jumpTriggered = true;
         // Limpiar variables temporales
@@ -191,6 +192,7 @@ export class VisualNovelEngine {
      * Desconecta la interfaz de usuario de la novela visual.
      */
     Disconnect() {
+        this.active = false;
         this.UI.Disconnect();
     }
 
@@ -1201,7 +1203,7 @@ export class VisualNovelEngine {
     CharacterView() {
         if (!this.uiElements.characterView) return;
         this.uiElements.characterView.innerHTML = "";
-        this.uiElements.characterView.appendChild(new CharacterView(this.Characters));
+        this.uiElements.characterView.appendChild(new CharacterManagerView(this.Characters));
     }
     /**
      * Registra un nuevo personaje en el motor de la novela visual.

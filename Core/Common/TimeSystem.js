@@ -65,7 +65,9 @@ export class TimeSystem {
         this.currentTime.weekDay = this.weekDays[newWeekIndex];
         this.currentTime.season = this.calculateSeason(); // Opcional
         this.vnEngine.clearMenus();
-        this.vnEngine.startScene(this.vnEngine.currentScene);
+        if (this.vnEngine.UI.isConnected) {
+            this.vnEngine.startScene(this.vnEngine.currentScene);
+        }       
     }
 
     get hour() { return this.currentTime.hour; }

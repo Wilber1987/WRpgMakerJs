@@ -537,8 +537,8 @@ export class BattleSystem extends HTMLElement {
     }
 
     /**
-     * @param {CharacterModel[]} party
      * @param {CharacterModel[]} enemies
+     * @param {CharacterModel[]} party    
      */
     async startBattle(party, enemies) {
         this.InitProps();
@@ -630,7 +630,7 @@ export class BattleSystem extends HTMLElement {
     showSkills(combatant) {
         this.skillButtonsEl.innerHTML = '';
         combatant.Skills.forEach((/** @type {SkillModel} */ skill) => {
-            const button = html`<img class='skill-btn ${skill.actualColdown > 0 ? "disabled" : ""}' alt="${skill.name}" src="${skill.icon}" 
+            const button = html`<img class='skill-btn ${skill.actualCooldown > 0 ? "disabled" : ""}' alt="${skill.name}" src="${skill.icon}" 
                 onclick="${() => {
                     // @ts-ignore
                     if (button.disabled) {
@@ -688,7 +688,7 @@ export class BattleSystem extends HTMLElement {
             const verify = this.verifyBattleState();
             if (verify) {
                 setTimeout(() => {
-                    user.Skills.forEach(skill => skill.reduceColdDown());
+                    user.Skills.forEach(skill => skill.reduceCooldDown());
                     this.startNextTurn();
                 }, 1000);
             }
@@ -721,7 +721,7 @@ export class BattleSystem extends HTMLElement {
             }
 
         } else {
-            this.logBattleMessage(`¡${skill.name} en coldDown, ${skill.actualColdown}!`);
+            this.logBattleMessage(`¡${skill.name} en coldDown, ${skill.actualCooldown}!`);
         }
     }
 

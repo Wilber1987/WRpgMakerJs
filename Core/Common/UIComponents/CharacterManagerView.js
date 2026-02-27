@@ -1,17 +1,17 @@
 //@ts-check
-import { CharacterModel } from "./CharacterModel.js";
-import { ComponentsManager, html } from "../WDevCore/WModules/WComponentsTools.js";
-import { css } from "../WDevCore/WModules/WStyledRender.js";
+import { CharacterModel } from "../CharacterModel.js";
+import { ComponentsManager, html } from "../../WDevCore/WModules/WComponentsTools.js";
+import { css } from "../../WDevCore/WModules/WStyledRender.js";
 import { CharacterCard } from "./CharacterCard.js";
 
-class CharacterView extends HTMLElement {
+export class CharacterManagerView extends HTMLElement {
 
     /**
      * @param {CharacterModel[]} Characters
      */
     constructor(Characters) {
         super();
-        this.Characters = Characters.filter(char => char.isFemale);
+        this.Characters = Characters;
         this.append(this.CustomStyle);
         this.Draw();
     }
@@ -35,6 +35,13 @@ class CharacterView extends HTMLElement {
         this.append(content)
     }
 
+    Connect() {
+        ComponentsManager.modalFunction(this);
+        if (!this.isConnected) {
+            document.body.append(this);
+        }
+    }
+
     update() {
         this.Draw();
     }
@@ -47,11 +54,12 @@ class CharacterView extends HTMLElement {
             left: 0;
             right: 0;
             bottom: 0;
-            z-index: 10001;
+            z-index: 10002;
             transition: all 1s;
             background-color: #fff;
             display: block;
-            height:100vh;
+            height:100vh;            
+            font-family: system-ui;
         }
         .character-view {  
             .characters-container {
@@ -68,8 +76,8 @@ class CharacterView extends HTMLElement {
             right: 15px;
             background: #4a5568;
             color: white;
-            width: 30px;
-            height: 30px;
+            width: 40px;
+            height: 40px;
             border-radius: 50%;
             display: flex;
             align-items: center;
@@ -81,5 +89,4 @@ class CharacterView extends HTMLElement {
         }
      `
 }
-customElements.define('w-character-view', CharacterView);
-export { CharacterView  }
+customElements.define('w-character-view', CharacterManagerView);

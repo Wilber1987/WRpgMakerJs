@@ -357,13 +357,14 @@ body {
 }
 
 .save-slot {
-  background-color: #222;
-  color: white;
-  padding: 10px;
-  border-radius: 8px;
-  text-align: center;
-  cursor: pointer;
-  transition: all 0.2s ease;
+    background-color: #222;
+    color: white;
+    border-radius: 8px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    height: 180px;
+    overflow: hidden;
 }
 
 .save-slot:hover {

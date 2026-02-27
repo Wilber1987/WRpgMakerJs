@@ -62,7 +62,7 @@ export class VisualNovelView extends HTMLElement {
         }
     }
     ComponentStyle = css`
-      w-novel-view {
+        w-novel-view {
             position: absolute;
             opacity: 0;
             pointer-events: none;
@@ -382,7 +382,7 @@ export class VisualNovelView extends HTMLElement {
 
         .choice-button {
           padding: 12px 20px;
-          background: rgba(0, 0, 0, 0.7);
+          background: rgba(0, 0, 0, 0.3);
           color: white;
           border: none;
           border-radius: 5px;
@@ -397,7 +397,7 @@ export class VisualNovelView extends HTMLElement {
           display: flex;
           flex-direction: column;
           gap: 8px;
-          background-color: rgba(0, 0, 0, 0.7);
+          background-color: rgba(0, 0, 0, 0.3);
           padding: 10px;
           border-radius: 8px;
           z-index: 1000;

@@ -1,9 +1,11 @@
 //@ts-check
 
 import { CharacterModel } from "../../Core/Common/CharacterModel.js";
+import { GameMenu } from "../../Core/Common/UIComponents/GameMenu.js";
+import { GameStartScreen } from "../../Core/OppenWorld/OpenWordModules/GameStartScreen.js";
 import { BlockObject, GameMap } from "../../Core/OppenWorld/OpenWordModules/Models.js";
 import { OpenWorldEngineView } from "../../Core/OppenWorld/OpenWorldEngineView.js";
-import { vnEngine } from "../../Core/VisualNovel/VisualNovelEngine.js";
+import { saveSystem, vnEngine } from "../../Core/VisualNovel/VisualNovelEngine.js";
 import { Dialogue, Flow, Scene } from "../../Core/VisualNovel/VisualNovelModules.js";
 import { Alexandra } from "../Characters/AlexandraCharacter.js";
 import { DanaCharacter } from "../Characters/DanaCharacter.js";
@@ -13,9 +15,6 @@ const getAsset = (/** @type {string} */ asset) => "./Media/assets/Maps/" + asset
 
 const npc1 = new CharacterModel({
     Name: "Mage",
-    Sprites: {
-        Normal: Array.from({ length: 33 }, (_, i) => `assets/sprites/Mage/Normal/${i}.png`)
-    },
     SpritesFrames: {
         //idle: 33,
         battle: 25,
@@ -36,6 +35,41 @@ const npc1 = new CharacterModel({
         }
     ]
 });
+/*
+    oppenWorldEngine.RegisterCharacter(DanaCharacter);
+    DanaCharacter.partyPosition = 1;
+*/
+DanaCharacter.MapData.push(
+    {
+        name: "Ciudad1", posX: 25, posY: 12, action: () => {
+            vnEngine.startScene("danaJoinHistory");
+        }
+    }
+)
+
+vnEngine.defineScene("danaJoinHistory", [
+    Scene.Show("assets/Maps/City1/scene1.png"),
+    DanaCharacter.Show(),
+    Flow.Choice([
+        Flow.Action("Saludar", [
+            Alexandra.Say("Hola"),
+            DanaCharacter.Say("Hola"),
+            () => vnEngine.Disconnect()
+        ]),
+        Flow.Action("Solicitar que se una al equipo", [
+            Alexandra.Say("Hola, escuche que necesitas un equipo"),
+            DanaCharacter.Say("Si yo estoy buscando equipo"),
+            Alexandra.Say("Excelente, unete ami"),
+            DanaCharacter.Say("Claro"),
+            DanaCharacter.SetVar("Join", true),
+            () => {
+                oppenWorldEngine.RegisterCharacter(DanaCharacter);
+                DanaCharacter.partyPosition = 1;
+                vnEngine.Disconnect()
+            }
+        ], { render: Flow.Var("DanaJoin", "==", false)})
+    ])
+]);
 
 
 
@@ -57,7 +91,9 @@ vnEngine.defineScene("npc1Chat", [
     ])
 ]);
 
-const oppenWorld = new OpenWorldEngineView({
+
+
+const oppenWorldEngine = new OpenWorldEngineView({
     character: Alexandra
 });
 
@@ -68,7 +104,7 @@ const ciudad1 = new GameMap('Ciudad1', 64, 36, {
     spawnX: 23,   // Punto de inicio del jugador
     spawnY: 16,
     bgColor: '#666', // Calle gris
-    NPCs: [npc1], // <-- Aquí se pasan los NPCs desde la creación
+    NPCs: [npc1, DanaCharacter], // <-- Aquí se pasan los NPCs desde la creación
     backgroundImage: getAsset("City1/map1.png")
 });
 
@@ -1002,19 +1038,14 @@ ciudad1.addObject(new BlockObject(15, 26, 1, 1, {
 
 // Pero como tu fondo ya es gris, quizás solo necesites dejar espacios libres.
 // --- Añadir el mapa al motor ---
-oppenWorld.AddMap(ciudad1);
+oppenWorldEngine.AddMap(ciudad1);
 
 // --- Ir al mapa ---
 //oppenWorld.GoToMap("Ciudad1");
 
 //#region SIMULADOR DE BATALLA
 const battle = () => {
-    // Crear grupo de prueba
-    const party = [
-        DanaCharacter,
-        npc1,
-        Alexandra
-    ];
+
     // Crear enemigos de prueba
     const enemies = [
         new CharacterModel({
@@ -1027,7 +1058,7 @@ const battle = () => {
             },
             isEnemy: true,
             SpritesFrames: { attack: 25 },
-            Skills: [oppenWorld.GameEngine.battleSystem.createBasicAttack()]
+            Skills: [oppenWorldEngine.GameEngine.battleSystem.createBasicAttack()]
         }),
         new CharacterModel({
             Name: "goblin",
@@ -1039,7 +1070,7 @@ const battle = () => {
             },
             SpritesFrames: { attack: 25 },
             isEnemy: true,
-            Skills: [oppenWorld.GameEngine.battleSystem.createBasicAttack()]
+            Skills: [oppenWorldEngine.GameEngine.battleSystem.createBasicAttack()]
         }),
         new CharacterModel({
             Name: "goblin",
@@ -1051,17 +1082,60 @@ const battle = () => {
             },
             SpritesFrames: { attack: 25 },
             isEnemy: true,
-            Skills: [oppenWorld.GameEngine.battleSystem.createBasicAttack()]
+            Skills: [oppenWorldEngine.GameEngine.battleSystem.createBasicAttack()]
         })
     ];
 
+    // Crear grupo de prueba
+    /*ejemplo: const party = [
+        DanaCharacter,
+        npc1,
+        Alexandra
+    ]; */
+    npc1.partyPosition = 0;
+    Alexandra.partyPosition = 3;
+    const partyDePrueba = oppenWorldEngine.GetParty(npc1);
+    console.log(partyDePrueba);
+    
     // Iniciar batalla
-    oppenWorld.GameEngine.battleSystem.startBattle(party, enemies);
+    /** es posible iniciar la batalla sin especificar el equipo de combate 
+     * de esta forma "oppenWorldEngine.StartBattle(enemies);" esto tomara por defecto el
+     * los personajes que tengan asignado posicion en el equipo y que esten registrados
+     * "oppenWorldEngine.RegisterCharacter(DanaCharacter);" con la propiedad "partyPosition = n" */
+    oppenWorldEngine.StartBattle(enemies, partyDePrueba);
 
 }
 //#endregion
-
+const screanOptions = [
+    {
+        name: "New Game", startGame: true, action: () => {
+            oppenWorldEngine.GoToMap("Ciudad1")
+            new GameMenu().Connect()
+        }
+    }, {
+        name: "Continuar", startGame: false, action: (/** @type {GameStartScreen} */ screenView) => {
+            saveSystem.showSaveLoadScreen(true);
+        }
+    }, {
+        name: "Test 2", startGame: true, action: () => {
+            vnEngine.startScene("start_game");
+        }
+    }
+]
+vnEngine.defineScene("start_game", [
+    Scene.Show("assets/Maps/City1/scene1.png"),
+    DanaCharacter.Say("..."),
+    npc1.ShowR(),
+    npc1.Say("....."),
+    Alexandra.ShowL(),
+    Alexandra.Say("Inicie la aventura"),
+    () => {
+        vnEngine.Disconnect();
+        oppenWorldEngine.GoToMap("Ciudad1");
+        new GameMenu().Connect();
+    }
+]);
 // --- Crear NPC's ---
 export const goToCity1 = () => {
-    oppenWorld.Start();// lo envia al primer mapa registrado
+    oppenWorldEngine.Start(screanOptions);// lo envia al primer mapa registrado
 }

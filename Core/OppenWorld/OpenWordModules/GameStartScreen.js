@@ -10,6 +10,7 @@ export class GameStartScreen extends HTMLElement {
     /**
      * @typedef {Object} GameStartScreenConfig 
         * @property {OpenWorldEngineView} OpenWorldEngine objeto
+        * @property {{ name: string; action: () => void; startGame: boolean? }[]} screenOptions
     **/
     /**
      * @param { GameStartScreenConfig } Config
@@ -18,6 +19,7 @@ export class GameStartScreen extends HTMLElement {
         super();
         this.Config = Config
         this.gameEngine = this.Config.OpenWorldEngine.GameEngine;
+        this.screenOptions = Config.screenOptions;
         this.attachShadow({ mode: 'open' });
         this.initializeComponent();
     }
@@ -37,8 +39,10 @@ export class GameStartScreen extends HTMLElement {
         this.saveBtn = html`<button class="menu-button save" 
             onclick="${() => this.handleSaveGame()}">SAVE GAME</button>`;
 
-        this.optionsBtn = html`<button class="menu-button options" 
-            onclick="${() => this.handleOpenOptions()}">OPTIONS</button>`;
+        //this.optionsBtn = html`<button class="menu-button options" 
+        //    onclick="${() => this.handleOpenOptions()}">OPTIONS</button>`;
+        
+        const colors = ["#52b641", "#52b641", "#52b641", "#52b641", "#52b641", "#52b641", "#52b641"]
 
         // Crear estructura HTML
         const container = html`<div class="container banner-body">
@@ -47,10 +51,9 @@ export class GameStartScreen extends HTMLElement {
             <div class="options-container">
                 <h1 class="game-title">OPEN WORLD ENGINE</h1>
                 <div class="menu-container">
-                    ${this.newGameBtn}
-                    ${this.continueBtn}
-                    ${this.saveBtn}
-                    ${this.optionsBtn}
+                    ${this.screenOptions.map((option, index) => html`<button class="menu-button" 
+                        style="background-color: ${colors[index]}"
+                        onclick="${() => this.handleOpenOptions(option.action, option.startGame ?? true)}">${option.name}</button>`)}
                 </div>  
             </div>            
             <div class="version-info">v1.0.0</div>
@@ -63,6 +66,7 @@ export class GameStartScreen extends HTMLElement {
 
     // Handlers para los botones
     handleNewGame() {
+        this.Config.OpenWorldEngine?.StartEngine()
         this.hide()
         this.setupGameEngineIntegration()
     }
@@ -74,7 +78,16 @@ export class GameStartScreen extends HTMLElement {
     handleSaveGame() {
     }
 
-    handleOpenOptions() { }
+    /**
+     * @param {Function} action
+     * @param {boolean} [start]
+     */
+    handleOpenOptions(action, start = true) {     
+        if (start) {            
+            this.hide()
+        }   
+        action(this)
+    }
 
     // Métodos públicos para control externo
 
@@ -101,7 +114,6 @@ export class GameStartScreen extends HTMLElement {
         const firstMap = Object.keys(this.Config.OpenWorldEngine.GameEngine.maps)[0]
         this.Config.OpenWorldEngine?.StartEngine()
         this.Config.OpenWorldEngine?.GoToMap(firstMap);
-
     }
 
     Style = css`
@@ -172,7 +184,7 @@ export class GameStartScreen extends HTMLElement {
             border-radius: 8px;
             cursor: pointer;
             transition: all 0.3s ease;
-            background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
+            //background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
             color: #fff;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
             text-align: center;
@@ -180,7 +192,7 @@ export class GameStartScreen extends HTMLElement {
         }
 
         .menu-button:hover {
-            background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
+            //background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
             transform: translateY(-2px);
             box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
         }

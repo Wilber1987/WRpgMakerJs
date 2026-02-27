@@ -1,6 +1,6 @@
 //@ts-check
-import { ComponentsManager, html } from "../WDevCore/WModules/WComponentsTools.js";
-import { css } from "../WDevCore/WModules/WStyledRender.js";
+import { ComponentsManager, html } from "../../WDevCore/WModules/WComponentsTools.js";
+import { css } from "../../WDevCore/WModules/WStyledRender.js";
 
 export class CharacterContainer extends HTMLElement {
     /**
@@ -17,7 +17,7 @@ export class CharacterContainer extends HTMLElement {
         this.character = character;
         this.position = position;
         this.options = {
-            fps: options.fps ?? 6,
+            fps: options.fps ?? 25,
             loop: options.loop ?? true,
             state: options.state ?? 'idle'
         };
@@ -64,6 +64,8 @@ export class CharacterContainer extends HTMLElement {
      */
     Draw = async (character, imageUrl, position = "center") => {
         const imgElement = html`<img src="${imageUrl}" class="character ${position}" alt="${character}" />`;
+        /**@type {HTMLImageElement} */
+        // @ts-ignore
         this.imgElement = imgElement;
         this.append(imgElement);
     }
@@ -89,7 +91,7 @@ export class CharacterContainer extends HTMLElement {
             this.startAnimation();
         } else if (frames.length > 0) {
             this._updateFrame(frames[0]);
-        }
+        } 
     }
 
     /**
@@ -115,7 +117,6 @@ export class CharacterContainer extends HTMLElement {
         this.lastTimestamp = 0;
         this._animate(this.lastTimestamp);
     }
-
     /**
      * Detiene la animación
      */
@@ -126,14 +127,12 @@ export class CharacterContainer extends HTMLElement {
             this.animationId = null;
         }
     }
-
     /**
      * Pausa la animación
      */
     pauseAnimation() {
         this.isPlaying = false;
     }
-
     /**
      * Reanuda la animación
      */
@@ -159,7 +158,9 @@ export class CharacterContainer extends HTMLElement {
 
         if (this.animTimer >= this.frameTime) {
             this.animTimer -= this.frameTime;
+            // @ts-ignore
             this.currentFrame = (this.currentFrame + 1) % this.spriteFrames.length;
+            // @ts-ignore
             this._updateFrame(this.spriteFrames[this.currentFrame]);
         }
 
@@ -185,8 +186,10 @@ export class CharacterContainer extends HTMLElement {
      * @param {number} frameIndex
      */
     goToFrame(frameIndex) {
+        // @ts-ignore
         if (frameIndex >= 0 && frameIndex < this.spriteFrames.length) {
             this.currentFrame = frameIndex;
+            // @ts-ignore
             this._updateFrame(this.spriteFrames[frameIndex]);
         }
     }
@@ -212,6 +215,7 @@ export class CharacterContainer extends HTMLElement {
         w-character-container { 
             opacity: 0; 
             transition: all 1s; 
+            font-family: system-ui;
         }
         
         w-character-container.visible {

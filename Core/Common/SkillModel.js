@@ -1,27 +1,42 @@
+//@ts-check
 import { CharacterModel } from "./CharacterModel.js";
+import { CharacterRegistry } from "./CharacterRegistry.js";
+import { SkillRegistry } from "./SkillRegistry.js";
 
-export class SkillModel {    
+export class SkillModel {
+    static _registeredClasses = new Set();
     /**
     * @param {Partial<SkillModel>} props 
     */
     constructor(props) {
+         /**@type {String} */
         this.name = props.name ?? "Basic Attack";
+        /**@type {String} */
         this.icon = `./Media/assets/sprites/skills/${props.icon ?? "basic_attack"}.png`;
-        this.actualColdown = 0;
-        this.coldown = this.coldown ?? 0;
+        this.actualCooldown = 0;
+        this.cooldown = this.cooldown ?? 0;
+        /**@type {Function} */
         this.calculateDamage = props.calculateDamage ?? this.basicSkill();
         /**@type {Number} */
-        this.numberTargets = props.numberTargets ?? 1; 
+        this.numberTargets = props.numberTargets ?? 1;
         /**@type {HTMLImageElement[]} */
         this.spriteSkillAnimation = props.spriteSkillAnimation ?? [];
+        /**@type {String} */
+        this.description = props.description ?? "Ataque";
+        // 🔥 Auto-registro UNA VEZ por tipo de clase
+        const className = this.constructor.name;
+        if (!SkillModel._registeredClasses.has(className)) {            
+            // @ts-ignore
+            SkillRegistry.register(className, this.constructor);
+            SkillModel._registeredClasses.add(className);
+        }
     }
 
-    excute( 
+    excute(
         /** @type {CharacterModel} */ user,
-        /** @type {CharacterModel} */ target)
-    {
-        if (this.actualColdown == 0) {            
-            this.actualColdown = this.coldown;
+        /** @type {CharacterModel} */ target) {
+        if (this.actualCooldown == 0) {
+            this.actualCooldown = this.cooldown;
             return this.calculateDamage(user, target);
         } else {
             return undefined;
@@ -37,14 +52,14 @@ export class SkillModel {
         }
     }
 
-    reduceColdDown() {
-        this.actualColdown--;
-        if (this.actualColdown < 0) {
+    reduceCooldDown() {
+        this.actualCooldown--;
+        if (this.actualCooldown < 0) {
             this.reset()
         }
     }
 
     reset() {
-        this.actualColdown = 0;
+        this.actualCooldown = 0;
     }
 }

@@ -11,9 +11,9 @@ class AlexandraCharacter extends CharacterModel {
         // @ts-ignore
         props.SpritesFrames = { attack : 100 }
         props.Stats = {
-            hp: 1500,
-            maxHp: 1500,
-            strength: 100,
+            hp: 30,
+            maxHp: 30,
+            strength: 5,
             speed: 3000,
         }
         super(props)

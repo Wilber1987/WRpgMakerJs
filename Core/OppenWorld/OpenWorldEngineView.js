@@ -5,23 +5,22 @@ import { GameStartScreen } from "./OpenWordModules/GameStartScreen.js";
 import { GameMap } from "./OpenWordModules/Models.js";
 import { ComponentsManager, html, WRender } from "../WDevCore/WModules/WComponentsTools.js";
 import { css } from "../WDevCore/WModules/WStyledRender.js";
+import { saveSystem, vnEngine } from "../VisualNovel/VisualNovelEngine.js";
 
 
 
 class OpenWorldEngineView extends HTMLElement {
-
-
     /**
      * @typedef {Object} ComponentsConfig 
         * @property {CharacterModel} [character] objeto
+        * @property {CharacterModel[]} [Characters]
     **/
     /**
     * @param {ComponentsConfig} [Config] 
     */
     constructor(Config) {
         super();
-        this.Config = Config
-
+        this.Config = Config;
         if (Config?.character) {
             Config?.character.RegisterWordMapCharacter()
         }
@@ -47,7 +46,12 @@ class OpenWorldEngineView extends HTMLElement {
         // @ts-ignore
         this.BattleCanvas = html`<canvas id="battle-canvas"></canvas>`
         this.Draw();
+        
+        this.character = Config?.character
         this.GameEngine = new GameEngine(this);
+        /** @type {CharacterModel[]} */
+        this.Characters = Config?.Characters ?? []
+        saveSystem.openWorldEngine = this
 
     }
     connectedCallback() {
@@ -99,6 +103,28 @@ class OpenWorldEngineView extends HTMLElement {
         resizeCanvas();
         requestAnimationFrame(this.GameEngine.update.bind(this.GameEngine));
     }
+    /** 
+     * @param {CharacterModel[]} aditionalMembers
+     * @returns {CharacterModel[]} 
+     * */    
+    GetParty(...aditionalMembers) {
+        const party = this.GameEngine.Characters.filter(
+            character => character.partyPosition != undefined        
+        )
+        if (party.length == 0) {
+            this.GameEngine.SelectedCharacter.partyPosition = 0;
+            return this.GetParty(...aditionalMembers);
+        }
+        party.push(...aditionalMembers)
+        // @ts-ignore
+        return party.sort((a, b) => a.partyPosition - b.partyPosition);;
+    }
+    /**
+    * @param {CharacterModel} character 
+    */
+    RegisterCharacter(character) {        
+        this.GameEngine.RegisterCharacter(character);
+    }
 
     update() {
         this.Draw();
@@ -134,24 +160,53 @@ class OpenWorldEngineView extends HTMLElement {
      * @param {string} mapName
      */
     GoToMap(mapName) {
+        this.StartEngine()
         this.GameEngine.GoToMap(mapName);
     }
 
-    Start() {
-        this.shadowRoot?.append(new GameStartScreen({ OpenWorldEngine: this }))
+    /**
+     * @param {{ name: string; action: Function; startGame: Boolean?; }[]} screenOptions
+     */
+    Start(screenOptions) {
+        this.screenView = new GameStartScreen({
+            OpenWorldEngine: this,
+            // @ts-ignore
+            screenOptions: screenOptions
+        })
+        this.shadowRoot?.append(this.screenView)
         document.body.append(this)
+    }
+    /**
+     * @param {CharacterModel[]} enemies
+     * @param {CharacterModel[]} [party]    
+     */
+    StartBattle =(enemies, party = this.GetParty())=> {
+        this.GameEngine.battleSystem.startBattle(party, enemies);
+    }
+
+
+    SetTimeClass = () => {
+        const hour = vnEngine.TimeSystem.getCurrentTime().hour;
+        let time = "time-morning"
+        if (hour >= 5 && hour < 15) time = "time-morning";
+        else if (hour >= 15 && hour < 20) time = "time-afternoon";
+        else if (hour >= 20 || hour < 1) time = "time-night";
+        else if (hour >= 1 || hour < 5) time = "time-late-night";
+        this.Canvas.className = time;
     }
 
     CustomStyle = css`
         :root {
             --ui-h: 48px
         }
+        :host {
+            font-family: system-ui;
+        }
 
         html,
         body {
             height: 100%;
-            margin: 0;
-            font-family: Inter, system-ui, Arial
+            margin: 0;            
         }
 
         .app {
@@ -198,7 +253,8 @@ class OpenWorldEngineView extends HTMLElement {
             display: block;
             width: 100%;
             height: 100%;
-            border-radius: 6px
+            border-radius: 6px;
+            transition: all 1s;
         }
 
         #ui {
@@ -208,7 +264,7 @@ class OpenWorldEngineView extends HTMLElement {
             flex-direction: column;
             gap: 12px;
             position: absolute;
-            right: 10px;
+            right: 120px;
             top: 10px;
         }
         /* En OpenWorldEngineView.js - CustomStyle */
@@ -261,6 +317,38 @@ class OpenWorldEngineView extends HTMLElement {
         .stat {
             font-size: 12px
         }
+
+                /* Estado base (mañana - sin cambios) */
+        .time-morning {
+          filter: none;
+        }
+
+        /* Tarde - un poco más cálido y suave */
+        .time-afternoon {
+          filter: 
+            brightness(0.95)
+            contrast(1.05)
+            sepia(0.15)
+            hue-rotate(-10deg);
+        }
+
+        /* Noche - más oscuro y ligeramente azulado */
+        .time-night {
+          filter: 
+            brightness(0.6)
+            contrast(1.1)
+            saturate(0.8)
+            hue-rotate(10deg);
+        }
+
+        /* Muy noche - oscuro profundo con tinte azul */
+        .time-late-night {
+          filter: 
+            brightness(0.4)
+            contrast(1.2)
+            saturate(0.6)
+            hue-rotate(20deg);
+        }
                 
      `
 }
@@ -285,4 +373,6 @@ export function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
  * @param {number} t
  */
 export function lerp(a, b, t) { return a + (b - a) * t; }
+
+//export const oppenWorldEngine = new OpenWorldEngineView();
 

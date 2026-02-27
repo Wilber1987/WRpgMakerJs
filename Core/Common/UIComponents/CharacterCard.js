@@ -1,7 +1,7 @@
 //@ts-check
-import { CharacterModel } from "./CharacterModel.js";
-import { html } from "../WDevCore/WModules/WComponentsTools.js";
-import { css } from "../WDevCore/WModules/WStyledRender.js";
+import { CharacterModel } from "../CharacterModel.js";
+import { html } from "../../WDevCore/WModules/WComponentsTools.js";
+import { css } from "../../WDevCore/WModules/WStyledRender.js";
 import { CharacterDetailView } from "./CharacterDetailView.js";
 
 class CharacterCard extends HTMLElement {
@@ -30,7 +30,7 @@ class CharacterCard extends HTMLElement {
             ${this.CustomStyle}
             <div class="gender-badge">${isFemale ? '♀' : '♂'}</div>                        
             <div class="image-container">
-                <img src="Media/${Sprites.Normal}.png">
+                <img src="./Media/${Sprites.Normal[0]}">
             </div>                        
             <div class="info-container">
                 <div class="name">${Name}</div>                
@@ -46,15 +46,17 @@ class CharacterCard extends HTMLElement {
             border-radius: var(--border-radius);
             box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
             overflow: hidden;
-            transition: transform var(--transition-speed), box-shadow var(--transition-speed);
             display: flex;
             flex-direction: column;
             position: relative;
+            cursor: pointer;
+            transition: all 0.5s;
+            border-radius: 15px;
         }
         
         .card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4);
+            box-shadow:  0 10px 20px rgba(0, 0, 0, 0.4);
         }
         
         .gender-badge {

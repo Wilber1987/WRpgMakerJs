@@ -2,12 +2,14 @@
 
 import { vnEngine } from "../VisualNovel/VisualNovelEngine.js";
 import { Character, Dialogue, Flow } from "../VisualNovel/VisualNovelModules.js";
+import { CharacterRegistry } from "./CharacterRegistry.js";
 import { SkillModel } from "./SkillModel.js";
 
 const translate = JSON.parse(localStorage.getItem("translate") ?? "[]");
 
 let TILE_SIZE = 32;
 export class CharacterModel {
+    static _registeredClasses = new Set();
     /**
      * @param {Partial<CharacterModel>} [props]
      */
@@ -23,10 +25,10 @@ export class CharacterModel {
         //esta propiedad refleja la ruta imagen que debe usar segun cada estado
         /**@type {Object.<string, any>} */
         this.Sprites = {
-            Angry: props?.Sprites?.Angry ?? `assets/sprites/${this.Name}/Angry.png`,
-            Fear: props?.Sprites?.Fear ?? `assets/sprites/${this.Name}/Fear.png`,
-            Happy: props?.Sprites?.Happy ?? `assets/sprites/${this.Name}/Happy.png`,
-            Normal: props?.Sprites?.Normal ?? `assets/sprites/${this.Name}/Normal.png`,
+            Angry: props?.Sprites?.Angry ?? Array.from({ length: 25 }, (_, i) => `assets/sprites/${this.Name}/Angry/${i}.png`),
+            Fear: props?.Sprites?.Fear ?? Array.from({ length: 25 }, (_, i) => `assets/sprites/${this.Name}/Normal/${i}.png`),
+            Happy: props?.Sprites?.Happy ?? Array.from({ length: 25 }, (_, i) => `assets/sprites/${this.Name}/Normal/${i}.png`),
+            Normal: props?.Sprites?.Normal ?? Array.from({ length: 25 }, (_, i) => `assets/sprites/${this.Name}/Normal/${i}.png`),
             idle: { down: [], up: [], left: [], right: [] },
             walk: { down: [], up: [], left: [], right: [] },
             battle: { down: [], up: [], left: [], right: [] },
@@ -91,11 +93,11 @@ export class CharacterModel {
         this.Level = Math.floor(Math.random() * 50) + 1;
         this.Experience = Math.floor(Math.random() * 1000);
         // Inventario simulado
-        /**@type {Array<Object>} */
+        /**@type {Array<{name: string, type: string, rarity: string}>} */
         this.Inventory = props?.Inventory ?? [
-            { name: "Espada", type: "Arma", rarity: "Común" },
-            { name: "Poción de Vida", type: "Consumible", rarity: "Común" },
-            { name: "Amuleto Mágico", type: "Accesorio", rarity: "Raro" }
+            //{ name: "Espada", type: "Arma", rarity: "Común" },
+            //{ name: "Poción de Vida", type: "Consumible", rarity: "Común" },
+            //{ name: "Amuleto Mágico", type: "Accesorio", rarity: "Raro" }
         ];
         /**
          * @type {number | undefined}
@@ -110,7 +112,7 @@ export class CharacterModel {
         /**@type {Number} */
         this.height = props?.height ?? 3;
 
-        // @ts-ignore
+       /**@type {Boolean} */
         this.isEnemy = props?.isEnemy ?? false
         //Object.assign(this, props);
         vnEngine.RegisterCharacter(this);
@@ -119,7 +121,17 @@ export class CharacterModel {
          */
         this.BattleState = undefined;
 
-        this.ChargeBattleSprites()
+        this.ChargeBattleSprites();
+        /**@type {number | undefined} */
+        this.partyPosition = undefined;
+
+        // 🔥 Auto-registro UNA VEZ por tipo de clase
+        const className = this.constructor.name;
+        if (!CharacterModel._registeredClasses.has(className)) {
+            // @ts-ignore
+            CharacterRegistry.register(className, this.constructor);
+            CharacterModel._registeredClasses.add(className);
+        }
     }
 
     RegisterWordMapCharacter = async () => {
@@ -398,3 +410,4 @@ export class CharacterModel {
     }
 
 }
+
