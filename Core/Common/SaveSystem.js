@@ -29,7 +29,8 @@ import { SkillModel } from "./SkillModel.js";
  * @property {string[]} activeCharacters - Lista de personajes actualmente visibles
  * @property {TimeState | null} timeState - Estado del sistema de tiempo
  * @property {string[]} sceneRegistry - Registro de nombres de escenas definidas
- * @property {boolean} active - Estado de actividad del motor VN
+* @property {string} lastBackground - Registro de nombres de escenas definidas
+* @property {boolean} active - Estado de actividad del motor VN
  */
 
 /**
@@ -98,6 +99,7 @@ import { SkillModel } from "./SkillModel.js";
  * @property {string} [map] - Nombre del mapa actual (solo OpenWorld)
  * @property {string | number} [scene] - Nombre de la escena actual (solo VisualNovel)
  * @property {string} [characterName] - Nombre del personaje principal
+ * @property {string} [miniature] - Nombre del personaje principal
  * @property {{x: number, y: number}} [playerPosition] - Posición del jugador
  */
 
@@ -309,7 +311,8 @@ export class SaveSystem {
                         map: data.openWorld?.currentMap,
                         scene: data.visualNovel?.currentScene,
                         characterName: data.openWorld?.player?.Name,
-                        playerPosition: data.openWorld?.player?.position
+                        playerPosition: data.openWorld?.player?.position,
+                        miniature: data.visualNovel.active ? data.visualNovel.lastBackground : ""
                     });
                 } catch {
                     slots.push({ slot: slotName, timestamp: 0 });
@@ -351,7 +354,8 @@ export class SaveSystem {
                 timeState: this.vnEngine.TimeSystem?.getCurrentTime?.() || null,
                 // Guardar escenas definidas (referencia, no contenido completo para ahorrar espacio)
                 sceneRegistry: Object.keys(this.vnEngine.scenes),
-                active: this.vnEngine.active
+                active: this.vnEngine.active,
+                lastBackground: this.vnEngine.uiElements.background?.innerHTML,
             };
         }
 
@@ -583,6 +587,9 @@ export class SaveSystem {
             if (state.visualNovel && this.vnEngine) {
                 await this._restoreVisualNovel(state.visualNovel);
                 if (this.vnEngine.active == true) {
+                    // @ts-ignore
+                    this.vnEngine.uiElements.background.innerHTML = state.visualNovel.lastBackground
+                
                     await this.vnEngine.startScene(state.visualNovel.currentScene);
                     this.vnEngine.waitForClick();
                 }

@@ -55,6 +55,7 @@ export class SaveLoadView extends HTMLElement {
                 slotData?.playerPosition ? `<div>${slotData.playerPosition.x.toFixed(1)}, ${slotData.playerPosition.y.toFixed(1)}</div>` : ''}
                 ${slotData?.scene ? `<div>🎬 ${slotData.scene}</div>` : ''}
                 </div>
+                ${slotData?.miniature}
             </div>`;
 
             // Preview de fondo si hay estado guardado
