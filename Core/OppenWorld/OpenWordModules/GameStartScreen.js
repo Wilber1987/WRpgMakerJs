@@ -9,8 +9,7 @@ import { BannerStyle } from "./BannerStyle.js";
 export class GameStartScreen extends HTMLElement {
     /**
      * @typedef {Object} GameStartScreenConfig 
-        * @property {OpenWorldEngineView} OpenWorldEngine objeto
-        * @property {{ name: string; action: () => void; startGame: boolean? }[]} screenOptions
+        * @property {{ name: string; action: Function; startGame: boolean? }[]} screenOptions
     **/
     /**
      * @param { GameStartScreenConfig } Config
@@ -18,7 +17,6 @@ export class GameStartScreen extends HTMLElement {
     constructor(Config) {
         super();
         this.Config = Config
-        this.gameEngine = this.Config.OpenWorldEngine.GameEngine;
         this.screenOptions = Config.screenOptions;
         this.attachShadow({ mode: 'open' });
         this.initializeComponent();
@@ -28,19 +26,7 @@ export class GameStartScreen extends HTMLElement {
         this.show();
     }
 
-    initializeComponent() {
-        // Crear botones como propiedades del componente
-        this.newGameBtn = html`<button class="menu-button new-game" 
-            onclick="${() => this.handleNewGame()}">NEW GAME</button>`;
-
-        this.continueBtn = html`<button class="menu-button continue" 
-            onclick="${() => this.handleContinueGame()}">CONTINUE</button>`;
-
-        this.saveBtn = html`<button class="menu-button save" 
-            onclick="${() => this.handleSaveGame()}">SAVE GAME</button>`;
-
-        //this.optionsBtn = html`<button class="menu-button options" 
-        //    onclick="${() => this.handleOpenOptions()}">OPTIONS</button>`;
+    initializeComponent() {       
         
         const colors = ["#52b641", "#52b641", "#52b641", "#52b641", "#52b641", "#52b641", "#52b641"]
 
@@ -64,20 +50,7 @@ export class GameStartScreen extends HTMLElement {
         this.shadowRoot?.appendChild(container);
     }
 
-    // Handlers para los botones
-    handleNewGame() {
-        this.Config.OpenWorldEngine?.StartEngine()
-        this.hide()
-        this.setupGameEngineIntegration()
-    }
-
-    handleContinueGame() {
-        this.gameEngine.handleContinueGame()
-    }
-
-    handleSaveGame() {
-    }
-
+   
     /**
      * @param {Function} action
      * @param {boolean} [start]
@@ -88,17 +61,9 @@ export class GameStartScreen extends HTMLElement {
         }   
         action(this)
     }
-
-    // Métodos públicos para control externo
-
-    enableButton() { }
-
-    disableButton() { }
-
     show() {
         ComponentsManager.modalFunction(this);
     }
-
     hide() {
         ComponentsManager.modalFunction(this);
         setTimeout(() => {
@@ -106,15 +71,6 @@ export class GameStartScreen extends HTMLElement {
         }, 500);
     }
 
-    initializeGameEngine() {
-        this.setupGameEngineIntegration();
-    }
-
-    setupGameEngineIntegration() {
-        const firstMap = Object.keys(this.Config.OpenWorldEngine.GameEngine.maps)[0]
-        this.Config.OpenWorldEngine?.StartEngine()
-        this.Config.OpenWorldEngine?.GoToMap(firstMap);
-    }
 
     Style = css`
         :host {

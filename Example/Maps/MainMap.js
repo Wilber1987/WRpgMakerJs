@@ -67,7 +67,7 @@ vnEngine.defineScene("danaJoinHistory", [
                 DanaCharacter.partyPosition = 1;
                 vnEngine.Disconnect()
             }
-        ], { render: Flow.Var("DanaJoin", "==", false)})
+        ], { render: Flow.Var("DanaJoin", "==", false) })
     ])
 ]);
 
@@ -103,7 +103,7 @@ const ciudad1 = new GameMap('Ciudad1', 64, 36, {
     //const ciudad1 = new GameMap('Ciudad1', 46, 27, {
     spawnX: 23,   // Punto de inicio del jugador
     spawnY: 16,
-    battleBackgrond:  getAsset("City1/battleBg.png"), 
+    battleBackgrond: getAsset("City1/battleBg.png"),
     bgColor: '#666', // Calle gris
     NPCs: [npc1, DanaCharacter], // <-- Aquí se pasan los NPCs desde la creación
     backgroundImage: getAsset("City1/map1.png")
@@ -1097,7 +1097,7 @@ const battle = () => {
     Alexandra.partyPosition = 3;
     const partyDePrueba = oppenWorldEngine.GetParty(npc1);
     console.log(partyDePrueba);
-    
+
     // Iniciar batalla
     /** es posible iniciar la batalla sin especificar el equipo de combate 
      * de esta forma "oppenWorldEngine.StartBattle(enemies);" esto tomara por defecto el
@@ -1107,7 +1107,7 @@ const battle = () => {
 
 }
 //#endregion
-const screanOptions = [
+const screenOptions = [
     {
         name: "New Game", startGame: true, action: () => {
             oppenWorldEngine.GoToMap("Ciudad1")
@@ -1115,7 +1115,7 @@ const screanOptions = [
         }
     }, {
         name: "Continuar", startGame: false, action: (/** @type {GameStartScreen} */ screenView) => {
-            saveSystem.showSaveLoadScreen(true, ()=> { new GameMenu().Connect() });
+            saveSystem.showSaveLoadScreen(true, () => { new GameMenu().Connect() });
         }
     }, {
         name: "Test 2", startGame: true, action: () => {
@@ -1136,7 +1136,12 @@ vnEngine.defineScene("start_game", [
         new GameMenu().Connect();
     }
 ]);
+
+const screenView = new GameStartScreen({
+    screenOptions: screenOptions
+})
+document.body.append(screenView)
 // --- Crear NPC's ---
 export const goToCity1 = () => {
-    oppenWorldEngine.Start(screanOptions);// lo envia al primer mapa registrado
+    oppenWorldEngine.Start();// lo envia al primer mapa registrado
 }

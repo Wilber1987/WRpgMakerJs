@@ -1,7 +1,6 @@
 //@ts-check
 import { CharacterModel } from "../Common/CharacterModel.js";
 import { GameEngine } from "./GameEngine.js";
-import { GameStartScreen } from "./OpenWordModules/GameStartScreen.js";
 import { GameMap } from "./OpenWordModules/Models.js";
 import { ComponentsManager, html, WRender } from "../WDevCore/WModules/WComponentsTools.js";
 import { css } from "../WDevCore/WModules/WStyledRender.js";
@@ -160,20 +159,13 @@ class OpenWorldEngineView extends HTMLElement {
      * @param {string} mapName
      */
     GoToMap(mapName) {
+        if (!this.isConnected) {
+            this.Start();
+        }
         this.StartEngine()
         this.GameEngine.GoToMap(mapName);
     }
-
-    /**
-     * @param {{ name: string; action: Function; startGame: Boolean?; }[]} screenOptions
-     */
-    Start(screenOptions) {
-        this.screenView = new GameStartScreen({
-            OpenWorldEngine: this,
-            // @ts-ignore
-            screenOptions: screenOptions
-        })
-        this.shadowRoot?.append(this.screenView)
+    Start() {        
         document.body.append(this)
     }
     /**
