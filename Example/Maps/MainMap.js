@@ -39,13 +39,11 @@ const npc1 = new CharacterModel({
     oppenWorldEngine.RegisterCharacter(DanaCharacter);
     DanaCharacter.partyPosition = 1;
 */
-DanaCharacter.MapData.push(
-    {
-        name: "Ciudad1", posX: 25, posY: 12, action: () => {
-            vnEngine.startScene("danaJoinHistory");
-        }
+DanaCharacter.MapData.push({
+    name: "Ciudad1", posX: 25, posY: 12, action: () => {
+        vnEngine.startScene("danaJoinHistory");
     }
-)
+})
 
 vnEngine.defineScene("danaJoinHistory", [
     Scene.Show("assets/Maps/City1/scene1.png"),
@@ -67,11 +65,19 @@ vnEngine.defineScene("danaJoinHistory", [
                 DanaCharacter.partyPosition = 1;
                 vnEngine.Disconnect()
             }
-        ], { render: Flow.Var("DanaJoin", "==", false) })
+        ], { render: Flow.Var("DanaJoin", "==", false) }),
+        Flow.Action("Solicitar que te siga", [
+            Alexandra.Say("Sigueme"),         
+            DanaCharacter.Say("Claro"),
+            () => {                
+                DanaCharacter.isFollower = true;
+                ciudad1.removeNpc(DanaCharacter);
+                vnEngine.Disconnect()
+            }
+        ], { render: Flow.Var("DanaJoin", "==", true) }),
+
     ])
 ]);
-
-
 
 vnEngine.defineScene("npc1Chat", [
     Scene.Show("assets/Maps/City1/scene1.png"),
@@ -90,8 +96,6 @@ vnEngine.defineScene("npc1Chat", [
         ])
     ])
 ]);
-
-
 
 const oppenWorldEngine = new OpenWorldEngineView({
     character: Alexandra
@@ -1046,7 +1050,6 @@ oppenWorldEngine.AddMap(ciudad1);
 
 //#region SIMULADOR DE BATALLA
 const battle = () => {
-
     // Crear enemigos de prueba
     const enemies = [
         new CharacterModel({
@@ -1106,23 +1109,7 @@ const battle = () => {
     oppenWorldEngine.StartBattle(enemies, partyDePrueba);
 
 }
-//#endregion
-const screenOptions = [
-    {
-        name: "New Game", startGame: true, action: () => {
-            oppenWorldEngine.GoToMap("Ciudad1")
-            new GameMenu().Connect()
-        }
-    }, {
-        name: "Continuar", startGame: false, action: (/** @type {GameStartScreen} */ screenView) => {
-            saveSystem.showSaveLoadScreen(true, () => { new GameMenu().Connect() });
-        }
-    }, {
-        name: "Test 2", startGame: true, action: () => {
-            vnEngine.startScene("start_game");
-        }
-    }
-]
+
 vnEngine.defineScene("start_game", [
     Scene.Show("assets/Maps/City1/scene1.png"),
     DanaCharacter.Say("..."),
@@ -1137,11 +1124,30 @@ vnEngine.defineScene("start_game", [
     }
 ]);
 
+//#endregion
+const screenOptions = [
+    {
+        name: "New Game", startGame: true, action: () => {
+            oppenWorldEngine.GoToMap("Ciudad1")
+            new GameMenu().Connect()
+        }
+    }, {
+        name: "Continuar", startGame: false, action: (/** @type {GameStartScreen} */ screenView) => {
+            saveSystem.showSaveLoadScreen(true, () => { new GameMenu(screenView).Connect() });
+        }
+    }, {
+        name: "Test 2", startGame: true, action: () => {
+            vnEngine.startScene("start_game");
+        }
+    }
+]
+
 const screenView = new GameStartScreen({
     screenOptions: screenOptions
 })
+oppenWorldEngine.screenView = screenView;
 document.body.append(screenView)
 // --- Crear NPC's ---
 export const goToCity1 = () => {
-    oppenWorldEngine.Start();// lo envia al primer mapa registrado
+    //oppenWorldEngine.Start();// lo envia al primer mapa registrado
 }

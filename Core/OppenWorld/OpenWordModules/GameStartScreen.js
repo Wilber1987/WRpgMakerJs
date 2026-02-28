@@ -26,10 +26,8 @@ export class GameStartScreen extends HTMLElement {
         this.show();
     }
 
-    initializeComponent() {       
-        
-        const colors = ["#52b641", "#52b641", "#52b641", "#52b641", "#52b641", "#52b641", "#52b641"]
-
+    initializeComponent() {        
+        const colors = ["#52b641", "#52b641", "#52b641", "#52b641", "#52b641", "#52b641", "#52b641"];
         // Crear estructura HTML
         const container = html`<div class="container banner-body">
             ${BannerStyle}

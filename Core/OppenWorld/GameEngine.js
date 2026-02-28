@@ -1,6 +1,6 @@
 //@ts-check
 import { CharacterModel } from "../Common/CharacterModel.js";
-import { clamp, DPR, OpenWorldEngineView, TILE_SIZE } from "./OpenWorldEngineView.js";
+import { clamp, DPR, lerp, OpenWorldEngineView, TILE_SIZE } from "./OpenWorldEngineView.js";
 import { Camera } from "./Camera.js";
 import { GameMap } from "./OpenWordModules/Models.js";
 import { BattleSystem } from "./BattleModule/BattleSystem.js";
@@ -335,10 +335,12 @@ export class GameEngine {
             // movement
             // movimiento
             let dx = 0, dy = 0;
-            if (this.keys["arrowup"] || this.keys["w"]) { dy = -1; this.SelectedCharacter.direction = "up"; }
-            if (this.keys["arrowdown"] || this.keys["s"]) { dy = 1; this.SelectedCharacter.direction = "down"; }
-            if (this.keys["arrowleft"] || this.keys["a"]) { dx = -1; this.SelectedCharacter.direction = "left"; }
-            if (this.keys["arrowright"] || this.keys["d"]) { dx = 1; this.SelectedCharacter.direction = "right"; }
+            ({ dy, dx } = this.UpdateCharacterStateDirection(dy, dx, this.SelectedCharacter));
+            const followers = this.Characters.filter(c => c.isFollower);
+
+            followers.forEach((character, index) => {
+                this.UpdateCharacterStateDirection(dy, dx, character);
+            })
 
             if (dx !== 0 && dy !== 0) { const inv = 1 / Math.sqrt(2); dx *= inv; dy *= inv; }
 
@@ -350,9 +352,12 @@ export class GameEngine {
                 const ny = this.SelectedCharacter.y + dy * sp;
                 // simple collision: check destination tile
                 if (!this.currentMap.isBlocked(Math.floor(nx), Math.floor(ny))) {
-                    this.SelectedCharacter.x = nx; this.SelectedCharacter.y = ny;
+                    this.SelectedCharacter.x = nx;
+                    this.SelectedCharacter.y = ny;
+                    this.updateFollowerState(nx, ny, followers, dt, moving);
                 }
             }
+
             // 👇 NUEVO: Verificar proximidad para alertas
             this._checkAlertProximity();
         }
@@ -366,6 +371,63 @@ export class GameEngine {
         // draw
         this.draw();
         requestAnimationFrame(this.update.bind(this));
+    }
+
+    /**
+     * @param {number} nx
+     * @param {number} ny
+     * @param {any[]} followers
+     * @param {number} dt
+     * @param {boolean} moving
+     */
+    updateFollowerState(nx, ny, followers, dt, moving) {
+        let prevX = nx, prevY = ny;
+        const spacing = 1.2; // distancia en tiles entre personajes
+
+        followers.forEach((character, index) => {
+            // Posicionar detrás del anterior (no del líder directo)
+            const pos = this._getFollowerPosition(prevX, prevY, this.SelectedCharacter.direction, spacing);
+
+            // Suavizado opcional: interpolación para movimiento fluido
+            character.x = lerp(character.x, pos.x, 0.2);
+            character.y = lerp(character.y, pos.y, 0.2);
+
+            // Actualizar animación
+            character.updateAnimation(dt, moving);
+
+            // Guardar posición para el siguiente follower
+            prevX = character.x;
+            prevY = character.y;
+        });
+    }
+
+    /**
+     * @param {number} dy
+     * @param {number} dx
+     * @param {CharacterModel} character
+     */
+    UpdateCharacterStateDirection(dy, dx, character) {
+        if (this.keys["arrowup"] || this.keys["w"]) { dy = -1; character.direction = "up"; }
+        if (this.keys["arrowdown"] || this.keys["s"]) { dy = 1; character.direction = "down"; }
+        if (this.keys["arrowleft"] || this.keys["a"]) { dx = -1; character.direction = "left"; }
+        if (this.keys["arrowright"] || this.keys["d"]) { dx = 1; character.direction = "right"; }
+        return { dy, dx };
+    }
+
+    /**
+     * @param {number} leaderX
+     * @param {number} leaderY
+     * @param {string} direction
+     * @param {number} offsetTiles
+     */
+    _getFollowerPosition(leaderX, leaderY, direction, offsetTiles) {
+        switch (direction) {
+            case 'up': return { x: leaderX, y: leaderY + offsetTiles };
+            case 'down': return { x: leaderX, y: leaderY - offsetTiles };
+            case 'left': return { x: leaderX + offsetTiles, y: leaderY };
+            case 'right': return { x: leaderX - offsetTiles, y: leaderY };
+            default: return { x: leaderX, y: leaderY };
+        }
     }
 
     /**
@@ -440,7 +502,18 @@ export class GameEngine {
 
         ctx.fillStyle = 'rgba(0,0,0,0.3)'; ctx.beginPath(); ctx.arc(ppx, ppy, 12 * this.cam.zoom, 0, Math.PI * 2);
         ctx.fill();
+        if (this.SelectedCharacter.direction == "down") {
+            this.Characters.filter(character => character.isFollower).forEach((character, index) => {
+                character.draw(ctx, this.cam);
+            })
+        }
         this.SelectedCharacter.draw(ctx, this.cam);
+
+        if (this.SelectedCharacter.direction != "down") {
+            this.Characters.filter(character => character.isFollower).forEach((character, index) => {
+                character.draw(ctx, this.cam);
+            })
+        }
         // HUD text
         if (this.hud) { // Add null check for hud
             this.hud.innerText = `Time: ${vnEngine.TimeSystem.currentTime}
@@ -559,7 +632,7 @@ export class GameEngine {
 
         // Buscar datos del mapa para este NPC
         let mapData = null;
-        if (npc.MapData) {            
+        if (npc.MapData) {
             mapData = npc.MapData.find(data => data.name === this.currentMap?.name);
         }
 
@@ -944,6 +1017,7 @@ export class GameEngine {
         if (this.Characters.some(chara => chara == character)) {
             return;
         }
+        character.RegisterWordMapCharacter()
         this.Characters.push(character);
     }
 }

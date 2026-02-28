@@ -5,6 +5,7 @@ import { GameMap } from "./OpenWordModules/Models.js";
 import { ComponentsManager, html, WRender } from "../WDevCore/WModules/WComponentsTools.js";
 import { css } from "../WDevCore/WModules/WStyledRender.js";
 import { saveSystem, vnEngine } from "../VisualNovel/VisualNovelEngine.js";
+import { GameStartScreen } from "./OpenWordModules/GameStartScreen.js";
 
 
 
@@ -34,7 +35,7 @@ class OpenWorldEngineView extends HTMLElement {
             opacity: "0",
             pointerEvents: "none",
             height: "100vh"
-        })
+        });
         /**@type {HTMLCanvasElement} */
         // @ts-ignore
         this.Canvas = html`<canvas id="view"></canvas>`;
@@ -43,15 +44,16 @@ class OpenWorldEngineView extends HTMLElement {
         this.MinimapCanvas = html`<canvas id="minimap"></canvas>`;
         /**@type {HTMLCanvasElement} */
         // @ts-ignore
-        this.BattleCanvas = html`<canvas id="battle-canvas"></canvas>`
+        this.BattleCanvas = html`<canvas id="battle-canvas"></canvas>`;
         this.Draw();
         
-        this.character = Config?.character
+        this.character = Config?.character;
         this.GameEngine = new GameEngine(this);
         /** @type {CharacterModel[]} */
-        this.Characters = Config?.Characters ?? []
-        saveSystem.openWorldEngine = this
-
+        this.Characters = Config?.Characters ?? [];
+        saveSystem.openWorldEngine = this;
+        /**@type { GameStartScreen? } */
+        this.screenView = null;
     }
     connectedCallback() {
         //this.StartEngine();

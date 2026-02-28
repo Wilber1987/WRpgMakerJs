@@ -75,7 +75,6 @@ export class CharacterModel {
             strength: 5,
             speed: 5 // Para batalla
         }
-
         /**
          * @type {SkillModel[]}
          */
@@ -109,9 +108,7 @@ export class CharacterModel {
             //{ name: "Poción de Vida", type: "Consumible", rarity: "Común" },
             //{ name: "Amuleto Mágico", type: "Accesorio", rarity: "Raro" }
         ];
-        /**
-         * @type {number | undefined}
-         */
+        /** @type {number | undefined} */
         this.tileHeight = props?.tileHeight ?? 3;
         /**@type {Boolean} */
         this.isNPC = props?.isNPC ?? false;
@@ -142,15 +139,14 @@ export class CharacterModel {
             CharacterRegistry.register(className, this.constructor);
             CharacterModel._registeredClasses.add(className);
         };
-        /**
-         * @type {Boolean|undefined}
-         */
+        /** @type {Boolean|undefined} */
         this.collision = undefined;
+        /** @type {Boolean|undefined} */
+        this.isFollower = false;
     }
 
     RegisterWordMapCharacter = async () => {
-        this.ChargeBasicSprites()
-
+        this.ChargeBasicSprites();
         this.Sprites.walk = {
             down: this._loadSpriteSequence(
                 `Media/assets/sprites/${this.Name}/walk_down/`, this.SpritesFrames.walk
@@ -326,10 +322,10 @@ export class CharacterModel {
             this.animTimer = 0;
         }
 
-        // @ts-ignore
-        const fps = this.animFPS[this.state] ?? 6;
-        const frameTime = 1 / fps;
 
+        // @ts-ignore
+        const fps = this.animFPS[this.state] ?? 25;
+        const frameTime = 1 / fps;
         this.animTimer += dt;
         try {
             while (this.animTimer >= frameTime) {

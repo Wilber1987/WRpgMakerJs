@@ -39,6 +39,8 @@ import { SkillModel } from "./SkillModel.js";
  * @property {string} __className - Nombre identificador de la clase
  * @property {Object.<string, any>} __props
  * @property {boolean} isNPC - Indica si es un personaje no jugador
+ * @property {boolean} isFollower - Indica si es un personaje es seguidor
+ * @property {boolean} isFemale - Indica si es un personaje es seguidor
  * @property {{x: number, y: number}} position - Posición en coordenadas del mapa
  * @property {string} direction - Dirección actual de la animación
  * @property {string} state - Estado de animación actual (idle, walk, attack, etc.)
@@ -435,6 +437,8 @@ export class SaveSystem {
             // Posición y animación
             position: { x: character.x, y: character.y },
             direction: character.direction,
+            isFollower: character.isFollower ?? false,
+            isFemale: character.isFemale,
             state: character.state,
             animFrame: character.animFrame,
             Name: character.Name,

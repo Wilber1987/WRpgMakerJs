@@ -1,15 +1,19 @@
 //@ts-check
 
+import { GameStartScreen } from "../../OppenWorld/OpenWordModules/GameStartScreen.js";
 import { saveSystem, vnEngine } from "../../VisualNovel/VisualNovelEngine.js";
 import { ComponentsManager, html } from "../../WDevCore/WModules/WComponentsTools.js";
 import { css } from "../../WDevCore/WModules/WStyledRender.js";
 import { CharacterManagerView } from "./CharacterManagerView.js";
 
 export class GameMenu extends HTMLElement {
-    constructor() {
+
+    /** @param {GameStartScreen} [screenView]*/
+    constructor(screenView) {
         super();
         this.attachShadow({ mode: 'open' });
         this.shadowRoot?.append(this.CustomStyle);
+        this.screenView = screenView
         this.Draw();
     }
     connectedCallback() { }
@@ -52,7 +56,7 @@ export class GameMenu extends HTMLElement {
             document.body.append(this);
         }
     }
-    close() {       
+    close() {
         ComponentsManager.modalFunction(this);
         setTimeout(() => {
             this.parentNode?.removeChild(this);
@@ -62,7 +66,8 @@ export class GameMenu extends HTMLElement {
         saveSystem.showSaveLoadScreen(false)
     }
     handlerLoad = () => {
-        saveSystem.showSaveLoadScreen(true)
+        saveSystem.showSaveLoadScreen(true);
+        this.screenView?.hide();
     }
     handlerTimeSkip = () => {
         vnEngine.TimeSystem.autoAdvanceTime(4)

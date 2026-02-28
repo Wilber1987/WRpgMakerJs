@@ -44,6 +44,7 @@ export class BlockObject {
 }
 
 export class GameMap {
+    
     /**
      * @param {string} name
      * @param {any} w 64/48/32
@@ -302,6 +303,14 @@ export class GameMap {
                 ActionQuestion: null
             };
         }
+    }
+
+    /**
+     * @param {CharacterModel} DanaCharacter
+     */
+    removeNpc(DanaCharacter) {
+        console.log(this.NPCs.indexOf(DanaCharacter));        
+        this.NPCs.splice(this.NPCs.indexOf(DanaCharacter), 1);
     }
 
 
