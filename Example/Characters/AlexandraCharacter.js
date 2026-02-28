@@ -13,7 +13,7 @@ class AlexandraCharacter extends CharacterModel {
         props.Stats = {
             hp: 30,
             maxHp: 30,
-            strength: 5,
+            strength: 1000,
             speed: 3000,
         }
         super(props)

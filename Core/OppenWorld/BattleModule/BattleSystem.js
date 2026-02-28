@@ -1034,12 +1034,12 @@ export class BattleSystem extends HTMLElement {
         ctx.save();
 
         // === Configuración de la sombra ===
-        const shadowWidth = this.cellWidth  * 0.55 * cam.zoom;
-        const shadowHeight = this.cellHeight  * 0.18 * cam.zoom;
-        
+        const shadowWidth = this.cellWidth * 0.55 * cam.zoom;
+        const shadowHeight = this.cellHeight * 0.18 * cam.zoom;
+
         // 👉 ESCALAR contexto para que el gradiente radial se adapte a la elipse
         ctx.scale(1, shadowHeight / shadowWidth); // 👈 Clave: comprime Y para que el radial parezca elíptico
-        
+
         // === Gradiente radial AHORA se ve elíptico por el scale ===
         const gradient = ctx.createRadialGradient(
             0, 0, 0,
@@ -1048,13 +1048,13 @@ export class BattleSystem extends HTMLElement {
         gradient.addColorStop(0, 'rgba(0, 0, 0, 0.5)');
         gradient.addColorStop(0.6, 'rgba(0, 0, 0, 0.15)');
         gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
-        
+
         // === Dibujar elipse (ahora círculo por el scale, pero visualmente elipse) ===
         ctx.beginPath();
         ctx.ellipse(0, 0, shadowWidth, shadowWidth, 0, 0, Math.PI * 2); // 👈 Usar shadowWidth en ambos ejes
         ctx.fillStyle = gradient;
         ctx.fill();
-        
+
         ctx.restore();
     }
 
@@ -1230,27 +1230,36 @@ export class BattleSystem extends HTMLElement {
      */
     showBattleEndMessage(message, type = 'victory') {
         // Crear overlay si no existe
-        // Estilos según el tipo de resultado
-        const colors = {
-            victory: { text: '#4ade80', glow: '0 0 30px rgba(74, 222, 128, 0.6)' },
-            defeat: { text: '#f87171', glow: '0 0 30px rgba(248, 113, 113, 0.6)' },
-            draw: { text: '#fbbf24', glow: '0 0 30px rgba(251, 191, 36, 0.6)' }
-        };
+        // Estilos según el tipo de resultado        
         // @ts-ignore
-        const style = colors[type] || colors.victory;
-        const battleMassage = html`<div class="end-battle-message">
+
+        const battleMassage = html`<div class="end-battle-message ${type}">
         <style>
            .end-battle-message {
                 font-size: 4rem;
                 font-weight: bold;
-                color: ${style.text};
-                text-shadow: ${style.glow};
                 letter-spacing: 8px;
                 animation: pulse 0.5s ease-in-out forwards;
                 Z-INDEX: 10000;
                 position: fixed;
                 top: 50%;                
                 left: 50%;
+                box-shadow: 0 0 10px 0 #000;
+                background: rgba(0,0,0,0.4);
+                padding: 20px;
+                border-radius: 20px;
+            }
+            .victory {
+                color: #ffffff;
+                text-shadow: 0 0 5px #07e345;
+            }
+            .defeat {
+                color: #ffffff;
+                text-shadow: 0 0 5px #f87171;
+            }
+            .draw {
+                color: #ffffff;
+                text-shadow: 0 0 5px #fbbf24;
             }
             @keyframes pulse {
                 0% { 
@@ -1261,6 +1270,60 @@ export class BattleSystem extends HTMLElement {
                     transform: translate(-50%, -50%) scale(2); 
                     opacity: 1;
                  }
+            }
+            .victory {
+               
+                overflow: hidden;   /* oculta el destello fuera del contenedor */
+                color: #ffffff;
+                text-shadow: 0 0 5px #07e345;
+            }
+
+            /* DESTELLOS */
+            .victory::before,
+            .victory::after {
+                content: "";
+                position: absolute;
+                width: 150%;
+                height: 6px;
+                background: linear-gradient(
+                    90deg,
+                    transparent,
+                    rgba(255,255,255,0.8),
+                    transparent
+                );
+                transform: translateX(-100%);
+                animation: shine 1s linear infinite;
+                border-radius: 5px;
+            }
+
+            /* Parte superior */
+            .victory::before {
+                top: 0px;
+            }
+
+            /* Parte inferior */
+            .victory::after {
+                bottom: 0px;
+                animation: shineInverse 1s linear infinite;
+                transform: translateX(100%);
+                 /*animation-delay: 1s; desfase para que no coincidan */
+            }
+
+            @keyframes shine {
+                0% {
+                    transform: translateX(-100%);
+                }
+                100% {
+                    transform: translateX(100%);
+                }
+            }
+            @keyframes shineInverse {
+                0% {
+                    transform: translateX(100%);
+                }
+                100% {
+                    transform: translateX(-100%);
+                }
             }
         </style>
         ${message}</div>`;
