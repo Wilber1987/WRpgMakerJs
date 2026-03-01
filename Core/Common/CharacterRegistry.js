@@ -1,5 +1,4 @@
 //@ts-check
-
 import { CharacterModel } from "../Common/CharacterModel.js";
 
 /**
@@ -21,12 +20,24 @@ export const CharacterRegistry = {
      * @private 
      */
     _classes: new Map(),
-    
+
     /** 
      * @type {Map<string, (savedData: any, context?: any) => Promise<CharacterModel> | CharacterModel>} 
      * @private 
      */
     _customFactories: new Map(),
+
+    /** 
+     * @type {Map<string, import('./CharacterModel.js').CharacterModel>} 
+     * @private 
+     */
+    _singletons: new Map(),
+
+    /** 
+    * @type {Map<string, (savedData: any, instance: CharacterModel) => void>} 
+    * @private 
+    */
+    _restoreHandlers: new Map(),
 
     /**
      * Registra una clase de personaje para serialización/deserialización.
@@ -38,12 +49,35 @@ export const CharacterRegistry = {
     register(className, Constructor, customFactory) {
         if (this._classes.has(className)) {
             console.warn(`⚠️ Clase "${className}" ya registrada. Sobrescribiendo...`);
+            return;
         }
         this._classes.set(className, Constructor);
         if (customFactory) {
             this._customFactories.set(className, customFactory);
         }
         console.log(`✅ Registrado: ${className}`);
+    },
+
+    /**
+    * Registra una instancia singleton para hidratación en lugar de creación.
+    * Los singletons tienen prioridad sobre las clases registradas.
+    * @param {import('./CharacterModel.js').CharacterModel} instance - La instancia singleton existente
+    * @param {(savedData: any, instance: CharacterModel) => void} [restoreHandler] - Handler opcional para restauración personalizada
+    */
+    registerSingleton(instance, restoreHandler) {
+        if (!instance?.Name) {
+            console.error(`❌ No se puede registrar singleton: la instancia no tiene propiedad Name`);
+            return;
+        }
+        this._singletons.set(instance?.Name, instance);
+        if (restoreHandler) {
+            this._restoreHandlers.set(instance?.Name, restoreHandler);
+        } else if (typeof instance.restoreState === 'function') {
+            // Usar método restoreState si existe en la instancia
+            this._restoreHandlers.set(instance?.Name, (savedData, inst) => inst.restoreState(savedData));
+        }
+
+        console.log(`✅ Singleton registrado: ${instance?.Name} → ${instance.constructor.name}`);
     },
 
     /**
@@ -64,9 +98,15 @@ export const CharacterRegistry = {
             console.warn('⚠️ Datos sin __className, usando CharacterModel base');
             return new CharacterModel(savedData.__props || {});
         }
-
+        const characterName = savedData.Name;
         const className = savedData.__className;
-        
+
+        // 🔥 1. PRIORIDAD: Singleton registrado
+        const singletonInstance = this._singletons.get(characterName);
+        if (singletonInstance) {           
+            return singletonInstance;
+        }
+
         // 1. Intentar factory personalizado (para lógica compleja post-construcción)
         const customFactory = this._customFactories.get(className);
         if (customFactory) {
@@ -77,7 +117,7 @@ export const CharacterRegistry = {
                 console.error(`❌ Error en factory personalizado para ${className}:`, err);
             }
         }
-        
+
         // 2. Usar constructor registrado
         const Constructor = this._classes.get(className);
         if (Constructor) {
@@ -90,11 +130,57 @@ export const CharacterRegistry = {
                 return new CharacterModel(savedData.__props || {});
             }
         }
-        
+
         // 3. Fallback: advertir y usar base
         console.warn(`⚠️ Clase "${className}" no registrada. Usando CharacterModel base.`);
         console.warn('💡 Solución: Regístrala con CharacterRegistry.register()');
         return new CharacterModel(savedData.__props || {});
+    },
+
+    /**
+     * Hidratación básica para personajes sin handler personalizado.
+     * @param {CharacterModel} character 
+     * @param {import("./SaveSystem.js").SerializedCharacter} savedData 
+     * @private
+     */
+    _applyBasicHydration(character, savedData) {
+        if (!savedData || !character) return;
+
+        // Posición y animación
+        if (savedData.position) {
+            character.x = savedData.position.x ?? character.x;
+            character.y = savedData.position.y ?? character.y;
+        }
+        if (savedData.direction) character.direction = savedData.direction;
+        if (savedData.state) character.state = savedData.state;
+        if (typeof savedData.animFrame === 'number') character.animFrame = savedData.animFrame;
+
+        // Stats: fusión profunda
+        if (savedData.Stats && character.Stats) {
+            Object.assign(character.Stats, savedData.Stats);
+        }
+
+        // Nivel y experiencia
+        if (typeof savedData.Level === 'number') character.Level = savedData.Level;
+        if (typeof savedData.Experience === 'number') character.Experience = savedData.Experience;
+
+        // Colecciones: reemplazo completo
+        if (Array.isArray(savedData.Inventory)) {
+            character.Inventory = JSON.parse(JSON.stringify(savedData.Inventory));
+        }
+        if (Array.isArray(savedData.Skills)) {
+            character.Skills = JSON.parse(JSON.stringify(savedData.Skills));
+        }
+        if (Array.isArray(savedData.MapData)) {
+            character.MapData = JSON.parse(JSON.stringify(savedData.MapData));
+        }
+
+        // Props personalizadas
+        if (savedData.customProps) {
+            Object.assign(character, savedData.customProps);
+        }
+
+        console.debug(`💧 "${character.Name}" hidratado`);
     },
 
     /**
@@ -106,6 +192,21 @@ export const CharacterRegistry = {
         return character?.constructor?.name || 'CharacterModel';
     },
 
+    /**
+     * Verifica si un nombre corresponde a un singleton registrado.
+     * @param {string} name 
+     * @returns {boolean}
+     */
+    isSingleton(name) {
+        return this._singletons.has(name);
+    },
+    /**
+    * Lista todos los singletons registrados (para debug).
+    * @returns {string[]}
+    */
+    listSingletons() {
+        return Array.from(this._singletons.keys());
+    },
     /**
      * Verifica si una clase está registrada.
      * @param {string} className 

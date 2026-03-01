@@ -346,6 +346,9 @@ export class GameEngine {
 
             const moving = (dx || dy) !== 0;
             this.SelectedCharacter.updateAnimation(dt, moving);
+            followers.forEach((character, index) => {
+                character.updateAnimation(dt, moving);
+            })
             if (dx || dy) {
                 const sp = this.SelectedCharacter.speed * dt;
                 const nx = this.SelectedCharacter.x + dx * sp;
@@ -366,6 +369,9 @@ export class GameEngine {
         // camera follow
         this.cam.follow(this.SelectedCharacter, this.currentMap);
         this.currentMap.NPCs.forEach(npc => {
+            if (npc.isFollower) {
+                return;
+            }
             npc.updateAnimation(dt, false);
         })
         // draw
@@ -391,10 +397,6 @@ export class GameEngine {
             // Suavizado opcional: interpolación para movimiento fluido
             character.x = lerp(character.x, pos.x, 0.2);
             character.y = lerp(character.y, pos.y, 0.2);
-
-            // Actualizar animación
-            character.updateAnimation(dt, moving);
-
             // Guardar posición para el siguiente follower
             prevX = character.x;
             prevY = character.y;
@@ -548,6 +550,9 @@ export class GameEngine {
         if (!this.currentMap?.NPCs) return;
 
         for (const npc of this.currentMap.NPCs) {
+            if (npc.isFollower) {
+                continue;
+            }
             // Obtener posición desde MapData
             let npcX = npc.x, npcY = npc.y; // Fallback to npc.x/y if MapData not found/valid
             if (this.currentMap) { // Added null check for currentMap
@@ -837,6 +842,9 @@ export class GameEngine {
         // ─── 2. Buscar en NPCs ───
         if (this.currentMap.NPCs) {
             for (const npc of this.currentMap.NPCs) {
+                if (npc.isFollower) {
+                    continue
+                }
                 const mapData = npc.MapData?.find(data => data.name === this.currentMap?.name);
                 if (!mapData || (!mapData.action && !mapData.ActionQuestion)) continue;
 

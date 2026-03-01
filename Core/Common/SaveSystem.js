@@ -794,15 +794,11 @@ export class SaveSystem {
 
         // Skills: recrear instancias si es posible
 
-        // Skills: recrear instancias con reflexión
-        if (savedData.Skills !== undefined) {
-            // 🔥 ESPERAR la promesa porque _restoreSkills es ahora async
-            character.Skills = await this._restoreSkills(savedData.Skills, character);
-        }
+        
 
         // MapData: reemplazo completo
         if (savedData.MapData !== undefined) {
-            character.MapData = JSON.parse(JSON.stringify(savedData.MapData));
+           //character.MapData = JSON.parse(JSON.stringify(savedData.MapData));
         }
 
         // Props personalizadas
@@ -812,6 +808,13 @@ export class SaveSystem {
 
         // @ts-ignore
         console.log(`👤 "${character.Name}" restaurado como ${savedData.__className}`);
+
+        // Skills: recrear instancias con reflexión
+        if (savedData.Skills !== undefined) {
+            // 🔥 ESPERAR la promesa porque _restoreSkills es ahora async
+            character.Skills = await this._restoreSkills(savedData.Skills, character);
+        }
+        await character.RegisterWordMapCharacter();
         return character;
     }
 

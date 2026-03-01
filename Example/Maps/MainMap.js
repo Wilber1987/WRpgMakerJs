@@ -1,6 +1,7 @@
 //@ts-check
 
 import { CharacterModel } from "../../Core/Common/CharacterModel.js";
+import { CharacterRegistry } from "../../Core/Common/CharacterRegistry.js";
 import { GameMenu } from "../../Core/Common/UIComponents/GameMenu.js";
 import { GameStartScreen } from "../../Core/OppenWorld/OpenWordModules/GameStartScreen.js";
 import { BlockObject, GameMap } from "../../Core/OppenWorld/OpenWordModules/Models.js";
@@ -11,6 +12,11 @@ import { Alexandra } from "../Characters/AlexandraCharacter.js";
 import { DanaCharacter } from "../Characters/DanaCharacter.js";
 
 const getAsset = (/** @type {string} */ asset) => "./Media/assets/Maps/" + asset;
+
+// 🔥 2. REGISTRAR SINGLETONS (prioridad sobre clases)
+// Alexandra y Dana ya existen en memoria, se hidratarán en lugar de recrearse
+CharacterRegistry.registerSingleton(Alexandra);
+CharacterRegistry.registerSingleton(DanaCharacter);
 
 
 const npc1 = new CharacterModel({
@@ -70,8 +76,8 @@ vnEngine.defineScene("danaJoinHistory", [
             Alexandra.Say("Sigueme"),         
             DanaCharacter.Say("Claro"),
             () => {                
-                DanaCharacter.isFollower = true;
-                ciudad1.removeNpc(DanaCharacter);
+                DanaCharacter.follow(Alexandra);
+                //ciudad1.removeNpc(DanaCharacter);
                 vnEngine.Disconnect()
             }
         ], { render: Flow.Var("DanaJoin", "==", true) }),

@@ -315,14 +315,14 @@ export class CharacterModel {
         if (isBattle) {
             nextState = this.BattleState ?? nextState;
         }
-
+        if (nextState == 'walk') {
+           // console.log(this.Name, "walking")
+        }
         if (this.state !== nextState) {
             this.state = nextState;
             this.animFrame = 0;
             this.animTimer = 0;
         }
-
-
         // @ts-ignore
         const fps = this.animFPS[this.state] ?? 25;
         const frameTime = 1 / fps;
@@ -331,7 +331,7 @@ export class CharacterModel {
             while (this.animTimer >= frameTime) {
                 this.animTimer -= frameTime;
                 const frames = this.Sprites[this.state][this.direction];
-                this.animFrame = (this.animFrame + 1) % frames.length;
+                this.animFrame = (this.animFrame + 1) % frames.length;                
             }
         } catch (error) {
             console.error(error);
@@ -357,7 +357,7 @@ export class CharacterModel {
 
         const drawH = TILE_SIZE * cam.zoom * tileHeight;
         const aspect = img.naturalWidth / img.naturalHeight;
-        const drawW = drawH * aspect;
+        const drawW = drawH * aspect;       
         ctx.drawImage(
             img,
             px - drawW / 2,
@@ -391,7 +391,81 @@ export class CharacterModel {
     isDeath = () => {
         return this.Stats.hp == 0;
     }
+    /** @param {CharacterModel} character */
+    follow = (character) => {
+        this.isFollower = true;
+        this.direction = character.direction;
+        switch (character.direction) {
+            case "up":
+                this.x = character.x;
+                this.y = character.y + 1;
+                break;
+            case "down":
+                this.x = character.x;
+                this.y = character.y - 1;
+                break;
+            case "left":
+                this.x = character.x + 1;
+                this.y = character.y;
+                break;
+            case "right":
+                this.x = character.x - 1;
+                this.y = character.y;
+                break;
+            default:
+                this.x = character.x + 1;
+                this.y = character.y + 1;
+                break;
+        }
+        this.RegisterWordMapCharacter();
+    }
+    /**
+     * 🔥 MÉTODO: Restaura estado desde datos guardados
+     * CharacterRegistry lo llamará automáticamente si este singleton está registrado
+     * @param {import("./SaveSystem.js").SerializedCharacter} savedData - Props serializados del guardado
+     */
+    restoreState(savedData) {
+        // Restaurar posición
+        if (savedData.position) {
+            this.x = savedData.position.x ?? this.x;
+            this.y = savedData.position.y ?? this.y;
+        }
 
+        // 🔥 FUSIONAR ESTADO DINÁMICO (mantiene métodos del prototipo)
+        Object.assign(this, {
+            x: savedData.position?.x ?? this.x,
+            y: savedData.position?.y ?? this.y,
+            direction: savedData.direction ?? this.direction,
+            state: savedData.state ?? this.state,
+            animFrame: savedData.animFrame ?? this.animFrame,
+            Level: savedData.Level ?? this.Level,
+            Experience: savedData.Experience ?? this.Experience
+        });
+
+        // Stats: fusión
+        if (savedData.Stats && this.Stats) {
+            Object.assign(this.Stats, savedData.Stats);
+        }
+
+        // Nivel/experiencia
+        if (typeof savedData.Level === 'number') this.Level = savedData.Level;
+        if (typeof savedData.Experience === 'number') this.Experience = savedData.Experience;
+
+        // Colecciones
+        if (Array.isArray(savedData.Inventory)) {
+            this.Inventory = JSON.parse(JSON.stringify(savedData.Inventory));
+        }
+        if (Array.isArray(savedData.MapData)) {
+            this.MapData = JSON.parse(JSON.stringify(savedData.MapData));
+        }
+
+        // Props personalizadas
+        if (savedData.customProps) {
+            Object.assign(this, savedData.customProps);
+        }
+
+        console.log(`✨ Alexandra restaurada: pos=(${this.x},${this.y}), hp=${this.Stats.hp}`);
+    }
 
     //------------
 

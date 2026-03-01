@@ -106,13 +106,14 @@ export class GameMap {
         for (const o of this.objects) {
             if (o.occupies(tx, ty)) return true;
         }
-
         // 2. Verificar NPCs con colisión (usando SOLO MapData, sin recursión)
         if (this.NPCs) {
             for (const npc of this.NPCs) {
+                if (npc.isFollower) {
+                    continue;
+                }
                 //TODO Skip NPCs sin colisión
                 if (npc.collision === false) continue;
-
                 // Obtener posición DIRECTAMENTE desde MapData
                 let npcX, npcY;
                 if (npc.MapData) {

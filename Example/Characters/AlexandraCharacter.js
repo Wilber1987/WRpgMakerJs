@@ -1,7 +1,10 @@
 //@ts-check
 
 import { CharacterModel } from "../../Core/Common/CharacterModel.js";
+import { CharacterRegistry } from "../../Core/Common/CharacterRegistry.js";
 import { SkillModel } from "../../Core/Common/SkillModel.js";
+
+
 
 class AlexandraCharacter extends CharacterModel {
     /**
@@ -13,7 +16,7 @@ class AlexandraCharacter extends CharacterModel {
         props.Stats = {
             hp: 30,
             maxHp: 30,
-            strength: 1000,
+            strength: 5,
             speed: 3000,
         }
         super(props)
