@@ -329,6 +329,7 @@ export class GameEngine {
         if (!this.active) return; // 👈 detener si no está activo
         if (!this.lastTs) this.lastTs = ts; const dt = (ts - this.lastTs) / 1000; this.lastTs = ts;
         if (!this.currentMap) { requestAnimationFrame(this.update.bind(this)); return; }
+        const followers = this.Characters.filter(c => c.isFollower);
 
         // Si hay una batalla activa, no procesar movimiento
         if (!this.battleSystem.isActive) {
@@ -336,9 +337,10 @@ export class GameEngine {
             // movimiento
             let dx = 0, dy = 0;
             ({ dy, dx } = this.UpdateCharacterStateDirection(dy, dx, this.SelectedCharacter));
-            const followers = this.Characters.filter(c => c.isFollower);
 
-            followers.forEach((character, index) => {
+            followers.push(...this.currentMap.NPCs.filter(npc => npc.isFollower && !followers.includes(npc)))
+
+            followers.forEach((character) => {
                 this.UpdateCharacterStateDirection(dy, dx, character);
             })
 
@@ -346,7 +348,7 @@ export class GameEngine {
 
             const moving = (dx || dy) !== 0;
             this.SelectedCharacter.updateAnimation(dt, moving);
-            followers.forEach((character, index) => {
+            followers.forEach((character) => {
                 character.updateAnimation(dt, moving);
             })
             if (dx || dy) {
@@ -375,7 +377,7 @@ export class GameEngine {
             npc.updateAnimation(dt, false);
         })
         // draw
-        this.draw();
+        this.draw(followers);
         requestAnimationFrame(this.update.bind(this));
     }
 
@@ -434,8 +436,9 @@ export class GameEngine {
 
     /**
      * Dibuja todos los elementos del juego en el canvas (fondo, cuadrícula, objetos, NPCs, jugador, HUD, minimapa, alertas).
+     * @param {CharacterModel[]} followers
      */
-    draw() {
+    draw(followers) {
         const canvas = /** @type {HTMLCanvasElement | null | undefined} */(this.OpenWorldInstance.shadowRoot?.querySelector('#view'));
         this.OpenWorldInstance.SetTimeClass();
         if (!canvas) return; // Add null check for canvas
@@ -505,14 +508,14 @@ export class GameEngine {
         ctx.fillStyle = 'rgba(0,0,0,0.3)'; ctx.beginPath(); ctx.arc(ppx, ppy, 12 * this.cam.zoom, 0, Math.PI * 2);
         ctx.fill();
         if (this.SelectedCharacter.direction == "down") {
-            this.Characters.filter(character => character.isFollower).forEach((character, index) => {
+            followers.forEach((character) => {
                 character.draw(ctx, this.cam);
             })
         }
         this.SelectedCharacter.draw(ctx, this.cam);
 
         if (this.SelectedCharacter.direction != "down") {
-            this.Characters.filter(character => character.isFollower).forEach((character, index) => {
+            followers.forEach((character) => {
                 character.draw(ctx, this.cam);
             })
         }
@@ -551,6 +554,7 @@ export class GameEngine {
 
         for (const npc of this.currentMap.NPCs) {
             if (npc.isFollower) {
+
                 continue;
             }
             // Obtener posición desde MapData

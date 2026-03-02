@@ -13,7 +13,7 @@ import { DanaCharacter } from "../Characters/DanaCharacter.js";
 
 const getAsset = (/** @type {string} */ asset) => "./Media/assets/Maps/" + asset;
 
-// 🔥 2. REGISTRAR SINGLETONS (prioridad sobre clases)
+// REGISTRAR SINGLETONS (prioridad sobre clases)
 // Alexandra y Dana ya existen en memoria, se hidratarán en lugar de recrearse
 CharacterRegistry.registerSingleton(Alexandra);
 CharacterRegistry.registerSingleton(DanaCharacter);
@@ -73,9 +73,9 @@ vnEngine.defineScene("danaJoinHistory", [
             }
         ], { render: Flow.Var("DanaJoin", "==", false) }),
         Flow.Action("Solicitar que te siga", [
-            Alexandra.Say("Sigueme"),         
+            Alexandra.Say("Sigueme"),
             DanaCharacter.Say("Claro"),
-            () => {                
+            () => {
                 DanaCharacter.follow(Alexandra);
                 //ciudad1.removeNpc(DanaCharacter);
                 vnEngine.Disconnect()
@@ -90,7 +90,12 @@ vnEngine.defineScene("npc1Chat", [
     DanaCharacter.Say("..."),
     npc1.Show(),
     Flow.Choice([
-        Flow.Action("Saludar", [
+        Flow.Action("Sigueme", [
+            () => {
+                npc1.isFollower = true;
+                vnEngine.Disconnect();
+            }
+        ]), Flow.Action("Saludar", [
             DanaCharacter.Say("Hola"),
             Dialogue.Say("Mage", "Hola"),
             () => vnEngine.Disconnect()
