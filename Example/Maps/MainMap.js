@@ -2,22 +2,45 @@
 
 import { CharacterModel } from "../../Core/Common/CharacterModel.js";
 import { CharacterRegistry } from "../../Core/Common/CharacterRegistry.js";
+import { SkillModel } from "../../Core/Common/SkillModel.js";
 import { GameMenu } from "../../Core/Common/UIComponents/GameMenu.js";
 import { GameStartScreen } from "../../Core/OppenWorld/OpenWordModules/GameStartScreen.js";
 import { BlockObject, GameMap } from "../../Core/OppenWorld/OpenWordModules/Models.js";
 import { OpenWorldEngineView } from "../../Core/OppenWorld/OpenWorldEngineView.js";
 import { saveSystem, vnEngine } from "../../Core/VisualNovel/VisualNovelEngine.js";
 import { Dialogue, Flow, Scene } from "../../Core/VisualNovel/VisualNovelModules.js";
-import { Alexandra } from "../Characters/AlexandraCharacter.js";
 import { DanaCharacter } from "../Characters/DanaCharacter.js";
 
-const getAsset = (/** @type {string} */ asset) => "./Media/assets/Maps/" + asset;
+const getAsset = (/** @type {string} */ asset) => "./Media/assets/" + asset;
 
 // REGISTRAR SINGLETONS (prioridad sobre clases)
-// Alexandra y Dana ya existen en memoria, se hidratarán en lugar de recrearse
-CharacterRegistry.registerSingleton(Alexandra);
+
+// Dana ya existen en memoria, se hidratarán en lugar de recrearse
 CharacterRegistry.registerSingleton(DanaCharacter);
 
+class WarriorModel extends CharacterModel {
+    /**
+    * @param {Partial<CharacterModel>} props
+    */
+    constructor(props) {
+        props.SpritesFrames = { attack: 25 }
+        props.Stats = {
+            hp: 30,
+            maxHp: 30,
+            strength: 10,
+            speed: 3000,
+        }
+        super(props)
+        this.Skills = [
+            new SkillModel({ numberTargets: 100 })
+        ]
+    }
+}
+
+export const Warrior = new WarriorModel({}); 
+
+//en este caso solo debera haber una instancia de warrior al momento de restaurar la memoria
+CharacterRegistry.registerSingleton(Warrior);
 
 const npc1 = new CharacterModel({
     Name: "Mage",
@@ -27,12 +50,6 @@ const npc1 = new CharacterModel({
         attack: 89,
         death: 25
     },
-    /*Stats: {
-        hp: 1500,
-        maxHp: 1500,
-        strength: 100,
-        speed: 30,
-    },*/
     MapData: [
         {
             name: "Ciudad1", posX: 24, posY: 14, action: () => {
@@ -41,29 +58,28 @@ const npc1 = new CharacterModel({
         }
     ]
 });
-/*
-    oppenWorldEngine.RegisterCharacter(DanaCharacter);
-    DanaCharacter.partyPosition = 1;
-*/
+
 DanaCharacter.MapData.push({
-    name: "Ciudad1", posX: 25, posY: 12, action: () => {
+    name: "Ciudad1", posX: 26, posY: 14, action: () => {
         vnEngine.startScene("danaJoinHistory");
     }
 })
+
+//#region SCENEAS DE HISTORIA EN MODO NOVELA VISUAL
 
 vnEngine.defineScene("danaJoinHistory", [
     Scene.Show("assets/Maps/City1/scene1.png"),
     DanaCharacter.Show(),
     Flow.Choice([
         Flow.Action("Saludar", [
-            Alexandra.Say("Hola"),
+            Warrior.Say("Hola"),
             DanaCharacter.Say("Hola"),
             () => vnEngine.Disconnect()
         ]),
         Flow.Action("Solicitar que se una al equipo", [
-            Alexandra.Say("Hola, escuche que necesitas un equipo"),
+            Warrior.Say("Hola, escuche que necesitas un equipo"),
             DanaCharacter.Say("Si yo estoy buscando equipo"),
-            Alexandra.Say("Excelente, unete ami"),
+            Warrior.Say("Excelente, unete ami"),
             DanaCharacter.Say("Claro"),
             DanaCharacter.SetVar("Join", true),
             () => {
@@ -73,10 +89,10 @@ vnEngine.defineScene("danaJoinHistory", [
             }
         ], { render: Flow.Var("DanaJoin", "==", false) }),
         Flow.Action("Solicitar que te siga", [
-            Alexandra.Say("Sigueme"),
+            Warrior.Say("Sigueme"),
             DanaCharacter.Say("Claro"),
             () => {
-                DanaCharacter.follow(Alexandra);
+                DanaCharacter.follow(Warrior);
                 //ciudad1.removeNpc(DanaCharacter);
                 vnEngine.Disconnect()
             }
@@ -108,8 +124,23 @@ vnEngine.defineScene("npc1Chat", [
     ])
 ]);
 
+vnEngine.defineScene("start_game", [
+    Scene.Show("assets/Maps/City1/scene1.png"),
+    DanaCharacter.Say("..."),
+    npc1.ShowR(),
+    npc1.Say("....."),
+    Warrior.ShowL(),
+    Warrior.Say("Inicie la aventura"),
+    () => {
+        vnEngine.Disconnect();
+        oppenWorldEngine.GoToMap("Ciudad1");
+        new GameMenu().Connect();
+    }
+]);
+//#endregion
+
 const oppenWorldEngine = new OpenWorldEngineView({
-    character: Alexandra
+    character: Warrior
 });
 
 // --- Crear el mapa Ciudad1 ---
@@ -118,31 +149,23 @@ const ciudad1 = new GameMap('Ciudad1', 64, 36, {
     //const ciudad1 = new GameMap('Ciudad1', 46, 27, {
     spawnX: 23,   // Punto de inicio del jugador
     spawnY: 16,
-    battleBackgrond: getAsset("City1/battleBg.png"),
+    battleBackgrond: getAsset("Maps/City1/battleBg.png"),
     bgColor: '#666', // Calle gris
     NPCs: [npc1, DanaCharacter], // <-- Aquí se pasan los NPCs desde la creación
-    backgroundImage: getAsset("City1/map1.png")
+    backgroundImage: getAsset("Maps/City1/map1.png")
 });
 
-// --- Agregar edificios (bloques marrones) ---
-// Edificio 1
-// ciudad1.addObject(new BlockObject(2, 2, 4, 4, {
-//     color: '#8B4513', // Marrón oscuro
-//     autoTrigger: true,
-//     icon: getAsset("City1/EDIFICIO (2).png")
-// }));
-
-// Puerta del edificio 1 (amarilla)
-ciudad1.addObject(new BlockObject(23, 15, 1, 1, {
-    color: '#FFD700', // Amarillo
-    //autoTrigger: true,
+// Objeto en (19, 13, 1 , 1 ) con forma de Cofre x = 19, y =  13, w = 1 , h= 1
+ciudad1.addObject(new BlockObject(19, 13, 1, 1, {
+    icon: getAsset("items/chest.png"),
+    //color: '#FFD700', // Amarillo opcional
     Action: () => {
         console.log("Prueba de proximidad auto disparada");
         battle()
     }
 }));
 
-//#region BLOQUES DE COLICIONES INVISIBLES
+//#region BLOQUES DE COLICIONES INVISIBLES dentro del mapa para delimitar el movimiento
 // --- Objetos/Bloques para ciudad1 ---
 // Objeto en (22, 1)
 ciudad1.addObject(new BlockObject(22, 1, 1, 1, {
@@ -1052,10 +1075,9 @@ ciudad1.addObject(new BlockObject(15, 26, 1, 1, {
 
 //#endregion
 
-// Pero como tu fondo ya es gris, quizás solo necesites dejar espacios libres.
 // --- Añadir el mapa al motor ---
+// se pueden agregar multiples mapas y navegar entre ellos usando **oppenWorldEngine.GoToMap("nombre_mapa")**
 oppenWorldEngine.AddMap(ciudad1);
-
 // --- Ir al mapa ---
 //oppenWorld.GoToMap("Ciudad1");
 
@@ -1105,10 +1127,10 @@ const battle = () => {
     /*ejemplo: const party = [
         DanaCharacter,
         npc1,
-        Alexandra
+        Warrior
     ]; */
     npc1.partyPosition = 0;
-    Alexandra.partyPosition = 3;
+    Warrior.partyPosition = 3;
     const partyDePrueba = oppenWorldEngine.GetParty(npc1);
     console.log(partyDePrueba);
 
@@ -1120,20 +1142,6 @@ const battle = () => {
     oppenWorldEngine.StartBattle(enemies, partyDePrueba);
 
 }
-
-vnEngine.defineScene("start_game", [
-    Scene.Show("assets/Maps/City1/scene1.png"),
-    DanaCharacter.Say("..."),
-    npc1.ShowR(),
-    npc1.Say("....."),
-    Alexandra.ShowL(),
-    Alexandra.Say("Inicie la aventura"),
-    () => {
-        vnEngine.Disconnect();
-        oppenWorldEngine.GoToMap("Ciudad1");
-        new GameMenu().Connect();
-    }
-]);
 
 //#endregion
 const screenOptions = [
@@ -1152,13 +1160,21 @@ const screenOptions = [
         }
     }
 ]
-
+/* 
+GameStartScreen es un webcomponent creado para ser la pantalla principal, sin embargo puede ser cualquier interfaz
+que tenga opciones para activar las funciones del motor, ejemplo: **oppenWorldEngine.GoToMap("Ciudad1")** o **vnEngine.startScene("start_game")**
+asi mismo **GameMenu** tambien es un webcomponent que sirve como menu flotante, pero puede ser remplazado por otros menus o simplemente agregar 
+todos los componentes que se requieran  
+ */
 const screenView = new GameStartScreen({
     screenOptions: screenOptions
 })
 oppenWorldEngine.screenView = screenView;
 document.body.append(screenView)
-// --- Crear NPC's ---
-export const goToCity1 = () => {
+
+
+/**podrias disparar el evento que quieras al cargar el sitio o simplemente ejecutar el motor de forma directa*/
+window.onload = ()=> {
+    //document.body.append(screenView)
     //oppenWorldEngine.Start();// lo envia al primer mapa registrado
 }

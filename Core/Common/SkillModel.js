@@ -34,6 +34,10 @@ export class SkillModel {
         this.manaCost = props.manaCost ?? 0;
         /**@type {Number} */
         this.level = props.level ?? 1;
+        /**
+         * @type {string|undefined}
+         */
+        this.element = props.element ?? undefined;
     }
 
     excute(

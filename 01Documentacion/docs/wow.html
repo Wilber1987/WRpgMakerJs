@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WOpenWorldJS - Documentación Técnica</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>WOpenWorldJS</h1>
+            <p class="subtitle">Motor de juego Open World basado en JavaScript para crear experiencias RPG interactivas
+                con sistema de batalla, novelas visuales y exploración de mapas.</p>
+            <a href="https://github.com/Wilber1987/WOpenWorldJs" class="repo-link" target="_blank">Ver Repositorio
+                GitHub</a>
+        </header>
+
+        <section class="section">
+            <h2>📦 Instalación del Proyecto</h2>
+            <p>Para comenzar a trabajar con WOpenWorldJS, es necesario clonar el repositorio incluyendo todos sus
+                submódulos. El proyecto utiliza una arquitectura modular que requiere dependencias externas.</p>
+
+            <div class="warning">
+                <strong>Importante:</strong> El comando de clonación debe incluir la bandera
+                <code>--recurse-submodules</code> para descargar correctamente todas las dependencias del proyecto.
+            </div>
+
+            <div class="code-block">
+                <div class="code-header">Terminal - Clonar repositorio</div>
+                <pre><code class="language-bash">git clone --recurse-submodules -j8 https://github.com/Wilber1987/WOpenWorldJs</code></pre>
+            </div>
+
+            <p>Este comando descarga el código fuente principal junto con todos los módulos necesarios para el
+                funcionamiento del motor de juego.</p>
+        </section>
+
+        <section class="section">
+            <h2>🏗️ Arquitectura del Motor</h2>
+            <p>WOpenWorldJS está construido sobre una arquitectura basada en componentes web (Web Components) que
+                permite una integración sencilla con cualquier aplicación web moderna.</p>
+
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <h4>OpenWorldEngineView</h4>
+                    <p>Componente principal que gestiona el ciclo de vida del juego, renderizado en canvas y
+                        coordinación entre sistemas.</p>
+                </div>
+                <div class="feature-card">
+                    <h4>GameEngine</h4>
+                    <p>Núcleo lógico que maneja el estado del juego, colisiones, movimiento de personajes y
+                        actualizaciones por frame.</p>
+                </div>
+                <div class="feature-card">
+                    <h4>CharacterModel</h4>
+                    <p>Sistema de personajes con soporte para estadísticas, inventario, habilidades y animaciones
+                        sprite-based.</p>
+                </div>
+                <div class="feature-card">
+                    <h4>Visual Novel Engine</h4>
+                    <p>Motor integrado para crear secuencias narrativas con diálogos, elecciones y escenas cinemáticas.
+                    </p>
+                </div>
+                <div class="feature-card">
+                    <h4>Battle System</h4>
+                    <p>Sistema de combate por turnos con gestión de partidos, enemigos y habilidades especiales.</p>
+                </div>
+                <div class="feature-card">
+                    <h4>Map System</h4>
+                    <p>Gestión de múltiples mapas con colisiones, objetos interactivos y NPCs posicionados
+                        dinámicamente.</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="section">
+            <h2>🎮 Configuración Básica del Juego</h2>
+            <p>La inicialización del motor requiere configurar el componente principal, definir personajes y crear al
+                menos un mapa para explorar.</p>
+
+            <h3>1. Inicialización del Motor</h3>
+            <p>El punto de entrada principal es la creación de una instancia de <span
+                    class="highlight">OpenWorldEngineView</span>, que actúa como contenedor de todos los sistemas del
+                juego.</p>
+
+            <div class="code-block">
+                <div class="code-header">main.js - Inicialización del motor</div>
+                <pre><code class="language-javascript">// Crear instancia del motor con personaje principal
+const oppenWorldEngine = new OpenWorldEngineView({
+    character: Warrior // Personaje principal definido previamente
+});
+
+// El motor se appendea al DOM cuando esté listo
+document.body.append(oppenWorldEngine);</code></pre>
+            </div>
+
+            <h3>2. Definición de Personajes</h3>
+            <p>Los personajes se crean extendiendo la clase <span class="highlight">CharacterModel</span>, permitiendo
+                personalizar estadísticas, sprites y comportamientos únicos.</p>
+
+            <div class="code-block">
+                <div class="code-header">Characters/Warrior.js - Definición de personaje</div>
+                <pre><code class="language-javascript">class WarriorModel extends CharacterModel {
+    constructor(props) {
+        // Configurar frames de animación específicos
+        props.SpritesFrames = { attack: 25 }
+        
+        // Definir estadísticas base del personaje
+        props.Stats = {
+            hp: 30,           // Puntos de vida
+            maxHp: 30,        // Vida máxima
+            strength: 10,     // Fuerza de ataque
+            speed: 3000,      // Velocidad de movimiento
+        }
+        
+        super(props)
+        
+        // Asignar habilidades especiales
+        this.Skills = [
+            new SkillModel({ numberTargets: 100 })
+        ]
+    }
+}
+
+// Crear instancia singleton del guerrero
+export const Warrior = new WarriorModel({});
+
+// Registrar en el sistema para persistencia
+CharacterRegistry.registerSingleton(Warrior);</code></pre>
+            </div>
+
+            <div class="image-gallery">
+                <div class="image-card">
+                    <img src="https://image.qwenlm.ai/public_source/4789d6b7-bd7f-4294-a5a0-570902df2946/1496d3bfb-bc8a-4275-8972-a2d5577d9b26.png"
+                        alt="Sprite sheet de guerrero">
+                    <div class="image-caption">Ejemplo de sprite sheet para animaciones de personaje</div>
+                </div>
+            </div>
+        </section>
+
+        <section class="section">
+            <h2>🗺️ Creación de Mapas</h2>
+            <p>Los mapas son el escenario donde ocurre la acción del juego. Cada mapa define dimensiones, fondo, puntos
+                de spawn y objetos interactivos.</p>
+
+            <h3>Estructura de un Mapa</h3>
+            <p>Un mapa se crea instanciando la clase <span class="highlight">GameMap</span> con parámetros específicos
+                de configuración.</p>
+
+            <div class="code-block">
+                <div class="code-header">Maps/Ciudad1.js - Creación de mapa</div>
+                <pre><code class="language-javascript">// Función auxiliar para rutas de assets
+const getAsset = (asset) => "./Media/assets/" + asset;
+
+// Crear mapa Ciudad1 con dimensiones 64x36 tiles
+const ciudad1 = new GameMap('Ciudad1', 64, 36, {
+    spawnX: 23,              // Coordenada X de inicio del jugador
+    spawnY: 16,              // Coordenada Y de inicio del jugador
+    battleBackgrond: getAsset("Maps/City1/battleBg.png"), // Fondo de batalla
+    bgColor: '#666',         // Color de fondo por defecto
+    NPCs: [npc1, DanaCharacter], // NPCs presentes en este mapa
+    backgroundImage: getAsset("Maps/City1/map1.png") // Imagen de fondo del mapa
+});</code></pre>
+            </div>
+
+            <div class="image-gallery">
+                <div class="image-card">
+                   <video class="video" src="../Media/videos/vid4.webm" loop controls autoplay></video>
+                    <div class="image-caption">Ejemplo visual de mapa tipo ciudad para el juego</div>
+                </div>
+            </div>
+
+             <div class="image-gallery">
+                <div class="image-card">
+                   <video class="video" src="../Media/videos/vid5.webm" loop controls autoplay></video>
+                    <div class="image-caption">Ejemplo visual de mapa tipo ciudad para el juego</div>
+                </div>
+            </div>
+
+            <h3>Agregar Objetos al Mapa</h3>
+            <p>Los objetos interactivos se añaden usando la clase <span class="highlight">BlockObject</span>, que puede
+                representar desde cofres hasta puertas o zonas de colisión.</p>
+
+            <div class="code-block">
+                <div class="code-header">Maps/Ciudad1.js - Agregar objetos</div>
+                <pre><code class="language-javascript">// Cofre interactivo en posición (19, 13)
+ciudad1.addObject(new BlockObject(19, 13, 1, 1, {
+    icon: getAsset("items/chest.png"), // Imagen del objeto
+    Action: () => {
+        console.log("Cofre abierto - iniciar batalla");
+        battle() // Disparar evento de batalla
+    }
+}));
+
+// Bloques de colisión invisibles para delimitar áreas
+ciudad1.addObject(new BlockObject(22, 1, 1, 1, {
+    // Sin color ni icono = objeto invisible pero sólido
+}));</code></pre>
+            </div>
+
+            <div class="success">
+                <strong>Nota:</strong> Los objetos sin propiedades visuales (color/icon) funcionan como colisionadores
+                invisibles, útiles para crear paredes o áreas restringidas.
+            </div>
+        </section>
+
+        <section class="section">
+            <h2>💬 Sistema de Novela Visual</h2>
+            <p>El motor incluye un sistema completo para crear secuencias narrativas con diálogos, elecciones
+                ramificadas y cambios de estado del juego.</p>
+
+            <h3>Definición de Escenas</h3>
+            <p>Las escenas se definen usando el <span class="highlight">vnEngine</span> y pueden incluir mostrar
+                personajes, diálogos y opciones de elección.</p>
+
+            <div class="code-block">
+                <div class="code-header">Scenes/Historia.js - Escena narrativa</div>
+                <pre><code class="language-javascript">vnEngine.defineScene("danaJoinHistory", [
+    // Mostrar fondo de escena
+    Scene.Show("assets/Maps/City1/scene1.png"),
+    
+    // Mostrar personaje en pantalla
+    DanaCharacter.Show(),
+    
+    // Crear menú de elecciones
+    Flow.Choice([
+        // Opción 1: Saludar
+        Flow.Action("Saludar", [
+            Warrior.Say("Hola"),
+            DanaCharacter.Say("Hola"),
+            () => vnEngine.Disconnect() // Cerrar escena
+        ]),
+        
+        // Opción 2: Reclutar (solo si no se ha unido)
+        Flow.Action("Solicitar que se una al equipo", [
+            Warrior.Say("Hola, escuche que necesitas un equipo"),
+            DanaCharacter.Say("Si yo estoy buscando equipo"),
+            Warrior.Say("Excelente, unete ami"),
+            DanaCharacter.Say("Claro"),
+            
+            // Cambiar variable de estado
+            DanaCharacter.SetVar("Join", true),
+            
+            // Registrar personaje en el partido
+            () => {
+                oppenWorldEngine.RegisterCharacter(DanaCharacter);
+                DanaCharacter.partyPosition = 1;
+                vnEngine.Disconnect()
+            }
+        ], { render: Flow.Var("DanaJoin", "==", false) }), // Condición de visualización
+        
+        // Opción 3: Seguir (solo si ya se unió)
+        Flow.Action("Solicitar que te siga", [
+            Warrior.Say("Sigueme"),
+            DanaCharacter.Say("Claro"),
+            () => {
+                DanaCharacter.follow(Warrior);
+                vnEngine.Disconnect()
+            }
+        ], { render: Flow.Var("DanaJoin", "==", true) })
+    ])
+]);</code></pre>
+            </div>
+
+            <div class="image-gallery">
+                <div class="image-card">
+                    <video class="video" src="../Media/videos/vid2.webm" loop controls autoplay></video>
+                    <div class="image-caption">Ejemplo de interfaz de novela visual con diálogo y personaje</div>
+                </div>
+            </div>
+        </section>
+
+        <section class="section">
+            <h2>⚔️ Sistema de Batalla</h2>
+            <p>El sistema de combate permite enfrentamientos por turnos entre el partido del jugador y grupos de
+                enemigos, con gestión de habilidades y estadísticas.</p>
+
+            <h3>Iniciar una Batalla</h3>
+            <p>Las batallas se pueden llamarse desde cualquier parte del código, típicamente desde eventos, interacciones con objetos o
+                NPCs.</p>
+
+            <div class="code-block">
+                <div class="code-header">Battle/Sistema.js - Función de batalla</div>
+                <pre><code class="language-javascript">const battle = () => {
+    // Crear array de enemigos
+    const enemies = [
+        new CharacterModel({
+            Name: "goblin",
+            Stats: {
+                hp: 15,
+                maxHp: 15,
+                strength: 3,
+                speed: 3,
+            },
+            isEnemy: true, // Marcar como enemigo
+            SpritesFrames: { attack: 25 },
+            Skills: [oppenWorldEngine.GameEngine.battleSystem.createBasicAttack()]
+        }),
+        // ... más enemigos
+    ];
+
+    // Obtener partido actual (personajes registrados con partyPosition)
+    const partyDePrueba = oppenWorldEngine.GetParty(npc1);
+
+    // Iniciar batalla con enemigos y partido
+    oppenWorldEngine.StartBattle(enemies, partyDePrueba);
+}</code></pre>
+            </div>
+
+            <div class="image-gallery">
+                <div class="image-card">
+                    <video class="video" src="../Media/videos/vid3.webm" loop controls autoplay></video>
+                    <div class="image-caption">Interfaz de sistema de batalla por turnos</div>
+                </div>
+            </div>
+
+            <div class="warning">
+                <strong>Importante:</strong> Los personajes deben tener asignada la propiedad <code>partyPosition</code>
+                para ser incluidos automáticamente en el partido de batalla.
+            </div>
+        </section>
+
+        <section class="section">
+            <h2>🖥️ Pantalla de Inicio</h2>
+            <p>La pantalla inicial del juego se gestiona mediante el componente <span
+                    class="highlight">GameStartScreen</span>, que permite configurar múltiples opciones de menú.</p>
+
+            <div class="code-block">
+                <div class="code-header">UI/PantallaInicio.js - Configuración de menú</div>
+                <pre><code class="language-javascript">// Definir opciones del menú principal
+const screenOptions = [
+    {
+        name: "New Game", 
+        startGame: true, 
+        action: () => {
+            oppenWorldEngine.GoToMap("Ciudad1")
+            new GameMenu().Connect()
+        }
+    }, 
+    {
+        name: "Continuar", 
+        startGame: false, 
+        action: (screenView) => {
+            saveSystem.showSaveLoadScreen(true, () => { 
+                new GameMenu(screenView).Connect() 
+            });
+        }
+    }, 
+    {
+        name: "Test 2", 
+        startGame: true, 
+        action: () => {
+            vnEngine.startScene("start_game");
+        }
+    }
+]
+
+// Crear e insertar pantalla de inicio
+const screenView = new GameStartScreen({
+    screenOptions: screenOptions
+})
+
+oppenWorldEngine.screenView = screenView;
+document.body.append(screenView)</code></pre>
+            </div>
+        </section>
+
+        <section class="section">
+            <h2>🔄 Ciclo de Vida del Juego</h2>
+            <p>El motor sigue un ciclo de actualización constante que maneja inputs, lógica de juego y renderizado.</p>
+
+            <h3>Flujo Principal</h3>
+            <ol style="margin-left: 1.5rem; margin-top: 1rem;">
+                <li style="margin-bottom: 0.5rem;"><strong>Inicialización:</strong> Se crean todas las instancias de
+                    personajes, mapas y sistemas.</li>
+                <li style="margin-bottom: 0.5rem;"><strong>Configuración:</strong> Se registran los mapas en el motor y
+                    se configuran las relaciones entre personajes.</li>
+                <li style="margin-bottom: 0.5rem;"><strong>Pantalla de Inicio:</strong> Se muestra el menú principal con
+                    las opciones configuradas.</li>
+                <li style="margin-bottom: 0.5rem;"><strong>Inicio del Juego:</strong> Al seleccionar "New Game", el
+                    motor carga el primer mapa y comienza el loop principal.</li>
+                <li style="margin-bottom: 0.5rem;"><strong>Game Loop:</strong> El motor actualiza constantemente el
+                    estado del juego (movimiento, colisiones, animaciones) y renderiza cada frame.</li>
+                <li style="margin-bottom: 0.5rem;"><strong>Eventos:</strong> Las interacciones del usuario (teclado,
+                    clicks) disparan acciones que pueden cambiar el estado del juego, iniciar batallas o activar escenas
+                    narrativas.</li>
+            </ol>
+        </section>
+
+        <footer>
+            <p>WOpenWorldJS - Motor de Juego Open World en JavaScript</p>
+            <p>Documentación técnica basada en el ejemplo de implementación proporcionado</p>
+        </footer>
+    </div>
+
+    <script>
+        // Inicializar Prism para resaltado de sintaxis
+        document.addEventListener('DOMContentLoaded', function () {
+            Prism.highlightAll();
+        });
+    </script>
+</body>
+
+</html>

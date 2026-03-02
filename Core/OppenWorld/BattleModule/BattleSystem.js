@@ -50,7 +50,8 @@ export class BattleSystem extends HTMLElement {
         /** @type {CharacterModel[]} */
         this.combatants = [];
         /**
-         * @type {{ target?: CharacterModel; damage: number; isCritical: boolean; startTime: number | null; spriteSkillAnimation?: HTMLImageElement[]; }[]}
+         * @type {{ target?: CharacterModel; skillElement?: string;  damage: number; isCritical: boolean; 
+         * startTime: number | null; spriteSkillAnimation?: HTMLImageElement[]; }[]}
          */
         this.targetDamage = [];
         /**
@@ -171,7 +172,7 @@ export class BattleSystem extends HTMLElement {
             this.engine.GameEngine.resume();
             this.remove();
             this.isActive = false;
-        }, 500);
+        }, 10);
     }
 
     _resizeCanvas() {
@@ -286,7 +287,7 @@ export class BattleSystem extends HTMLElement {
                             const targetDamage = this.targetDamage.find(t => t.target == npc)
                             if (targetDamage) {
                                 // @ts-ignore
-                                this._drawSelectionDamage(ctx, targetDamage, !npc.isEnemy, cam);
+                                this._drawSelectionDamage(ctx, targetDamage, !npc.isEnemy, cam, targetDamage.skillElement);
                             }
                         }
                         ctx.restore();
@@ -615,7 +616,7 @@ export class BattleSystem extends HTMLElement {
         this.logBattleMessage(`Turno de ${currentCombatant.Name}`);
         this._renderBattleScene();
         if (currentCombatant.isEnemy) {
-            setTimeout(() => this.executeEnemyTurn(currentCombatant), 1000);
+            setTimeout(() => this.executeEnemyTurn(currentCombatant), 10);
         } else {
             this.showSkills(currentCombatant);
         }
@@ -710,7 +711,7 @@ export class BattleSystem extends HTMLElement {
                 setTimeout(() => {
                     user.Skills.forEach(skill => skill.reduceCooldDown());
                     this.startNextTurn();
-                }, 1000);
+                }, 100);
             }
 
         }, direction);
@@ -730,6 +731,7 @@ export class BattleSystem extends HTMLElement {
             this.targetDamage.push({
                 target: target,
                 damage: damage,
+                skillElement: skill.element,
                 spriteSkillAnimation: skill.spriteSkillAnimation,
                 isCritical: false,              // Opcional: golpe crítico
                 startTime: null                 // Se asigna automáticamente en el primer frame
@@ -832,7 +834,7 @@ export class BattleSystem extends HTMLElement {
                     this.hideBattleEndMessage(battleMessage);
                     this.close()
                 }, 3000);
-            }, 500);
+            }, 50);
 
             return false;
         } else if (aliveParty.length === 0 && aliveEnemies.length > 0) {
@@ -844,7 +846,7 @@ export class BattleSystem extends HTMLElement {
                     this.hideBattleEndMessage(battleMessage);
                     this.close()
                 }, 3000);
-            }, 500);
+            }, 50);
             this.combatants.forEach(combatant => {
                 combatant.BattleState = undefined;
             });
@@ -858,7 +860,7 @@ export class BattleSystem extends HTMLElement {
                     this.hideBattleEndMessage(battleMessage);
                     this.close()
                 }, 3000);
-            }, 500);
+            }, 50);
             return false;
         }
         this.logBattleMessage("La batalla continua");
@@ -1059,158 +1061,198 @@ export class BattleSystem extends HTMLElement {
     }
 
     /**
-     * Dibuja indicador visual de daño recibido (número flotante + efecto de impacto)
+     * Dibuja indicador visual de daño recibido (impacto fuerte + elemento)
      * @param {CanvasRenderingContext2D} ctx
-     * @param {boolean} isAlly - true para aliado, false para enemigo
-     * @param {Camera} cam - Cámara para aplicar zoom     * 
-     * @param {{ startTime: number; damage: number; isCritical: boolean; spriteSkillAnimation: HTMLImageElement[] }} targetDamage
+     * @param  {{ target?: CharacterModel; damage: number; isCritical: boolean; startTime: number | null; spriteSkillAnimation?: HTMLImageElement[]; }} targetDamage
+     * @param {boolean} isAlly
+     * @param {Camera} cam
+     * @param {string} elementType - 'fire' | 'ice' | 'thunder' | 'poison' | 'earth' | undefined
      */
-    _drawSelectionDamage(ctx, targetDamage, isAlly, cam) {
-        // ⚠️ Este método se llama DENTRO del contexto transformado del sprite
-        // El origen (0,0) corresponde a pos.x, pos.y gracias al translate()
+    _drawSelectionDamage(ctx, targetDamage, isAlly, cam, elementType) {
 
-        // === 🎛️ CONFIGURACIÓN CENTRALIZADA ===
         const CONFIG = {
-            // ⏱️ Animación
-            duration: 0.8,
-            ringMaxProgress: 0.7,
-            flashMaxProgress: 0.2,
+            duration: 0.9,
+            ringMaxProgress: 0.6,
+            flashMaxProgress: targetDamage?.isCritical ? 0.35 : 0.2,
 
-            // 🎨 Colores
-            colors: {
-                ally: { primary: 'rgba(249, 115, 22, 1)', glow: 'rgba(249, 115, 22, 0.4)' },
-                enemy: { primary: 'rgba(74, 222, 128, 1)', glow: 'rgba(74, 222, 128, 0.4)' }
-            },
-
-            // 💥 Anillo de impacto
-            ring: {
-                baseWidthFactor: 0.4,
-                baseHeightFactor: 0.12,
-                lineWidth: 5,
-                maxAlpha: 0.8
-            },
-
-            // 🔢 Texto de daño
-            damageText: {
-                startYOffset: -40,
-                floatDistance: 35,
-                floatEasePower: 3,
-                scaleStart: 0.8,
-                scaleEnd: 1.2,
-                fontSize: 24,
-                shadowOffsetX: 2,
-                shadowOffsetY: 2,
-                shadowAlpha: 0.6,
-                gradientStartY: -12,
-                gradientEndY: 12,
-                critBorderWidth: 2
-            },
-
-            // ✨ Flash
-            flash: {
-                yOffset: -30,
-                radius: 20,
-                maxAlpha: 0.5
+            elements: {
+                none: { primary: 'rgba(255,255,255,1)', glow: 'rgba(255,255,255,0.5)' },
+                fire: { primary: 'rgba(255,90,0,1)', glow: 'rgba(255,120,0,0.5)' },
+                ice: { primary: 'rgba(120,220,255,1)', glow: 'rgba(180,240,255,0.5)' },
+                thunder: { primary: 'rgba(255,240,0,1)', glow: 'rgba(255,255,150,0.5)' },
+                poison: { primary: 'rgba(170,0,255,1)', glow: 'rgba(200,120,255,0.5)' },
+                earth: { primary: 'rgba(160,110,60,1)', glow: 'rgba(200,160,120,0.5)' }
             }
         };
 
-        // === 📍 VARIABLES DE POSICIÓN BASE (ajustar aquí si hay que desplazar todo) ===
-        // Estas coordenadas son RELATIVAS al contexto transformado (origen = pies del personaje)
-        const basePosX = 0;  // ← Ajustar para desplazar horizontalmente el efecto completo
-        const basePosY = -200;  // ← Ajustar para desplazar verticalmente el efecto completo
+        const basePosX = 0;
+        const basePosY = -200;
 
-        // === ⏱️ TIEMPO DE ANIMACIÓN ===
         const now = performance.now();
-        if (!targetDamage?.startTime) {
-            // @ts-ignore
+        if (!targetDamage.startTime) {
             targetDamage.startTime = now;
+            // @ts-ignore
+            targetDamage.particles = this._createElementParticles(elementType);
         }
-        // @ts-ignore
+
         const elapsed = (now - targetDamage.startTime) / 1000;
         const t = Math.min(elapsed / CONFIG.duration, 1);
 
-        // === 🎨 COLORES ===
-        const colorSet = isAlly ? CONFIG.colors.ally : CONFIG.colors.enemy;
+        // @ts-ignore
+        const colorSet = CONFIG.elements[elementType] || CONFIG.elements.none;
 
-        // === 💥 1. ANILLO DE IMPACTO ===
-        if (t < CONFIG.ringMaxProgress) {
-            const ringT = Math.min(t / CONFIG.ringMaxProgress, 1);
-            const ringRadiusX = this.cellWidth * CONFIG.ring.baseWidthFactor * ringT * cam.zoom;
-            const ringRadiusY = this.cellHeight * CONFIG.ring.baseHeightFactor * ringT * cam.zoom;
-            const ringAlpha = (1 - ringT) * CONFIG.ring.maxAlpha;
+        /* ============================
+           💥 PARTÍCULAS ELEMENTALES
+        ============================ */
 
-            // Posición del anillo (centrado en basePosX, basePosY)
-            const ringPosX = basePosX;
-            const ringPosY = basePosY;
+        // @ts-ignore
+        if (targetDamage.particles) {
+            ctx.save();
+            ctx.translate(basePosX, basePosY);
 
-            ctx.beginPath();
-            ctx.ellipse(ringPosX, ringPosY, ringRadiusX, ringRadiusY, 0, 0, Math.PI * 2);
-            ctx.strokeStyle = colorSet.glow.replace('1)', `${ringAlpha})`);
-            ctx.lineWidth = CONFIG.ring.lineWidth * (1 - ringT) * cam.zoom;
-            ctx.stroke();
+            // @ts-ignore
+            targetDamage.particles.forEach(p => {
+                p.life -= 0.016;
+                p.x += p.vx;
+                p.y += p.vy;
+                p.vy += p.gravity;
+
+                const alpha = Math.max(p.life / p.maxLife, 0);
+
+                ctx.globalAlpha = alpha;
+                ctx.fillStyle = p.color;
+
+                ctx.beginPath();
+                ctx.arc(p.x * cam.zoom, p.y * cam.zoom, p.size * cam.zoom, 0, Math.PI * 2);
+                ctx.fill();
+            });
+
+            ctx.globalAlpha = 1;
+
+            // @ts-ignore
+            targetDamage.particles = targetDamage.particles.filter(p => p.life > 0);
+            ctx.restore();
         }
 
-        // === 🔢 2. NÚMERO DE DAÑO FLOTANTE ===
-        const easeFactor = 1 - Math.pow(1 - t, CONFIG.damageText.floatEasePower);
-        const floatOffset = CONFIG.damageText.floatDistance * easeFactor * cam.zoom;
-        const damageYOffset = CONFIG.damageText.startYOffset * cam.zoom - floatOffset;
+        /* ============================
+           💥 SHOCKWAVE
+        ============================ */
 
-        // Posición del texto (X centrada, Y con offset desde basePosY)
-        const textPosX = basePosX;
-        const textPosY = basePosY + damageYOffset;
+        if (t < CONFIG.ringMaxProgress) {
+            const ringT = t / CONFIG.ringMaxProgress;
+            const radius = 60 * ringT * cam.zoom;
+            const alpha = (1 - ringT) * 0.8;
+
+            ctx.save();
+            ctx.beginPath();
+            ctx.arc(basePosX, basePosY, radius, 0, Math.PI * 2);
+            ctx.strokeStyle = colorSet.glow.replace('0.5', alpha.toString());
+            ctx.lineWidth = 8 * (1 - ringT);
+            ctx.stroke();
+            ctx.restore();
+        }
+
+        /* ============================
+           🔢 TEXTO DAÑO IMPACTO
+        ============================ */
+
+        const floatOffset = 45 * (1 - Math.pow(1 - t, 3)) * cam.zoom;
+        const textPosY = basePosY - 40 * cam.zoom - floatOffset;
 
         ctx.save();
-        ctx.translate(textPosX, textPosY);
 
-        const scale = CONFIG.damageText.scaleStart + t * (CONFIG.damageText.scaleEnd - CONFIG.damageText.scaleStart);
-        const alpha = 1 - t;
+        const shake = (1 - t) * 6;
+        ctx.translate(basePosX + (Math.random() - 0.5) * shake,
+            textPosY + (Math.random() - 0.5) * shake);
+
+        let scale = t < 0.15
+            ? 1.8 - (t * 4)
+            : 1.2 - ((t - 0.15) * 0.3);
+
+        if (targetDamage.isCritical) scale *= 1.4;
+
         ctx.scale(scale, scale);
 
-        // Sombra
-        ctx.fillStyle = `rgba(0, 0, 0, ${alpha * CONFIG.damageText.shadowAlpha})`;
-        ctx.font = `bold ${CONFIG.damageText.fontSize}px Arial`;
+        ctx.font = `bold 30px Arial`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        // @ts-ignore
-        ctx.fillText(`-${targetDamage?.damage}`, CONFIG.damageText.shadowOffsetX, CONFIG.damageText.shadowOffsetY);
 
-        // Texto principal con gradiente
-        const gradient = ctx.createLinearGradient(0, CONFIG.damageText.gradientStartY, 0, CONFIG.damageText.gradientEndY);
-        gradient.addColorStop(0, `rgba(255, 255, 255, ${alpha})`);
-        gradient.addColorStop(1, colorSet.primary.replace('1)', `${alpha})`));
+        const alpha = 1 - t;
+
+        ctx.fillStyle = `rgba(0,0,0,${alpha * 0.7})`;
+        ctx.fillText(`-${targetDamage.damage}`, 3, 3);
+
+        const gradient = ctx.createLinearGradient(0, -15, 0, 15);
+
+        if (targetDamage.isCritical) {
+            gradient.addColorStop(0, `rgba(255,255,180,${alpha})`);
+            gradient.addColorStop(1, `rgba(255,215,0,${alpha})`);
+        } else {
+            gradient.addColorStop(0, `rgba(255,255,255,${alpha})`);
+            gradient.addColorStop(1, colorSet.primary.replace('1)', `${alpha})`));
+        }
 
         ctx.fillStyle = gradient;
-        ctx.fillText(`-${targetDamage?.damage}`, 0, 0);
-
-        // Borde para crítico
-        if (targetDamage?.isCritical) {
-            ctx.strokeStyle = `rgba(255, 255, 255, ${alpha})`;
-            ctx.lineWidth = CONFIG.damageText.critBorderWidth;
-            ctx.strokeText(`-${targetDamage?.damage}`, 0, 0);
-        }
+        ctx.fillText(`-${targetDamage.damage}`, 0, 0);
 
         ctx.restore();
 
-        // === ✨ 3. FLASH DE IMPACTO ===
+        /* ============================
+           ✨ FLASH
+        ============================ */
+
         if (t < CONFIG.flashMaxProgress) {
-            const flashAlpha = (1 - t / CONFIG.flashMaxProgress) * CONFIG.flash.maxAlpha;
-
-            // Posición del flash
-            const flashPosX = basePosX;
-            const flashPosY = basePosY + (CONFIG.flash.yOffset * cam.zoom);
-
-            ctx.fillStyle = `rgba(255, 255, 255, ${flashAlpha})`;
+            const flashAlpha = (1 - t / CONFIG.flashMaxProgress) * 0.9;
+            ctx.save();
+            ctx.fillStyle = `rgba(255,255,255,${flashAlpha})`;
             ctx.beginPath();
-            ctx.arc(flashPosX, flashPosY, CONFIG.flash.radius * cam.zoom, 0, Math.PI * 2);
+            ctx.arc(basePosX, basePosY, 70 * cam.zoom, 0, Math.PI * 2);
             ctx.fill();
+            ctx.restore();
         }
 
-        // === 🧹 LIMPIEZA ===
         if (t >= 1) {
             this.targetDamage.splice(this.targetDamage.indexOf(targetDamage), 1);
         }
     }
 
+    
+    /**
+     * @param {string} elementType
+     */
+    _createElementParticles(elementType) {
+
+        const particles = [];
+        const count = 20;
+
+        for (let i = 0; i < count; i++) {
+
+            let color = "white";
+            let gravity = 0.05;
+
+            switch (elementType) {
+                case "fire": color = "orange"; break;
+                case "ice": color = "cyan"; gravity = 0.01; break;
+                case "thunder": color = "yellow"; break;
+                case "poison": color = "violet"; gravity = -0.01; break;
+                case "earth": color = "#8B5A2B"; gravity = 0.15; break;
+            }
+
+            particles.push({
+                x: 0,
+                y: 0,
+                vx: (Math.random() - 0.5) * 6,
+                vy: (Math.random() - 0.5) * 6,
+                size: 3 + Math.random() * 3,
+                life: 0.6,
+                maxLife: 0.6,
+                gravity,
+                color
+            });
+        }
+
+        return particles;
+    }
     /**
      * Limpia la selección actual
      * @private
