@@ -3,6 +3,21 @@ import { CharacterModel } from "./CharacterModel.js";
 import { CharacterRegistry } from "./CharacterRegistry.js";
 import { SkillRegistry } from "./SkillRegistry.js";
 
+export const ElementsType = {
+    FIRE: "fire",
+    ICE: "ice",
+    THUNDER: "thunder",
+    POISON: "poison",
+    EARTH: "earth",
+    LIGHT: "light",
+    DARK: "dark",
+}
+
+export const SkillsType = {
+    MELE: "MELE",
+    LONG_RANGE: "LONG_RANGE"
+}
+
 export class SkillModel {
     static _registeredClasses = new Set();
     /**
@@ -37,7 +52,23 @@ export class SkillModel {
         /**
          * @type {string|undefined}
          */
-        this.element = props.element ?? undefined;
+        this.element = props.element ?? ElementsType.LIGHT;
+        /**
+         * @type {number}
+         */
+        this.level = props.level ?? 1;
+        /**
+         * @type {string}
+         */
+        this.skillType = props.skillType ?? SkillsType.MELE;
+        /**
+         * @type {number|undefined}
+         */
+        this.animationPause = props.animationPause;
+        /**
+         * @type {number|undefined}
+         */
+        this.animationPauseEnd = props.animationPauseEnd;
     }
 
     excute(

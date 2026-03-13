@@ -5,6 +5,7 @@ import { Camera } from "./Camera.js";
 import { GameMap } from "./OpenWordModules/Models.js";
 import { BattleSystem } from "./BattleModule/BattleSystem.js";
 import { vnEngine } from "../VisualNovel/VisualNovelEngine.js";
+import { CharactersUtil } from "../Common/CharactersUtil.js";
 
 /**
  * @typedef {Object} MapObject
@@ -72,7 +73,6 @@ import { vnEngine } from "../VisualNovel/VisualNovelEngine.js";
 // Engine
 // --------------------------------------------------
 export class GameEngine {
-
     /**
     * @param {OpenWorldEngineView} openWorldInstance
     */
@@ -83,11 +83,13 @@ export class GameEngine {
         this.maps = {};
         /**@type {GameMap | null} */
         this.currentMap = null;
-        /** @type {CharacterModel} */
-        this.SelectedCharacter = openWorldInstance.character ?? new CharacterModel();
+
 
         /** @type {CharacterModel[]} */
-        this.Characters = openWorldInstance.Characters ?? [];
+        this.Characters = openWorldInstance.Characters;
+
+        /** @type {CharacterModel} */
+        this.SelectedCharacter = CharactersUtil.getLeader(this.Characters) ?? new CharacterModel();
 
         /** @type {Camera} */
         this.cam = new Camera(100, 100);
@@ -98,26 +100,24 @@ export class GameEngine {
         /** @type {Set<MapObject>} */
         this.overlaps = new Set(); // objects currently overlapped  
 
-        /** @type {HTMLElement} */
-        // @ts-ignore
+        /** @type {HTMLElement} */// @ts-ignore
         this.hud = this.OpenWorldInstance.shadowRoot?.querySelector('#hud');
         /** @type {HTMLCanvasElement} */
 
         this.minimapCanvas = this.OpenWorldInstance.MinimapCanvas;
-        /** @type {CanvasRenderingContext2D} */
-        // @ts-ignore
+        /** @type {CanvasRenderingContext2D} */// @ts-ignore
         this.minictx = this.minimapCanvas?.getContext('2d');
         // Sistema de batalla
         /** @type {BattleSystem} */
         this.battleSystem = new BattleSystem(openWorldInstance);
-        // En constructor de GameEngine
+
         /** @type {number} */
         this.minZoom = 0.4; // valor por defecto
         /** @type {number} */
-        this.maxZoom = 2.5; // valor por defecto
-        // input
-        // En GameEngine.constructor()
+
+        this.maxZoom = 5; // valor por defecto
         /** @type {boolean} */
+
         this.active = true;
         this._bindInputs();
 
@@ -127,7 +127,7 @@ export class GameEngine {
         /** @type {AlertTarget | null} */
         this.alertTarget = null;
         /** @type {number} */
-        this.alertRadius = 0.5;  // Aumentar radio para probar
+        this.alertRadius = 1.5;  // Aumentar radio para probar
         /** @type {{x: number, y: number}} */
         this.alertOffset = { x: 0, y: -20 };
         // 🔧 CORRECCIÓN 4: Agregar gestión de foco (evita bugs con alert())
@@ -151,7 +151,10 @@ export class GameEngine {
      * @param {{x: number, y: number}} [pos] - La posición (x, y) opcional para el personaje en el nuevo mapa. Si no se proporciona, usa el spawn del mapa.
      */
     GoToMap(name, pos) {
-        this.RegisterCharacter(this.SelectedCharacter)
+        this.RegisterCharacter(this.SelectedCharacter, this.OpenWorldInstance.Config?.isFullPerspective ?? false);
+        this.Characters.forEach(character => {
+            this.RegisterCharacter(character, this.OpenWorldInstance.Config?.isFullPerspective ?? false);
+        });
         const target = this.maps[name];
         if (!target) { console.warn('Mapa no encontrado:', name); return; }
         this.currentMap = target;
@@ -163,6 +166,9 @@ export class GameEngine {
             this.SelectedCharacter.x = target.spawnX;
             this.SelectedCharacter.y = target.spawnY;
         }
+        const followers = this.Characters.filter(c => c.isFollower).forEach(char => {
+            char.follow(this.SelectedCharacter)
+        });
 
         // reset overlaps y teclas
         this.overlaps.clear();
@@ -172,9 +178,10 @@ export class GameEngine {
         this.cam.y = this.SelectedCharacter.y;
 
         // 👇 Actualizar límites de zoom según el mapa
-        this.minZoom = 1.2
+        this.minZoom = this.cam.GetMinZoom(this.currentMap);
         console.log(`this.minZoom ${this.minZoom}`);
-        this.maxZoom = 10;
+        this.maxZoom = this.cam.GetMaxZoom(this.currentMap);
+
         // Asegurar que el zoom actual esté dentro de los nuevos límites
         this.cam.zoom = clamp(this.cam.zoom, this.minZoom, this.maxZoom);
 
@@ -329,12 +336,10 @@ export class GameEngine {
         if (!this.active) return; // 👈 detener si no está activo
         if (!this.lastTs) this.lastTs = ts; const dt = (ts - this.lastTs) / 1000; this.lastTs = ts;
         if (!this.currentMap) { requestAnimationFrame(this.update.bind(this)); return; }
+        this.SelectedCharacter = CharactersUtil.getLeader(this.Characters) ?? new CharacterModel();
         const followers = this.Characters.filter(c => c.isFollower);
 
-        // Si hay una batalla activa, no procesar movimiento
         if (!this.battleSystem.isActive) {
-            // movement
-            // movimiento
             let dx = 0, dy = 0;
             ({ dy, dx } = this.UpdateCharacterStateDirection(dy, dx, this.SelectedCharacter));
 
@@ -362,12 +367,9 @@ export class GameEngine {
                     this.updateFollowerState(nx, ny, followers, dt, moving);
                 }
             }
-
             // 👇 NUEVO: Verificar proximidad para alertas
             this._checkAlertProximity();
         }
-
-
         // camera follow
         this.cam.follow(this.SelectedCharacter, this.currentMap);
         this.currentMap.NPCs.forEach(npc => {
@@ -390,7 +392,7 @@ export class GameEngine {
      */
     updateFollowerState(nx, ny, followers, dt, moving) {
         let prevX = nx, prevY = ny;
-        const spacing = 1.2; // distancia en tiles entre personajes
+        const spacing = 1.2 * (this.currentMap?.usarPerspectiva ? this.currentMap?.factorPerspectiva + 1 : 1); // distancia en tiles entre personajes
 
         followers.forEach((character, index) => {
             // Posicionar detrás del anterior (no del líder directo)
@@ -411,10 +413,52 @@ export class GameEngine {
      * @param {CharacterModel} character
      */
     UpdateCharacterStateDirection(dy, dx, character) {
-        if (this.keys["arrowup"] || this.keys["w"]) { dy = -1; character.direction = "up"; }
-        if (this.keys["arrowdown"] || this.keys["s"]) { dy = 1; character.direction = "down"; }
-        if (this.keys["arrowleft"] || this.keys["a"]) { dx = -1; character.direction = "left"; }
-        if (this.keys["arrowright"] || this.keys["d"]) { dx = 1; character.direction = "right"; }
+        // 🔹 PASO 1: Leer inputs y establecer valores base
+        let inputDx = 0, inputDy = 0;
+
+        if (this.keys["arrowup"] || this.keys["w"]) { inputDy = -1; }
+        if (this.keys["arrowdown"] || this.keys["s"]) { inputDy = 1; }
+        if (this.keys["arrowleft"] || this.keys["a"]) { inputDx = -1; }
+        if (this.keys["arrowright"] || this.keys["d"]) { inputDx = 1; }
+
+        // 🔹 PASO 2: Determinar dirección (8 direcciones) basado en input COMBINADO
+        let newDirection = character.direction;
+
+        const isFullPerspective = this.OpenWorldInstance.Config?.isFullPerspective
+
+        if (inputDx < 0 && inputDy < 0 && isFullPerspective) {
+            newDirection = "up_left";
+        } else if (inputDx > 0 && inputDy < 0 && isFullPerspective) {
+            newDirection = "up_right";
+        } else if (inputDx < 0 && inputDy > 0 && isFullPerspective) {
+            newDirection = "down_left";
+        } else if (inputDx > 0 && inputDy > 0 && isFullPerspective) {
+            newDirection = "down_right";
+        } else if (inputDy < 0) {
+            newDirection = "up";
+        } else if (inputDy > 0) {
+            newDirection = "down";
+        } else if (inputDx < 0) {
+            newDirection = "left";
+        } else if (inputDx > 0) {
+            newDirection = "right";
+        }
+        // Si no hay input, mantiene la dirección anterior
+
+        // 🔹 PASO 3: Actualizar dirección SOLO si hay movimiento
+        if (inputDx !== 0 || inputDy !== 0) {
+            character.direction = newDirection;
+        }
+
+        // 🔹 PASO 4: Normalizar velocidad diagonal (para que no sea más rápido en diagonal)
+        dx = inputDx;
+        dy = inputDy;
+        if (dx !== 0 && dy !== 0) {
+            const inv = 1 / Math.sqrt(2);
+            dx *= inv;
+            dy *= inv;
+        }
+
         return { dy, dx };
     }
 
@@ -430,203 +474,229 @@ export class GameEngine {
             case 'down': return { x: leaderX, y: leaderY - offsetTiles };
             case 'left': return { x: leaderX + offsetTiles, y: leaderY };
             case 'right': return { x: leaderX - offsetTiles, y: leaderY };
+            case 'up_left': return { x: leaderX + offsetTiles * 0.7, y: leaderY + offsetTiles * 0.7 };
+            case 'up_right': return { x: leaderX - offsetTiles * 0.7, y: leaderY + offsetTiles * 0.7 };
+            case 'down_left': return { x: leaderX + offsetTiles * 0.7, y: leaderY - offsetTiles * 0.7 };
+            case 'down_right': return { x: leaderX - offsetTiles * 0.7, y: leaderY - offsetTiles * 0.7 };
             default: return { x: leaderX, y: leaderY };
         }
     }
-
     /**
-     * Dibuja todos los elementos del juego en el canvas (fondo, cuadrícula, objetos, NPCs, jugador, HUD, minimapa, alertas).
+     * Dibuja todos los elementos con perspectiva 2.5D, Y-sorting, y lógica de followers por dirección
      * @param {CharacterModel[]} followers
      */
     draw(followers) {
-        const canvas = /** @type {HTMLCanvasElement | null | undefined} */(this.OpenWorldInstance.shadowRoot?.querySelector('#view'));
+        /** @type {HTMLCanvasElement | null | undefined} */
+        const canvas = this.OpenWorldInstance.shadowRoot?.querySelector('#view');
         this.OpenWorldInstance.SetTimeClass();
-        if (!canvas) return; // Add null check for canvas
-
-        const ctx = /** @type {CanvasRenderingContext2D | null | undefined} */(canvas.getContext('2d'));
-        if (!ctx) return; // Add null check for ctx
+        if (!canvas) return;
+        /** @type {CanvasRenderingContext2D | null | undefined} */
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
 
         ctx.setTransform(1, 0, 0, 1, 0, 0);
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.scale(DPR, DPR);
 
-        // background
+        // --- Fondo y grid (sin cambios) ---
         ctx.fillStyle = this.currentMap?.bgColor;
         ctx.fillRect(0, 0, this.cam.screenW, this.cam.screenH);
 
-        // grid (optional subtle)
         const leftTile = Math.floor(this.cam.x - (this.cam.screenW / TILE_SIZE) / (2 * this.cam.zoom)) - 1;
         const rightTile = Math.ceil(this.cam.x + (this.cam.screenW / TILE_SIZE) / (2 * this.cam.zoom)) + 1;
         const topTile = Math.floor(this.cam.y - (this.cam.screenH / TILE_SIZE) / (2 * this.cam.zoom)) - 1;
         const bottomTile = Math.ceil(this.cam.y + (this.cam.screenH / TILE_SIZE) / (2 * this.cam.zoom)) + 1;
-        ctx.lineWidth = 1 / this.cam.zoom; ctx.strokeStyle = 'rgba(0,0,0,0.12)';
+
+        ctx.lineWidth = 1 / this.cam.zoom;
+        ctx.strokeStyle = 'rgba(0,0,0,0.12)';
         for (let tx = leftTile; tx <= rightTile; tx++) {
             for (let ty = topTile; ty <= bottomTile; ty++) {
-                if (!this.currentMap) continue; // Added null check for currentMap
-                if (tx < 0 || ty < 0 || tx >= this.currentMap.w || ty >= this.currentMap.h) continue;
+                if (!this.currentMap || tx < 0 || ty < 0 || tx >= this.currentMap.w || ty >= this.currentMap.h) continue;
                 const px = (tx - this.cam.x) * TILE_SIZE * this.cam.zoom + this.cam.screenW / 2;
                 const py = (ty - this.cam.y) * TILE_SIZE * this.cam.zoom + this.cam.screenH / 2;
                 ctx.strokeRect(px, py, TILE_SIZE * this.cam.zoom, TILE_SIZE * this.cam.zoom);
             }
         }
 
+        // --- Dibujar background image ---
         const bg = this.currentMap;
-        if (!bg) return; // Add null check for bg
-
-        // Dentro de draw(), justo antes de dibujar el fondo:
+        if (!bg) return;
         const offsetX = -this.cam.x * TILE_SIZE * this.cam.zoom + this.cam.screenW / 2;
         const offsetY = -this.cam.y * TILE_SIZE * this.cam.zoom + this.cam.screenH / 2;
-        // Dibujar fondo
+
         if (bg.backgroundImage && bg.backgroundImage.complete) {
             const mapPxW = bg.w * TILE_SIZE;
             const mapPxH = bg.h * TILE_SIZE;
-
-            ctx.drawImage(
-                bg.backgroundImage,
-                0, 0,
-                bg.backgroundImage.naturalWidth, bg.backgroundImage.naturalHeight,
-                offsetX, offsetY,                 // 👈 posición relativa a la cámara
-                mapPxW * this.cam.zoom,
-                mapPxH * this.cam.zoom
-            );
-        } else {
-            ctx.fillStyle = bg.bgColor;
-            ctx.fillRect(0, 0, this.cam.screenW, this.cam.screenH);
+            ctx.drawImage(bg.backgroundImage, 0, 0, bg.backgroundImage.naturalWidth, bg.backgroundImage.naturalHeight,
+                offsetX, offsetY, mapPxW * this.cam.zoom, mapPxH * this.cam.zoom);
         }
 
-        // objects
-        this.BuildObjects(ctx);
 
-        // NPCs (dibujados después para que aparezcan encima de los objetos)
-        this.BuildNPCs(ctx);
 
-        // player
-        const Character = this.SelectedCharacter;
-        const ppx = (Character.x - this.cam.x) * TILE_SIZE * this.cam.zoom + this.cam.screenW / 2;
-        const ppy = (Character.y - this.cam.y) * TILE_SIZE * this.cam.zoom + this.cam.screenH / 2;
+        const renderQueue = [];
 
-        ctx.fillStyle = 'rgba(0,0,0,0.3)'; ctx.beginPath(); ctx.arc(ppx, ppy, 12 * this.cam.zoom, 0, Math.PI * 2);
-        ctx.fill();
-        if (this.SelectedCharacter.direction == "down") {
-            followers.forEach((character) => {
-                character.draw(ctx, this.cam);
-            })
-        }
-        this.SelectedCharacter.draw(ctx, this.cam);
-
-        if (this.SelectedCharacter.direction != "down") {
-            followers.forEach((character) => {
-                character.draw(ctx, this.cam);
-            })
-        }
-        // HUD text
-        if (this.hud) { // Add null check for hud
-            this.hud.innerText = `Time: ${vnEngine.TimeSystem.currentTime}
-                Pos: ${Character.x.toFixed(2)}, ${Character.y.toFixed(2)}
-                Map: ${this.currentMap?.name} • Zoom: ${this.cam.zoom.toFixed(2)}
-                Overlaps: ${this.overlaps.size}`;
-        }
-        // minimap
-        this._drawMinimap();
-
-        // 👉 NUEVO: Dibujar alerta ÚLTIMO (encima de todo)
-        this._drawAlertIcon(ctx);
-
-        // HUD text (ya existe)
-        if (this.hud) { // Add null check for hud
-            this.hud.innerText = `Time: Hora: ${vnEngine.TimeSystem.getFormattedHour()} | Día: ${vnEngine.TimeSystem.currentTime.day} (${vnEngine.TimeSystem.currentTime.weekDay}) |  Temporada: ${vnEngine.TimeSystem.currentTime.season}
-                    Pos: ${Character.x.toFixed(2)}, ${Character.y.toFixed(2)}
-                    Map: ${this.currentMap?.name} • Zoom: ${this.cam.zoom.toFixed(2)}
-                    Overlaps: ${this.overlaps.size}
-                    ${this.alertVisible ? '💡 Z para interactuar' : ''}`;
-        }
-    }
-
-    // Método BuildNPCs actualizado - usa solo MapData, nunca las propiedades x/y del personaje
-    // En GameEngine.js - método BuildNPCs() actualizado
-    /**
-     * Dibuja todos los NPCs en el canvas.
-     * @param {CanvasRenderingContext2D} ctx - El contexto de renderizado 2D del canvas.
-     * @private
-     */
-    BuildNPCs(ctx) {
-        if (!this.currentMap?.NPCs) return;
-
-        for (const npc of this.currentMap.NPCs) {
-            if (npc.isFollower) {
-
-                continue;
-            }
-            // Obtener posición desde MapData
-            let npcX = npc.x, npcY = npc.y; // Fallback to npc.x/y if MapData not found/valid
-            if (this.currentMap) { // Added null check for currentMap
-                const mapData = npc.MapData?.find(d => d.name === this.currentMap?.name); // Added null check for currentMap
-                if (mapData?.rendered instanceof Function && mapData.rendered() == false) {
-                    continue;
+        // 1. Agregar objetos del mapa
+        if (this.currentMap?.objects) {
+            for (const obj of this.currentMap.objects) {
+                if (obj.icon || (obj.color && obj.color !== '')) {
+                    const scale = this.getScale(obj.y);
+                    renderQueue.push({
+                        type: 'object',
+                        ref: obj,
+                        sortY: obj.y + obj.h / 2,  // Centro del objeto para sorting
+                        scale: scale
+                    });
                 }
+            }
+        }
+        // 2. Agregar NPCs (excluyendo followers)
+        if (this.currentMap?.NPCs) {
+            for (const npc of this.currentMap.NPCs) {
+                if (npc.isFollower) continue;
+                let npcX = npc.x, npcY = npc.y;
+                const mapData = npc.MapData?.find(d => d.name === this.currentMap?.name);
                 if (mapData) {
+                    if (mapData.rendered instanceof Function && mapData.rendered() === false) continue;
                     npcX = mapData.posX;
                     npcY = mapData.posY;
                 }
+                const scale = this.getScale(npcY);
+                renderQueue.push({
+                    type: 'npc',
+                    ref: npc,
+                    sortY: npcY,  // Posición Y para sorting
+                    scale: scale
+                });
             }
-            // Verificar que el NPC tenga sprites cargados
-            if (!npc.Sprites || !npc.Sprites.idle || !npc.Sprites.idle.down) {
-                // Dibujar círculo de respaldo centrado en el tile
-                const px = (npcX - this.cam.x) * TILE_SIZE * this.cam.zoom + this.cam.screenW / 2;
-                const py = (npcY - this.cam.y) * TILE_SIZE * this.cam.zoom + this.cam.screenH / 2;
-                ctx.fillStyle = '#ff6b6b';
-                ctx.beginPath();
-                ctx.arc(px, py, 8 * this.cam.zoom, 0, Math.PI * 2);
-                ctx.fill();
-                continue;
+        }
+        // 🔧 3. AGREGAR GRUPO JUGADOR + FOLLOWERS (con orden interno por dirección)
+        const playerY = this.SelectedCharacter.y;
+        const playerScale = this.getScale(playerY);
+        const isDown = this.SelectedCharacter.direction.includes("down");
+
+        // Offset mínimo para forzar orden dentro del grupo (0.001 tiles)
+        const GROUP_OFFSET = 0.001;
+
+        if (isDown) {
+            // 🔽 Dirección DOWN: followers se dibujan PRIMERO (detrás del jugador)
+            for (const follower of followers) {
+                const scale = this.getScale(follower.y);
+                renderQueue.push({
+                    type: 'follower',
+                    ref: follower,
+                    sortY: playerY - GROUP_OFFSET,  // ⬅️ LIGERAMENTE ARRIBA del jugador
+                    scale: scale
+                });
             }
-            // Estado y dirección actual
-            const currentState = npc.state || 'idle';
-            const currentDirection = npc.direction || 'down';
-            if (npc.Sprites[currentState] && npc.Sprites[currentState][currentDirection]) {
-                const spriteList = npc.Sprites[currentState][currentDirection];
-                const animFrame = npc.animFrame || 0;
+            // Jugador se dibuja DESPUÉS (encima de followers)
+            renderQueue.push({
+                type: 'player',
+                ref: this.SelectedCharacter,
+                sortY: playerY,  // Posición real del jugador
+                scale: playerScale
+            });
+        } else {
+            // 🔼/◀️/▶️ Otras direcciones: jugador se dibuja PRIMERO (detrás de followers)
+            renderQueue.push({
+                type: 'player',
+                /**@type {CharacterModel} */ ref: this.SelectedCharacter,
+                sortY: playerY,  // Posición real del jugador
+                scale: playerScale
+            });
+            for (const follower of followers) {
+                const scale = this.getScale(follower.y);
+                renderQueue.push({
+                    type: 'follower',
+                    ref: follower,
+                    sortY: playerY + GROUP_OFFSET,  // ⬅️ LIGERAMENTE ABAJO del jugador
+                    scale: scale
+                });
+            }
+        }
 
-                if (spriteList[animFrame]) {
-                    const img = spriteList[animFrame];
-                    if (img && img.complete && img.naturalWidth > 0) {
-                        // Posición del centro del tile en pantalla
-                        const px = (npcX - this.cam.x) * TILE_SIZE * this.cam.zoom + this.cam.screenW / 2;
-                        const py = (npcY - this.cam.y) * TILE_SIZE * this.cam.zoom + this.cam.screenH / 2;
+        // 🔧 ORDENAR POR sortY (Y-SORTING)
+        // Entidades con mayor sortY se dibujan después (encima)
+        renderQueue.sort((a, b) => a.sortY - b.sortY);
 
-                        const tileHeight = npc.tileHeight ?? 1.5;
-                        const drawH = TILE_SIZE * this.cam.zoom * tileHeight;
-                        const aspect = img.naturalWidth / img.naturalHeight;
-                        const drawW = TILE_SIZE * this.cam.zoom * npc.width; // drawH * aspect;
-                        const imgWidth = drawH * aspect;
-
-                        // alert( drawW)
-                        ctx.fillStyle = 'rgba(0,0,0,0.3)';
-                        ctx.beginPath();
-                        ctx.arc(
-                            px + drawW / 2,
-                            py + drawH - 40,
-                            13 * this.cam.zoom,
-                            0,
-                            Math.PI * 2);
-                        ctx.fill();
-
-                        //ctx.fillRect(px, py, drawW, drawH);
-
-                        // ✅ CENTRADO: Restar la mitad de las dimensiones para alinear el centro de la imagen con (px, py)
-                        ctx.drawImage(
-                            img,
-                            px - drawW / 2,  // ← Centro horizontal (equivalente a translateX(-50%))
-                            py,  // ← Centro vertical
-                            imgWidth,
-                            drawH
-                        );
+        // 🔧 DIBUJAR TODO EN ORDEN
+        for (const entity of renderQueue) {
+            if (entity.type === 'npc' || entity.type === 'player' || entity.type === 'follower') {
+                /**@type {CharacterModel} */// @ts-ignore
+                const npc = entity.ref
+                if (this.currentMap && !npc.isFollower) { // Added null check for currentMap
+                    const mapData = npc.MapData?.find(d => d.name === this.currentMap?.name); // Added null check for currentMap
+                    if (mapData?.rendered instanceof Function && mapData.rendered() == false) return;
+                    if (mapData) {
+                        npc.x = mapData.posX;
+                        npc.y = mapData.posY;
                     }
                 }
+                npc.draw(ctx, this.cam, entity.scale);
+            } else if (entity.type === 'object') {
+                // @ts-ignore
+                this.BuildObject(ctx, entity.ref, entity.scale)
+            }
+        }
+
+        // --- HUD y elementos UI (sin escala de perspectiva) ---
+        const Character = this.SelectedCharacter;
+        if (this.hud) {
+            this.hud.innerText = `Time: Hora: ${vnEngine.TimeSystem.getFormattedHour()} | Día: ${vnEngine.TimeSystem.currentTime.day}
+                Pos: ${Character.x.toFixed(2)}, ${Character.y.toFixed(2)}
+                Map: ${this.currentMap?.name} • Zoom: ${this.cam.zoom.toFixed(2)}
+                Overlaps: ${this.overlaps.size}
+                ${this.alertVisible ? '💡 Z para interactuar' : ''}`;
+        }
+
+        this._drawMinimap();
+        this._drawAlertIcon(ctx);
+    }
+
+    getScale = (/** @type {number} */ entityY) => {
+        if (!this.currentMap?.usarPerspectiva) return 1;
+        const normalizedY = Math.max(0, Math.min(1, entityY / this.currentMap.h));
+        return 1 + (normalizedY * this.currentMap.factorPerspectiva);
+    };
+
+
+    /**
+     * @param {CanvasRenderingContext2D} ctx
+     * @param {{ x: number; zoom: number; screenW: number; y: number; screenH: number; }} cam
+     * @param {import("./OpenWordModules/Models.js").BlockObject} obj
+     * @param {number} scale
+     */
+    _drawObjectWithScale(ctx, cam, obj, scale) {
+        const px = (obj.x - cam.x) * TILE_SIZE * cam.zoom + cam.screenW / 2;
+        const py = (obj.y - cam.y) * TILE_SIZE * cam.zoom + cam.screenH / 2;
+
+        if (obj.icon instanceof Image && obj.icon.complete) {
+            const baseW = (obj.iconWidth ?? obj.w * TILE_SIZE) * cam.zoom;
+            const baseH = (obj.iconHeight ?? obj.h * TILE_SIZE) * cam.zoom;
+
+            // Aplicar escala
+            const drawW = baseW * scale;
+            const drawH = baseH * scale;
+
+            // Anclar por la base para que no "floten"
+            ctx.drawImage(obj.icon,
+                px,
+                py - drawH,
+                drawW,
+                drawH);
+        } else if (obj.color && obj.color !== '') {
+            ctx.fillStyle = obj.color;
+            const drawW = obj.w * TILE_SIZE * cam.zoom * scale;
+            const drawH = obj.h * TILE_SIZE * cam.zoom * scale;
+            ctx.fillRect(px, py - drawH, drawW, drawH);
+
+            // Highlight si está overlap
+            if (this.overlaps.has(obj)) {
+                ctx.strokeStyle = '#fff';
+                ctx.lineWidth = 2 / cam.zoom;
+                ctx.strokeRect(px, py - drawH, drawW, drawH);
             }
         }
     }
-
 
     /**
      * Agrega un NPC al juego. Si el NPC tiene MapData, intenta posicionarlo según el mapa, de lo contrario, lo coloca aleatoriamente.
@@ -683,48 +753,52 @@ export class GameEngine {
     /**
      * Dibuja todos los objetos del mapa en el canvas.
      * @param {CanvasRenderingContext2D} ctx - El contexto de renderizado 2D del canvas.
+     * @param {MapObject} mapObject
+     * @param {number} scale
      * @private
      */
-    BuildObjects(ctx) {
+    BuildObject(ctx, mapObject, scale) {
         if (!this.currentMap) return; // Add null check
-        for (const mapObject of this.currentMap.objects) {
-            const px = (mapObject.x - this.cam.x) * TILE_SIZE * this.cam.zoom + this.cam.screenW / 2;
-            const py = (mapObject.y - this.cam.y) * TILE_SIZE * this.cam.zoom + this.cam.screenH / 2;
+        const px = (mapObject.x - this.cam.x) * TILE_SIZE * this.cam.zoom + this.cam.screenW / 2;
+        const py = (mapObject.y - this.cam.y) * TILE_SIZE * this.cam.zoom + this.cam.screenH / 2;
 
-            if (mapObject.icon instanceof Image) {
-                if (!mapObject.icon.complete || mapObject.icon.naturalWidth === 0) continue;
+        if (mapObject.icon instanceof Image) {
+            if (!mapObject.icon.complete || mapObject.icon.naturalWidth === 0) return;
 
-                const w = (mapObject.iconWidth ?? mapObject.w * TILE_SIZE) * this.cam.zoom;
-                const h = (mapObject.iconHeight ?? mapObject.h * TILE_SIZE) * this.cam.zoom;
+            const baseW = (mapObject.iconWidth ?? mapObject.w * TILE_SIZE) * this.cam.zoom;
+            const baseH = (mapObject.iconHeight ?? mapObject.h * TILE_SIZE) * this.cam.zoom;
 
-                ctx.drawImage(mapObject.icon, px, py, w, h);
+            // Aplicar escala
+            const drawW = baseW * scale;
+            const drawH = baseH * scale;
 
-            } else {
-                // Solo dibujar si tiene un color definido
+            ctx.drawImage(mapObject.icon, px, py, drawW, drawH);
 
-                if (mapObject.color && mapObject.color !== '') {
-                    ctx.fillStyle = mapObject.color;
-                    ctx.fillRect(
+        } else {
+            // Solo dibujar si tiene un color definido
+
+            if (mapObject.color && mapObject.color !== '') {
+                ctx.fillStyle = mapObject.color;
+                ctx.fillRect(
+                    px,
+                    py,
+                    mapObject.w * TILE_SIZE * this.cam.zoom,
+                    mapObject.h * TILE_SIZE * this.cam.zoom
+                );
+
+                if (this.overlaps.has(mapObject)) {
+                    ctx.strokeStyle = '#fff';
+                    ctx.lineWidth = 2 / this.cam.zoom;
+                    ctx.strokeRect(
                         px,
                         py,
                         mapObject.w * TILE_SIZE * this.cam.zoom,
                         mapObject.h * TILE_SIZE * this.cam.zoom
                     );
-
-                    if (this.overlaps.has(mapObject)) {
-                        ctx.strokeStyle = '#fff';
-                        ctx.lineWidth = 2 / this.cam.zoom;
-                        ctx.strokeRect(
-                            px,
-                            py,
-                            mapObject.w * TILE_SIZE * this.cam.zoom,
-                            mapObject.h * TILE_SIZE * this.cam.zoom
-                        );
-                    }
                 }
-                // Si no hay color, no se dibuja nada → objeto "invisible"
-                // ¡Pero sigue existiendo en this.currentMap.objects!
             }
+            // Si no hay color, no se dibuja nada → objeto "invisible"
+            // ¡Pero sigue existiendo en this.currentMap.objects!
         }
     }
 
@@ -801,7 +875,7 @@ export class GameEngine {
         /**@type {AlertTarget} */
         // @ts-ignore
         let closestTarget = null;
-        let closestDist = maxRadius;
+        let closestDist = maxRadius * (this.currentMap.factorPerspectiva + 1);
 
         // ─── Helper: distancia mínima al rectángulo ───
         const distanceToRect = (/** @type {number} */ px,
@@ -938,45 +1012,122 @@ export class GameEngine {
     _drawAlertIcon(ctx) {
         if (!this.alertVisible || !this.SelectedCharacter) return;
 
-        // Calcular posición del jugador en pantalla
+        // === 📍 POSICIÓN ===
         const playerPx = (this.SelectedCharacter.x - this.cam.x) * TILE_SIZE * this.cam.zoom + this.cam.screenW / 2;
         const playerPy = (this.SelectedCharacter.y - this.cam.y) * TILE_SIZE * this.cam.zoom + this.cam.screenH / 2;
 
-        // Calcular tamaño del sprite del jugador
         const tileHeight = this.SelectedCharacter.tileHeight ?? 1.5;
-        const drawH = TILE_SIZE * this.cam.zoom * tileHeight;
-        const drawW = drawH * 0.7; // Asumiendo aspect ratio aproximado
+        const baseDrawH = TILE_SIZE * this.cam.zoom * tileHeight;
+        const drawH = TILE_SIZE * this.cam.zoom * tileHeight
+        const drawW = drawH * 0.7;
 
-        // Posicionar icono en esquina superior izquierda del sprite
-        // Offset adicional para que no quede pegado al sprite
-        const offsetX = -drawW / 2 + 4 * this.cam.zoom;
-        const offsetY = -drawH + 2 * this.cam.zoom;
-
+        // Posicionar icono en esquina superior del sprite
+        const offsetX = -drawW / 2 + 6 * this.cam.zoom;
+        const offsetY = -(drawH + 4 * this.cam.zoom) * this.getScale(playerPy)
         const px = playerPx + offsetX;
-        const py = playerPy + (offsetY / 2);
+        const pyBase = (playerPy + offsetY * 0.45)
+        const py = pyBase
 
-        // Círculo blanco discreto
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+        // === 🎨 CONFIGURACIÓN VISUAL ===
+        const baseRadius = 8 * this.cam.zoom;
+        const pulseSpeed = 0.005;
+        const pulseAmount = 0.2;
+
+        // Animación de pulso suave (0.8 → 1.2)
+        const pulse = 1 + pulseAmount * Math.sin(Date.now() * pulseSpeed);
+        const radius = baseRadius * pulse;
+
+        // Animación de "flotación" vertical sutil
+        const floatOffset = 2 * Math.sin(Date.now() * 0.008) * this.cam.zoom;
+
+        // === 1. GLOW EXTERIOR (anillo que pulsa) ===
+        ctx.save();
+        const glowRadius = radius * 1.8;
+        const glowAlpha = 0.4 + 0.2 * Math.sin(Date.now() * 0.01);
+
+        // Gradiente radial para el glow
+        const glowGradient = ctx.createRadialGradient(px, py, radius, px, py, glowRadius);
+        glowGradient.addColorStop(0, `rgba(255, 215, 0, ${glowAlpha})`);    // Dorado intenso cerca
+        glowGradient.addColorStop(0.5, `rgba(255, 215, 0, ${glowAlpha * 0.5})`);
+        glowGradient.addColorStop(1, 'rgba(255, 215, 0, 0)');                // Transparente afuera
+
+        ctx.fillStyle = glowGradient;
         ctx.beginPath();
-        ctx.arc(px, py, 6 * this.cam.zoom, 0, Math.PI * 2);
+        ctx.arc(px, py, glowRadius, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+
+        // === 2. CÍRCULO PRINCIPAL (con borde y sombra) ===
+        ctx.save();
+
+        // Sombra para profundidad
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.4)';
+        ctx.shadowBlur = 4 * this.cam.zoom;
+        ctx.shadowOffsetY = 2 * this.cam.zoom;
+
+        // Círculo con gradiente dorado/amarillo
+        const mainGradient = ctx.createRadialGradient(
+            px - radius * 0.3, py - radius * 0.3, 0,  // Punto de luz
+            px, py, radius                             // Radio total
+        );
+        mainGradient.addColorStop(0, '#fff7cc');  // Casi blanco en el centro
+        mainGradient.addColorStop(0.6, '#ffd700'); // Dorado
+        mainGradient.addColorStop(1, '#ffb700');   // Dorado oscuro en borde
+
+        ctx.fillStyle = mainGradient;
+        ctx.beginPath();
+        ctx.arc(px, py + floatOffset, radius, 0, Math.PI * 2);
         ctx.fill();
 
-        // Borde gris ligero
-        ctx.strokeStyle = 'rgba(180, 180, 180, 0.7)';
-        ctx.lineWidth = 1.5 * this.cam.zoom;
+        // Borde definido
+        ctx.strokeStyle = '#b8860b'; // Dorado oscuro
+        ctx.lineWidth = 2 * this.cam.zoom;
         ctx.stroke();
 
-        // Signo de interrogación pequeño y sutil
-        ctx.fillStyle = 'rgba(60, 60, 60, 0.9)';
-        ctx.font = `bold ${10 * this.cam.zoom}px Arial`;
+        ctx.restore();
+
+        // === 3. ICONO "?" (más visible y con contraste) ===
+        ctx.save();
+        ctx.translate(px, py + floatOffset);
+
+        // Texto con sombra para legibilidad
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.6)';
+        ctx.shadowBlur = 2 * this.cam.zoom;
+        ctx.shadowOffsetY = 1 * this.cam.zoom;
+
+        ctx.fillStyle = '#fff'; // Azul oscuro casi negro (alto contraste)
+        ctx.font = `bold ${12 * this.cam.zoom}px Arial`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText('?', px, py);
+        ctx.fillText('!', 0, 0);
 
-        // Efecto de parpadeo muy sutil
-        const pulse = 0.08 * Math.sin(Date.now() / 200);
-        ctx.globalAlpha = 0.7 + pulse;
-        ctx.globalAlpha = 1.0;
+        // Borde blanco sutil alrededor del texto para pop
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+        ctx.lineWidth = 1.5 * this.cam.zoom;
+        ctx.strokeText('!', 0, 0);
+
+        ctx.restore();
+
+        // === 4. PUNTOS DECORATIVOS (opcional, da sensación de "activo") ===
+        // Tres pequeños puntos que rotan alrededor del icono
+        const dotCount = 3;
+        const dotRadius = 2 * this.cam.zoom;
+        const dotDistance = radius * 1.6;
+        const rotation = Date.now() * 0.002;
+
+        ctx.save();
+        for (let i = 0; i < dotCount; i++) {
+            const angle = (i / dotCount) * Math.PI * 2 + rotation;
+            const dotX = px + Math.cos(angle) * dotDistance;
+            const dotY = py + floatOffset + Math.sin(angle) * dotDistance;
+
+            const dotAlpha = 0.6 + 0.4 * Math.sin(Date.now() * 0.01 + i);
+            ctx.fillStyle = `rgba(255, 215, 0, ${dotAlpha})`;
+            ctx.beginPath();
+            ctx.arc(dotX, dotY, dotRadius, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        ctx.restore();
     }
     /**
      * Pausa el motor de juego (detiene update loop y limpia estado de entrada)
@@ -1023,13 +1174,14 @@ export class GameEngine {
     }
 
     /**
-    * @param {CharacterModel} character 
-    */
-    RegisterCharacter(character) {
+     * @param {CharacterModel} character
+     * @param {boolean} [isFullPerspective]
+     */
+    RegisterCharacter(character, isFullPerspective = this.OpenWorldInstance.Config?.isFullPerspective) {
         if (this.Characters.some(chara => chara == character)) {
             return;
         }
-        character.RegisterWordMapCharacter()
+        character.RegisterWordMapCharacter(isFullPerspective)
         this.Characters.push(character);
     }
 }

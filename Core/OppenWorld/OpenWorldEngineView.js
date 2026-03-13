@@ -5,7 +5,9 @@ import { GameMap } from "./OpenWordModules/Models.js";
 import { ComponentsManager, html, WRender } from "../WDevCore/WModules/WComponentsTools.js";
 import { css } from "../WDevCore/WModules/WStyledRender.js";
 import { saveSystem, vnEngine } from "../VisualNovel/VisualNovelEngine.js";
-import { GameStartScreen } from "./OpenWordModules/GameStartScreen.js";
+import { GameStartScreen } from "../Common/UIComponents/GameStartScreen.js";
+import { LoadScreen } from "../Common/UIComponents/LoadScreen.js";
+import { CharactersUtil } from "../Common/CharactersUtil.js";
 
 
 
@@ -14,6 +16,7 @@ class OpenWorldEngineView extends HTMLElement {
      * @typedef {Object} ComponentsConfig 
         * @property {CharacterModel} [character] objeto
         * @property {CharacterModel[]} [Characters]
+        * @property {boolean} [isFullPerspective]
     **/
     /**
     * @param {ComponentsConfig} [Config] 
@@ -22,7 +25,7 @@ class OpenWorldEngineView extends HTMLElement {
         super();
         this.Config = Config;
         if (Config?.character) {
-            Config?.character.RegisterWordMapCharacter()
+            Config?.character.RegisterWordMapCharacter(this.Config?.isFullPerspective)
         }
         this.attachShadow({ mode: 'open' });
         this.shadowRoot?.append(this.CustomStyle);
@@ -46,14 +49,25 @@ class OpenWorldEngineView extends HTMLElement {
         // @ts-ignore
         this.BattleCanvas = html`<canvas id="battle-canvas"></canvas>`;
         this.Draw();
-        
+
         this.character = Config?.character;
-        this.GameEngine = new GameEngine(this);
         /** @type {CharacterModel[]} */
         this.Characters = Config?.Characters ?? [];
+        if (this.character && !this.Characters.includes(this.character)) {
+            this.Characters.push(this.character)
+        } else if(!this.character && this.Characters.length > 0) {
+            this.character = this.Characters[0];
+        }
+        if (this.character) {
+            CharactersUtil.assignLeader(this.character, this.Characters)
+        }
+
+        this.GameEngine = new GameEngine(this);
+        
         saveSystem.openWorldEngine = this;
         /**@type { GameStartScreen? } */
         this.screenView = null;
+        this.LoadScreen = this.LoadScreen ?? new LoadScreen();
     }
     connectedCallback() {
         //this.StartEngine();
@@ -107,10 +121,10 @@ class OpenWorldEngineView extends HTMLElement {
     /** 
      * @param {CharacterModel[]} aditionalMembers
      * @returns {CharacterModel[]} 
-     * */    
+     * */
     GetParty(...aditionalMembers) {
         const party = this.GameEngine.Characters.filter(
-            character => character.partyPosition != undefined        
+            character => character.partyPosition != undefined
         )
         if (party.length == 0) {
             this.GameEngine.SelectedCharacter.partyPosition = 0;
@@ -123,7 +137,7 @@ class OpenWorldEngineView extends HTMLElement {
     /**
     * @param {CharacterModel} character 
     */
-    RegisterCharacter(character) {        
+    RegisterCharacter(character) {
         this.GameEngine.RegisterCharacter(character);
     }
 
@@ -159,23 +173,47 @@ class OpenWorldEngineView extends HTMLElement {
     }
     /**
      * @param {string} mapName
+     * @param {number} [xPos]
+     * @param {number} [yPos]
      */
-    GoToMap(mapName) {
+    GoToMap(mapName, xPos, yPos) {
         if (!this.isConnected) {
-            this.Start();
+            this.Start(false);
         }
         this.StartEngine()
-        this.GameEngine.GoToMap(mapName);
+        // @ts-ignore
+        this.GameEngine.GoToMap(mapName,
+            xPos && yPos ? { x: xPos, y: yPos } : undefined);
     }
-    Start() {        
-        document.body.append(this)
+    Start(autoConnectMap = true) {
+        document.body.append(this);
+        if (autoConnectMap) {
+            this.GoToMap(Object.keys(this.GameEngine.maps)[0])
+        }
     }
     /**
      * @param {CharacterModel[]} enemies
      * @param {CharacterModel[]} [party]    
      */
-    StartBattle =(enemies, party = this.GetParty())=> {
-        this.GameEngine.battleSystem.startBattle(party, enemies);
+    StartBattle = async (enemies, party = this.GetParty()) => {
+        this.shadowRoot?.append(this.LoadScreen);
+        try {
+            for (const member of party) {
+                await member.ChargeBattleSprites();
+            }
+            for (const member of enemies) {
+                await member.ChargeBattleSprites();
+            }
+            setTimeout(() => {                
+                this.LoadScreen.hide();
+            }, 1000);
+            this.GameEngine.battleSystem.startBattle(party, enemies);
+        } catch (error) {
+            console.error('❌ Error cargando sprites de batalla:', error);
+            this.LoadScreen.hide();
+            // Fallback: iniciar batalla aunque los sprites no estén completos
+            this.GameEngine.battleSystem.startBattle(party, enemies);
+        }        
     }
 
 

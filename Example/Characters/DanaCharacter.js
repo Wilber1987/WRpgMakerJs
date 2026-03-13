@@ -6,7 +6,8 @@ class DanaCharacterModel extends CharacterModel {
     /**
     * @param {Partial<CharacterModel>} [props] 
     */
-    constructor(props) {
+    constructor(props = {}) {
+        props.isFemale = true
         super(props)
         /*Stats: {
             hp: 1500,

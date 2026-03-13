@@ -1,20 +1,25 @@
 //@ts-check
 
-import { GameStartScreen } from "../../OppenWorld/OpenWordModules/GameStartScreen.js";
+import { GameStartScreen } from "./GameStartScreen.js";
 import { saveSystem, vnEngine } from "../../VisualNovel/VisualNovelEngine.js";
 import { ComponentsManager, html } from "../../WDevCore/WModules/WComponentsTools.js";
 import { css } from "../../WDevCore/WModules/WStyledRender.js";
 import { CharacterManagerView } from "./CharacterManagerView.js";
+import { WAlertMessage } from "../../WDevCore/WComponents/WAlertMessage.js";
 
 export class GameMenu extends HTMLElement {
 
-    /** @param {GameStartScreen} [screenView]*/
-    constructor(screenView) {
+    /** 
+     * @param {GameStartScreen} [screenView]
+     *  @param {CharacterManagerView} [characterView]
+    */
+    constructor(screenView, characterView) {
         super();
         this.attachShadow({ mode: 'open' });
         this.shadowRoot?.append(this.CustomStyle);
         this.screenView = screenView
         this.Draw();
+        this.CharacterView = characterView;
     }
     connectedCallback() { }
     Draw = async () => {
@@ -73,7 +78,11 @@ export class GameMenu extends HTMLElement {
         vnEngine.TimeSystem.autoAdvanceTime(4)
     }
     handlerCharacters = () => {
-        new CharacterManagerView(vnEngine.Characters).Connect();
+        if (this.CharacterView) {
+            this.CharacterView.Connect()
+        } else {
+            WAlertMessage.Info("No hay administrador de personajes configurado", true)
+        };
     }
     handlerOptions = () => {
 
