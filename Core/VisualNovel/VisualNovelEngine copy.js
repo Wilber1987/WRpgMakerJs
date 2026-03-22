@@ -332,10 +332,10 @@ export class VisualNovelEngine {
                 }
                 this.quickSave();
                 return false; // Exit current execution
+
             case "choice":
                 if (command.options) {
                     await this.showChoices(command, sceneName, undefined); // sceneName is now before isGlobal
-                    return false; // Exit current execution
                 }
                 break;
 
@@ -525,7 +525,7 @@ export class VisualNovelEngine {
         } else {
             // Cargar imagen estática
             // @ts-ignore
-            imageSource = await this.loadImageWithExtensions(image);
+            imageSource = await this.loadImageWithExtensions(image);            
             if (!imageSource) {
                 console.warn(`No se pudo cargar la imagen para el personaje: ${character} con base: ${image}`);
                 return;
@@ -643,10 +643,20 @@ export class VisualNovelEngine {
      */
     async hideAllCharacter() {
         const elements = this.uiElements.characterSprites?.querySelectorAll(`.character-container`);
+
         if (!elements || elements.length === 0) return;
+
         for (const el of elements) {
-            // @ts-ignore
-            el.close();
+            el.classList.remove("visible");
+            el.classList.add("hiding");
+
+            // Esperar a que termine la transición antes de remover
+            await new Promise(resolve => {
+                el.addEventListener("transitionend", () => {
+                    el.remove();
+                    resolve(true);
+                }, { once: true });
+            });
         }
     }
 
@@ -1079,14 +1089,13 @@ export class VisualNovelEngine {
         }
 
         // Acción al hacer click
-        button.addEventListener("click", async (ev) => {
-            ev.stopPropagation()
-
+        button.addEventListener("click", async () => {
             this.ActualMenu = command
             if (menuWrapper) {
                 menuWrapper.remove()
             }
             button.classList.add("fade-out");
+            await new Promise(resolve => setTimeout(resolve, this.transitionDuration));
             //console.log(menuWrapper);
             if (option.action) {
                 // @ts-ignore

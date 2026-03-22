@@ -233,7 +233,7 @@ export class CharacterModel {
      */
     Say(text, audio = undefined) {
         const translated = translate.find((/** @type {{ old: any; }} */ x) => x.old == text)?.new;
-        return Dialogue.Say(this.Name, text, audio, this.isFemale);
+        return Dialogue.Say(this.Name, translated ?? text, audio, this.isFemale);
     }
     /**
      * @param {string | number} name

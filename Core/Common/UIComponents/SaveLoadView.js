@@ -55,7 +55,7 @@ export class SaveLoadView extends HTMLElement {
                 slotData?.playerPosition ? `<div>${slotData.playerPosition.x.toFixed(1)}, ${slotData.playerPosition.y.toFixed(1)}</div>` : ''}
                 ${slotData?.scene ? `<div>🎬 ${slotData.scene}</div>` : ''}
                 </div>
-                ${slotData?.miniature}
+                <div class="miniature">${slotData?.miniature}</div> 
             </div>`;
 
             // Preview de fondo si hay estado guardado
@@ -181,7 +181,17 @@ export class SaveLoadView extends HTMLElement {
         .return {
             padding: 10px;
             height: 20px;
-        }      
+        }   
+        .miniature {
+            position: relative;
+        }   
+        .miniature * {
+            height: 120px !important;
+            width: 250px !important;
+            margin: auto;
+            position: relative !important;
+            margin-top: 10px;
+        }
      `
 }
 customElements.define('w-save-load', SaveLoadView);

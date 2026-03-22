@@ -5,7 +5,7 @@ const domainUrl = "./Media";
 export class Scene {
     /**
      * @param {string} url
-     * @param {undefined} [audio]
+     * @param {string|undefined} [audio]
      */
     static Show(url, audio, loopAudio = true, isAffectedByTime = false) {
         return {
@@ -18,7 +18,7 @@ export class Scene {
     }
     /**
      * @param {any} url
-     * @param {any} audio
+     * @param {any} [audio]
      */
     static ShowV(url, audio, loopScene = true, loopAudio = true) {
         return {
@@ -118,7 +118,8 @@ export class Flow {
     }
 
     /**
-     * @param {({ type: string; who: any; image: string; position: string; } | (() => { type: string; target: string; }))[] | ({ type: string; image: string; audio: string | null; isAffectedByTime: boolean; loopAudio: boolean; } | { type: string; name: string; text: string; audio: string | null; isFemale: boolean; } | { type: string; target: string; } | { type: string; var: any; value: any; } | (() => { type: string; target: string; }))[] | ({ type: string; who: any; image: string; position: string; } | (() => { type: string; options: any; }))[] | ({ type: string; image: string; audio: string | null; isAffectedByTime: boolean; loopAudio: boolean; } | { type: string; name: string; text: string; audio: string | null; isFemale: boolean; } | { type: string; options: any; })[]} commands
+     * @param {( import("./VisualNovelEngine").SceneCommand 
+     * | (() => {  }))[] } commands
      */
     static Block(commands) {
         return { type: "block", commands: commands };
@@ -141,8 +142,9 @@ export class Flow {
     }
 
     /**
-     * @param {string | number} variable
+     * @param {string} variable
      * @param {string | number | boolean | undefined} [value]
+     * @returns {import("./VisualNovelEngine").SceneCommand}
      */
     static Set(variable, value) {
         return { type: "set", var: variable, value };
