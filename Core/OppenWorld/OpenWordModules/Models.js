@@ -12,7 +12,7 @@ export class BlockObject {
      * @param {number} y
      * @param {number} w
      * @param {number} h
-     * @param {Object<string, any>} opts
+     * @param {{ col?: any; Action?: any; durability?: any; weight?: any; movable?: any; color?: any; ActionQuestion?: any; autoTrigger?: any; icon?: any; }} opts
      */
     constructor(x, y, w, h, opts) {
         this.x = x; this.y = y; this.w = w; this.h = h;
@@ -44,7 +44,7 @@ export class BlockObject {
 }
 
 export class GameMap {
-    
+
     /**
      * @param {string} name
      * @param {any} w 64/48/32
@@ -58,6 +58,7 @@ export class GameMap {
          * @type {BlockObject[]}
          */
         this.objects = [];
+       
         this.bgColor = opts.bgColor || '#4aa3ff';
         this.bgImage = null;
         this.spawnX = opts.spawnX ?? 2;
@@ -77,6 +78,27 @@ export class GameMap {
         if (opts.battleBackgrond) {
             this.battleBackgrond = this.getBackgroundImage(opts.battleBackgrond)
         }
+
+        this.factorPerspectiva = opts.factorPerspectiva ?? 0.5;
+        this.usarPerspectiva = this.factorPerspectiva > 0;
+         this.addLimits();
+        this.NPCs.forEach(npc => {
+            npc.ChargeBasicSprites()
+        });
+    }
+    addLimits() {
+        this.objects.push(new BlockObject(0, 0, this.w, this.factorPerspectiva + 1, {
+            color: "rgba(0,0,0,0.05)"
+        }))
+        this.objects.push(new BlockObject(0, this.h - 1, this.w, 1, {
+            color: "rgba(0,0,0,0.05)"
+        }))
+        this.objects.push(new BlockObject(0, 0, 1, this.h, {
+            color: "rgba(0,0,0,0.05)"
+        }))
+        this.objects.push(new BlockObject(this.w - 1, 0, 1, this.h, {
+            color: "rgba(0,0,0,0.05)"
+        }))
     }
     /**
      * @param {BlockObject} mapObject
@@ -151,10 +173,10 @@ export class GameMap {
 
             // Verificar si la posición está bloqueada y recalcular si es necesario
             if (this._isPositionBlocked(finalX, finalY)) {
-                 const finalPost = this._findAlternativePosition(finalX, finalY);
+                const finalPost = this._findAlternativePosition(finalX, finalY);
                 finalX = finalPost.x;
                 finalY = finalPost.y
-                
+
             }
 
             npc.x = finalX;
@@ -170,7 +192,7 @@ export class GameMap {
             npc.x = randomPos.x;
             npc.y = randomPos.y;
         }
-
+        npc.ChargeBasicSprites()
         this.NPCs.push(npc);
     }
 
@@ -310,7 +332,7 @@ export class GameMap {
      * @param {CharacterModel} DanaCharacter
      */
     removeNpc(DanaCharacter) {
-        console.log(this.NPCs.indexOf(DanaCharacter));        
+        console.log(this.NPCs.indexOf(DanaCharacter));
         this.NPCs.splice(this.NPCs.indexOf(DanaCharacter), 1);
     }
 

@@ -12,13 +12,14 @@ const translate = JSON.parse(localStorage.getItem("translate") ?? "[]");
     * @property {()=> false} [rendered] objeto
     * @property {Function} [action] objeto
     * @property {Function} [ActionQuestion] objeto
-    * @property {String} name objeto
+    * @property {String} [name] objeto
     * @property {Number} posX objeto
     * @property {Number} posY objeto
 **/
 
 let TILE_SIZE = 32;
 export class CharacterModel {
+
     static _registeredClasses = new Set();
     /**
      * @param {Partial<CharacterModel>} [props]
@@ -39,8 +40,14 @@ export class CharacterModel {
             Fear: props?.Sprites?.Fear ?? Array.from({ length: 25 }, (_, i) => `assets/sprites/${this.Name}/Normal/${i}.png`),
             Happy: props?.Sprites?.Happy ?? Array.from({ length: 25 }, (_, i) => `assets/sprites/${this.Name}/Normal/${i}.png`),
             Normal: props?.Sprites?.Normal ?? Array.from({ length: 25 }, (_, i) => `assets/sprites/${this.Name}/Normal/${i}.png`),
-            idle: { down: [], up: [], left: [], right: [] },
-            walk: { down: [], up: [], left: [], right: [] },
+            idle: {
+                down: [], up: [], left: [], right: [],
+                up_left: [], up_right: [], down_left: [], down_right: [],
+            },
+            walk: {
+                down: [], up: [], left: [], right: [],
+                up_left: [], up_right: [], down_left: [], down_right: [],
+            },
             battle: { down: [], up: [], left: [], right: [] },
             attack: { down: [], up: [], left: [], right: [] },
             death: { down: [], up: [], left: [], right: [] },
@@ -51,8 +58,8 @@ export class CharacterModel {
             idle: props?.SpritesFrames?.idle ?? 25,
             walk: props?.SpritesFrames?.walk ?? 22,
             battle: props?.SpritesFrames?.battle ?? 25,
-            attack: props?.SpritesFrames?.attack ?? 88,
-            death: props?.SpritesFrames?.death ?? 25,
+            attack: props?.SpritesFrames?.attack ?? 25,
+            death: props?.SpritesFrames?.death ?? 1,
         }
         //estado del personaje
         /**@type {Number} */
@@ -108,27 +115,30 @@ export class CharacterModel {
             //{ name: "Poción de Vida", type: "Consumible", rarity: "Común" },
             //{ name: "Amuleto Mágico", type: "Accesorio", rarity: "Raro" }
         ];
-        /** @type {number | undefined} */
-        this.tileHeight = props?.tileHeight ?? 3;
+
         /**@type {Boolean} */
         this.isNPC = props?.isNPC ?? false;
         /**@type {Function} */
         this.Action = props?.Action ?? (() => { }) //TODO action de mapa;
+
+        this.isFemale = props?.isFemale ?? false;
+
         /**@type {Number} */
         this.width = props?.width ?? 1;
+
         /**@type {Number} */
-        this.height = props?.height ?? 3;
+        this.height = props?.height ?? (this.isFemale ? 2.9 : 3);
+
+        /** @type {number | undefined} */
+        this.tileHeight = props?.height ?? (this.isFemale ? 2.9 : 3);
 
         /**@type {Boolean} */
         this.isEnemy = props?.isEnemy ?? false
-        //Object.assign(this, props);
-        vnEngine.RegisterCharacter(this);
         /**
          * @type {string | undefined}
          */
         this.BattleState = undefined;
 
-        this.ChargeBattleSprites();
         /**@type {number | undefined} */
         this.partyPosition = undefined;
 
@@ -143,87 +153,172 @@ export class CharacterModel {
         this.collision = undefined;
         /** @type {Boolean|undefined} */
         this.isFollower = false;
+        /** @type {Boolean|undefined} */
+        this.partyLeader = undefined;
+        /** @type {Boolean} */
+        this.isFullPerspective = false;
     }
 
-    RegisterWordMapCharacter = async () => {
-        this.ChargeBasicSprites();
+    RegisterWordMapCharacter = async (isFullPerspective = this.isFullPerspective) => {
+        if (this.isWordMapRegistered) {
+            return
+        }
+        this.isFullPerspective = isFullPerspective;
+        this.ChargeBasicSprites(isFullPerspective);
         this.Sprites.walk = {
-            down: this._loadSpriteSequence(
+            down: await this._loadSpriteSequence(
                 `Media/assets/sprites/${this.Name}/walk_down/`, this.SpritesFrames.walk
             ),
-            up: this._loadSpriteSequence(
+            up: await this._loadSpriteSequence(
                 `Media/assets/sprites/${this.Name}/walk_up/`, this.SpritesFrames.walk
             ),
-            left: this._loadSpriteSequence(
+            left: await this._loadSpriteSequence(
                 `Media/assets/sprites/${this.Name}/walk_left/`, this.SpritesFrames.walk
             ),
-            right: this._loadSpriteSequence(
+            right: await this._loadSpriteSequence(
                 `Media/assets/sprites/${this.Name}/walk_right/`, this.SpritesFrames.walk
             ),
         };
+
+        if (isFullPerspective) {
+            this.Sprites.walk.up_left = await this._loadSpriteSequence(
+                `Media/assets/sprites/${this.Name}/walk_up_left/`, this.SpritesFrames.walk
+            );
+            this.Sprites.walk.up_right = await this._loadSpriteSequence(
+                `Media/assets/sprites/${this.Name}/walk_up_right/`, this.SpritesFrames.walk
+            );
+            this.Sprites.walk.down_left = await this._loadSpriteSequence(
+                `Media/assets/sprites/${this.Name}/walk_down_left/`, this.SpritesFrames.walk
+            );
+            this.Sprites.walk.down_right = await this._loadSpriteSequence(
+                `Media/assets/sprites/${this.Name}/walk_down_right/`, this.SpritesFrames.walk
+            );
+        }
+        this.isWordMapRegistered = true;
     }
 
-    ChargeBasicSprites = async () => {
+    ChargeBasicSprites = async (isFullPerspective = false) => {
+        if (this.isBasicRegistered) {
+            return
+        }
         this.Sprites.idle = {
-            down: this._loadSpriteSequence(
+            down: await this._loadSpriteSequence(
                 `Media/assets/sprites/${this.Name}/idle_down/`, this.SpritesFrames.idle
             ),
-            up: this._loadSpriteSequence(
+            up: await this._loadSpriteSequence(
                 `Media/assets/sprites/${this.Name}/idle_up/`, this.SpritesFrames.idle
             ),
-            left: this._loadSpriteSequence(
+            left: await this._loadSpriteSequence(
                 `Media/assets/sprites/${this.Name}/idle_left/`, this.SpritesFrames.idle
             ),
-            right: this._loadSpriteSequence(
+            right: await this._loadSpriteSequence(
                 `Media/assets/sprites/${this.Name}/idle_right/`, this.SpritesFrames.idle
             ),
         };
+        if (isFullPerspective) {
+            this.Sprites.idle.up_left = await this._loadSpriteSequence(
+                `Media/assets/sprites/${this.Name}/idle_up_left/`, this.SpritesFrames.idle
+            );
+            this.Sprites.idle.up_right = await this._loadSpriteSequence(
+                `Media/assets/sprites/${this.Name}/idle_up_right/`, this.SpritesFrames.idle
+            );
+            this.Sprites.idle.down_left = await this._loadSpriteSequence(
+                `Media/assets/sprites/${this.Name}/idle_down_left/`, this.SpritesFrames.idle
+            );
+            this.Sprites.idle.down_right = await this._loadSpriteSequence(
+                `Media/assets/sprites/${this.Name}/idle_down_right/`, this.SpritesFrames.idle
+            );
+        }
+        this.isBasicRegistered = true;
     }
 
     ChargeBattleSprites = async () => {
+        if (this.isBattleRegistered) {
+            return
+        }
         this.Sprites.attack = {
-            left: this.isEnemy ? this._loadSpriteSequence(
+            left: this.isEnemy ? await this._loadSpriteSequence(
                 `Media/assets/sprites/${this.Name}/attack_left/`, this.SpritesFrames.attack
             ) : [],
-            right: this.isEnemy == false ? this._loadSpriteSequence(
+            right: this.isEnemy == false ? await this._loadSpriteSequence(
                 `Media/assets/sprites/${this.Name}/attack_right/`, this.SpritesFrames.attack
             ) : [],
         };
         this.Sprites.battle = {
-            left: this.isEnemy ? this._loadSpriteSequence(
+            left: this.isEnemy ? await this._loadSpriteSequence(
                 `Media/assets/sprites/${this.Name}/battle_left/`, this.SpritesFrames.battle
             ) : [],
-            right: !this.isEnemy ? this._loadSpriteSequence(
+            right: !this.isEnemy ? await this._loadSpriteSequence(
                 `Media/assets/sprites/${this.Name}/battle_right/`, this.SpritesFrames.battle
             ) : [],
         };
         this.Sprites.death = {
-            left: this.isEnemy ? this._loadSpriteSequence(
+            left: this.isEnemy ? await this._loadSpriteSequence(
                 `Media/assets/sprites/${this.Name}/death_left/`, this.SpritesFrames.death
             ) : [],
-            right: !this.isEnemy ? this._loadSpriteSequence(
+            right: !this.isEnemy ? await this._loadSpriteSequence(
                 `Media/assets/sprites/${this.Name}/death_right/`, this.SpritesFrames.death
             ) : [],
         };
+        this.isBattleRegistered = true;
     }
 
     isFemale = false
     /**
      * Carga una secuencia de sprites numerados automáticamente
-     * Ej: walk_down1.png ... walk_down4.png
+     * Espera a que TODAS las imágenes se carguen antes de retornar
+     * Usa cache para evitar recargas innecesarias
      *
-     * @param {string} basePath  Ruta SIN el número final
+     * @param {string} basePath   Ruta SIN el número final
      * @param {number} frameCount Número de frames
      * @param {string} ext Extensión (png, webp, etc)
      * @param {number} startIndex Índice inicial (default = 1)
-     * @returns {HTMLImageElement[]}
+     * @returns {Promise<HTMLImageElement[]>}
      */
-    _loadSpriteSequence(basePath, frameCount, ext = 'png', startIndex = 0) {
+    async _loadSpriteSequence(basePath, frameCount, ext = 'png', startIndex = 0) {
         const frames = [];
+        const loadPromises = [];
+
         for (let i = 0; i < frameCount; i++) {
+            const src = `${basePath}${startIndex + i}.${ext}`;
+            if (CharacterModel.SpriteCache.has(src)) {
+                const cachedImg = CharacterModel.SpriteCache.get(src);
+                if (cachedImg.complete && cachedImg.naturalWidth !== 0) {
+                    frames.push(cachedImg);
+                    continue;
+                }
+                if (!cachedImg.complete) {
+                    const waitPromise = new Promise((resolve) => {
+                        if (cachedImg.complete) {
+                            resolve(cachedImg);
+                        } else {
+                            cachedImg.onload = () => resolve(cachedImg);
+                            cachedImg.onerror = () => resolve(cachedImg);
+                        }
+                    });
+                    loadPromises.push(waitPromise);
+                    continue;
+                }
+            }
             const img = new Image();
-            img.src = `${basePath}${startIndex + i}.${ext}`;
-            frames.push(img);
+            const loadPromise = new Promise((resolve) => {
+                img.onload = () => {
+                    CharacterModel.SpriteCache.set(src, img);
+                    resolve(img);
+                };
+                img.onerror = (err) => {
+                    console.warn(`❌ Failed to load sprite: ${src}`, err);
+                    CharacterModel.SpriteCache.set(src, img); 
+                    resolve(img);
+                };
+                img.src = src;
+            });
+            CharacterModel.SpriteCache.set(src, img);
+            loadPromises.push(loadPromise);
+        }
+        if (loadPromises.length > 0) {
+            const loadedFrames = await Promise.all(loadPromises);
+            return [...frames, ...loadedFrames];
         }
         return frames;
     }
@@ -316,7 +411,7 @@ export class CharacterModel {
             nextState = this.BattleState ?? nextState;
         }
         if (nextState == 'walk') {
-           // console.log(this.Name, "walking")
+            // console.log(this.Name, "walking")
         }
         if (this.state !== nextState) {
             this.state = nextState;
@@ -327,13 +422,17 @@ export class CharacterModel {
         const fps = this.animFPS[this.state] ?? 25;
         const frameTime = 1 / fps;
         this.animTimer += dt;
+        let frames;
         try {
+
             while (this.animTimer >= frameTime) {
                 this.animTimer -= frameTime;
-                const frames = this.Sprites[this.state][this.direction];
-                this.animFrame = (this.animFrame + 1) % frames.length;                
+                frames = this.Sprites[this.state][this.direction];
+                this.animFrame = (this.animFrame + 1) % frames.length;
             }
         } catch (error) {
+            console.log(frames);
+
             console.error(error);
             console.table(this);
         }
@@ -344,9 +443,11 @@ export class CharacterModel {
     /**
      * @param {{ drawImage: (arg0: any, arg1: number, arg2: number, arg3: number, arg4: number) => void; }} ctx
      * @param {{ x: number; zoom: number; screenW: number; y: number; screenH: number; }} cam
-     */
-    draw(ctx, cam) {
-        const spriteList = this.Sprites[this.state][this.direction];
+    * @param {number} [scaleOverride] - 🔧 NUEVO: Escala manual para perspectiva
+    */
+    draw(ctx, cam, scaleOverride = 1) {
+        const validDirection = this._getValidDirection();
+        const spriteList = this.Sprites[this.state][validDirection];
         const img = spriteList[this.animFrame];
         if (!img || !img.complete || img.naturalWidth === 0) return;
 
@@ -355,9 +456,12 @@ export class CharacterModel {
 
         const tileHeight = this.tileHeight ?? 1.5;
 
-        const drawH = TILE_SIZE * cam.zoom * tileHeight;
+        // 🔧 NUEVO: Aplicar escala a las dimensiones de dibujo
+        const baseDrawH = TILE_SIZE * cam.zoom * tileHeight;
+        const drawH = baseDrawH * scaleOverride;
         const aspect = img.naturalWidth / img.naturalHeight;
-        const drawW = drawH * aspect;       
+        const drawW = drawH * aspect;
+
         ctx.drawImage(
             img,
             px - drawW / 2,
@@ -367,25 +471,35 @@ export class CharacterModel {
         );
     }
 
-    // En CharacterModel.js - método occupies() mejorado
     /**
      * Verifica si el NPC ocupa una posición específica en el grid
-     * @param {number} tx - Coordenada X en tiles
-     * @param {number} ty - Coordenada Y en tiles
-     * @param {MapData} mapData
+     * @param {number} tx - Coordenada X del tile a verificar
+     * @param {number} ty - Coordenada Y del tile a verificar  
+     * @param {{posX: number, posY: number}} mapData - Datos de posición del NPC
      * @returns {boolean}
      */
     occupies(tx, ty, mapData) {
+        // Posición base del NPC (donde están sus "pies")
         const npcTileX = Math.floor(mapData.posX);
         const npcTileY = Math.floor(mapData.posY);
 
-        // Tamaño del NPC en tiles (por defecto 1x1)
+        // Tamaño del NPC en tiles
         const width = this.width ?? 1;
         const height = this.height ?? 1.5;
 
-        // Verificar si la posición está dentro del área del NPC
-        return tx >= npcTileX && tx < npcTileX + width &&
-            ty >= npcTileY && ty < npcTileY + height;
+        // 🔄 CORRECCIÓN: El personaje se dibuja hacia ARRIBA desde (posX, posY)
+        // Por lo tanto, ocupa tiles desde Y hacia valores MENORES (hacia arriba en pantalla)
+        const tilesHeight = Math.ceil(height);
+        const occupiedMinY = npcTileY - tilesHeight + 1;  // ⬅️ Tile más alto que ocupa
+        const occupiedMaxY = npcTileY;                     // ⬅️ Tile base (pies)
+
+        const tilesWidth = Math.ceil(width);
+        const occupiedMinX = npcTileX - tilesWidth;
+        const occupiedMaxX = npcTileX;
+
+        // Verificar si el tile (tx, ty) está dentro del área ocupada
+        return tx >= occupiedMinX && tx <= occupiedMaxX &&
+            ty >= occupiedMinY && ty <= occupiedMaxY;
     }
 
     isDeath = () => {
@@ -467,8 +581,54 @@ export class CharacterModel {
         console.log(`✨ Alexandra restaurada: pos=(${this.x},${this.y}), hp=${this.Stats.hp}`);
     }
 
-    //------------
 
+
+    // En CharacterModel.js - método auxiliar
+    /**
+     * Obtiene la dirección de sprite válida (con fallback a cardinal si diagonal no existe)
+     * @returns {string}
+     */
+    _getValidDirection() {
+        const dir = this.direction;
+        const stateSprites = this.Sprites[this.state];
+
+        // Si el sprite para esta dirección existe y tiene frames, usarlo
+        if (stateSprites[dir] && stateSprites[dir].length > 0 && stateSprites[dir][0]?.complete) {
+            return dir;
+        }
+
+        // 🔧 Fallback: convertir diagonal a cardinal más cercano
+        const fallbackMap = {
+            'up_left': 'up',
+            'up_right': 'up',
+            'down_left': 'down',
+            'down_right': 'down'
+        };
+
+        // @ts-ignore
+        return fallbackMap[dir] || dir;
+    }
+
+    /**
+     * @param {import("../OppenWorld/OpenWordModules/Models.js").GameMap} map
+     * @param {MapData} mapData
+     */
+    RegistrerNpcMapData(map, mapData) {
+        const actualMapData = this.MapData.find( mapData => mapData.name == map.name);
+        if (actualMapData) {
+            actualMapData.posX = mapData.posX;
+            actualMapData.posY = mapData.posY;
+            actualMapData.action = mapData.action;
+            actualMapData.ActionQuestion = mapData.ActionQuestion;
+            actualMapData.rendered = mapData.rendered;
+        } else {
+            mapData.name = map.name;
+            this.MapData.push(mapData);
+        }
+        if (!map.NPCs.includes(this)) {
+            map.addNPC(this);
+        }
+    }
     /**
      * @param {any} arg0
      * @param {any} arg1

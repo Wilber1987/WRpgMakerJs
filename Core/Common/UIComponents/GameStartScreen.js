@@ -1,10 +1,10 @@
 //@ts-check
 
-import { OpenWorldEngineView } from "../OpenWorldEngineView.js";
+import { OpenWorldEngineView } from "../../OppenWorld/OpenWorldEngineView.js";
 
 import { ComponentsManager, html } from "../../WDevCore/WModules/WComponentsTools.js";
 import { css } from "../../WDevCore/WModules/WStyledRender.js";
-import { BannerStyle } from "./BannerStyle.js";
+import { BannerStyle } from "../../OppenWorld/OpenWordModules/BannerStyle.js";
 
 export class GameStartScreen extends HTMLElement {
     /**

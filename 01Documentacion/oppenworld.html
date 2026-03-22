@@ -1,0 +1,1255 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Documentación - OpenWorld Engine</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+    <!-- Header -->
+    <header>
+        <div class="container header-content">
+            <div class="logo">
+                <div class="logo-icon">WO</div>
+                <span class="logo-text">WOpenWorld Engine</span>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="#inicio" class="active">Inicio</a></li>
+                    <li><a href="#guias">Guías</a></li>
+                    <li><a href="#api">API</a></li>
+                    <li><a href="#ejemplos">Ejemplos</a></li>
+                    <li><a href="https://github.com/Wilber1987/WOpenWorldJs" target="_blank">GitHub</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero" id="inicio">
+        <div class="hero-content">
+            <h1>WOpenWorld Engine</h1>
+            <p>Motor de juego Open World integrado con Visual Novel Engine. Crea experiencias interactivas con mapas
+                explorables, sistema de batalla por turnos, NPCs dinámicos y narrativa visual.</p>
+            <div class="hero-buttons">
+                <a href="#guias" class="btn btn-primary">Comenzar</a>
+                <a href="#api" class="btn btn-secondary">Ver API</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main Content -->
+    <main class="container">
+        <!-- Table of Contents -->
+        <div class="toc">
+            <h3>📋 Tabla de Contenidos</h3>
+            <ul>
+                <li><a href="#introduccion">Introducción</a></li>
+                <li><a href="#instalacion">Instalación y Configuración</a></li>
+                <li><a href="#componentes">Componentes Principales</a></li>
+                <li><a href="#personajes">Sistema de Personajes</a></li>
+                <li><a href="#mapas">Sistema de Mapas</a></li>
+                <li><a href="#batalla">Sistema de Batalla</a></li>
+                <li><a href="#vn-integration">Integración con VNEngine</a></li>
+                <li><a href="#ui">Componentes UI</a></li>
+                <li><a href="#api-reference">Referencia API Completa</a></li>
+            </ul>
+        </div>
+
+        <!-- Introduction -->
+        <section class="section" id="introduccion">
+            <h2 class="section-title">Introducción</h2>
+            <p class="section-subtitle">Un motor de juego open world web-first con integración completa de novelas
+                visuales</p>
+
+            <div class="cards-grid">
+                <div class="card">
+                    <div class="card-icon">🗺️</div>
+                    <h3>Mapas Explorables</h3>
+                    <p>Sistema de mapas tile-based con colisiones, objetos interactivos y NPCs posicionables con
+                        coordenadas precisas.</p>
+                </div>
+                <div class="card">
+                    <div class="card-icon">⚔️</div>
+                    <h3>Batalla por Turnos</h3>
+                    <p>Sistema de combate táctico con habilidades, estadísticas de personajes y IA enemiga configurable.
+                    </p>
+                </div>
+                <div class="card">
+                    <div class="card-icon">💬</div>
+                    <h3>Diálogos VN</h3>
+                    <p>Integración nativa con Visual Novel Engine para escenas narrativas, opciones y ramificaciones.
+                    </p>
+                </div>
+                <div class="card">
+                    <div class="card-icon">🎭</div>
+                    <h3>Personajes Dinámicos</h3>
+                    <p>Sistema de personajes con sprites animados, estados emocionales y comportamientos personalizados.
+                    </p>
+                </div>
+                <div class="card">
+                    <div class="card-icon">💾</div>
+                    <h3>Guardado Automático</h3>
+                    <p>Persistencia de estado del juego usando localStorage con soporte para múltiples slots.</p>
+                </div>
+                <div class="card">
+                    <div class="card-icon">🎨</div>
+                    <h3>UI Personalizable</h3>
+                    <p>Componentes de interfaz modulares con Web Components para menús, HUD y pantallas.</p>
+                </div>
+            </div>
+
+            <div class="alert alert-info">
+                <span class="alert-icon">ℹ️</span>
+                <div>
+                    <strong>Nota:</strong> Este motor está diseñado para funcionar junto con <code
+                        class="code-inline">VNEngine</code>.
+                    La integración permite transiciones fluidas entre exploración open world y escenas de novela visual.
+                </div>
+            </div>
+        </section>
+
+        <!-- Installation -->
+        <section class="section" id="instalacion">
+            <h2 class="section-title">Instalación y Configuración</h2>
+            <section class="section" id="instalacion">
+                <div class="guide-step">
+                    <h3><span class="step-number">1</span>Descargar el Repositorio</h3>
+                    <p style="color: var(--text-secondary); margin-bottom: 16px;">
+                        Primero, necesitas obtener una copia del código fuente del motor. Puedes hacerlo clonando el
+                        repositorio desde GitHub o descargándolo como un archivo ZIP.
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">Clonar Repositorio</span>
+                            <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+                        </div>
+                        <pre><code><span class="com"># Clonar desde GitHub con sus submodulos incluidos</span>
+git clone --recurse-submodules -j8 https://github.com/Wilber1987/WOpenWorldJs 
+
+<span class="com"># O descargar como ZIP desde la página del repositorio</span>
+<span class="com"># Haz clic en "Code" → "Download ZIP"</span></code></pre>
+                    </div>
+                </div>
+
+                <div class="guide-step">
+                    <h3><span class="step-number">2</span>Estructura del Proyecto</h3>
+                    <p style="color: var(--text-secondary); margin-bottom: 16px;">
+                        Después de descargar el repositorio, revisa la estructura básica de carpetas y archivos, podras
+                        importar desde cualquier parte de tu aplicación los módulos.
+                    </p>
+                </div>
+
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="code-title">Estructura de Carpetas</span>
+                        <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+                    </div>
+                    <pre><code>.
+├── Core/
+│   ├── Common/
+│   │   ├── CharacterModel.js
+│   │   ├── CharacterRegistry.js
+│   │   └── UIComponents/
+│   ├── OppenWorld/
+│   │   ├── OpenWorldEngineView.js
+│   │   ├── GameEngine.js
+│   │   ├── Camera.js
+│   │   └── OpenWordModules/
+│   │       ├── Models.js
+│   │       ├── BattleSystem.js
+│   │       └── GameStartScreen.js
+│   └── VisualNovel/
+│       ├── VisualNovelEngine.js
+│       └── VisualNovelModules.js
+├── Characters/
+│   ├── DanaCharacter.js
+│   └── AlexandraCharacter.js
+├── Maps/
+│   └── MainMap.js
+├── Media/
+│   └── assets/
+└── app.js</code></pre>
+                </div>
+
+                <div class="guide-step">
+                    <h3><span class="step-number">3</span>Configuración Inicial</h3>
+                    <p style="color: var(--text-secondary); margin-bottom: 16px;">
+                        Por defecto el index.html tendrá los elementos necesarios para arrancar el motor.
+                        Asegúrate de cargar los archivos necesarios en tu archivo HTML principal.
+                    </p>
+
+                    <div class="alert alert-success">
+                        <span class="alert-icon">✓</span>
+                        <div>
+                            <strong>Nota:</strong> El archivo HTML principal ya incluye un acaceso directo a los
+                            ejemplos y todas las dependencias necesarias.
+                            Solo necesitas visualizarlo para guiarte, luego podrás llamar a los módulos desde cualquier
+                            parte de tu APP
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+
+            <h3 style="margin: 30px 0 15px;">1. Estructura del Proyecto</h3>
+            <div class="code-block">
+                <div class="code-header">
+                    <span class="code-title">Estructura de Carpetas</span>
+                    <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+                </div>
+                <pre><code>.
+├── Core/
+│   ├── Common/
+│   │   ├── CharacterModel.js
+│   │   ├── CharacterRegistry.js
+│   │   └── UIComponents/
+│   ├── OppenWorld/
+│   │   ├── OpenWorldEngineView.js
+│   │   ├── GameEngine.js
+│   │   ├── Camera.js
+│   │   └── OpenWordModules/
+│   │       ├── Models.js
+│   │       ├── BattleSystem.js
+│   │       └── GameStartScreen.js
+│   └── VisualNovel/
+│       ├── VisualNovelEngine.js
+│       └── VisualNovelModules.js
+├── Characters/
+│   ├── DanaCharacter.js
+│   └── AlexandraCharacter.js
+├── Maps/
+│   └── MainMap.js
+├── Media/
+│   └── assets/
+└── app.js</code></pre>
+            </div>
+
+            <h3 style="margin: 30px 0 15px;">2. Inicialización del Motor</h3>
+            <div class="code-block">
+                <div class="code-header">
+                    <span class="code-title">app.js - Configuración Inicial</span>
+                    <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+                </div>
+                <pre><code><span class="com">// Importar módulos principales</span>
+<span class="kw">import</span> { OpenWorldEngineView } <span class="kw">from</span> <span class="str">"./Core/OppenWorld/OpenWorldEngineView.js"</span>;
+<span class="kw">import</span> { vnEngine } <span class="kw">from</span> <span class="str">"./Core/VisualNovel/VisualNovelEngine.js"</span>;
+<span class="kw">import</span> { Alexandra } <span class="kw">from</span> <span class="str">"./Characters/AlexandraCharacter.js"</span>;
+
+<span class="com">// Crear instancia del motor OpenWorld</span>
+<span class="kw">const</span> oppenWorldEngine = <span class="kw">new</span> <span class="type">OpenWorldEngineView</span>({
+    character: Alexandra  <span class="com">// Personaje principal, PUEDE SER REMPLAZADO EN CUALQUIER MOMENTO</span>
+});
+
+<span class="com">// Registrar personaje en el sistema</span>
+oppenWorldEngine.<span class="fn">RegisterCharacter</span>(OtroPersonaje);
+OtroPersonaje.partyPosition = <span class="num">0</span>;  <span class="com">// Posición en el equipo de batalla</span></code></pre>
+            </div>
+
+            <h3 style="margin: 30px 0 15px;">3. HTML Principal</h3>
+            <div class="code-block">
+                <div class="code-header">
+                    <span class="code-title">index.html</span>
+                    <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+                </div>
+                <pre><code><span class="kw">&lt;!DOCTYPE html&gt;</span>
+<span class="kw">&lt;html</span> <span class="prop">lang</span>=<span class="str">"es"</span><span class="kw">&gt;</span>
+<span class="kw">&lt;head&gt;</span>
+    <span class="kw">&lt;meta</span> <span class="prop">charset</span>=<span class="str">"UTF-8"</span><span class="kw">&gt;</span>
+    <span class="kw">&lt;meta</span> <span class="prop">name</span>=<span class="str">"viewport"</span> <span class="prop">content</span>=<span class="str">"width=device-width, initial-scale=1.0"</span><span class="kw">&gt;</span>
+    <span class="kw">&lt;title&gt;</span>Mi Juego OpenWorld<span class="kw">&lt;/title&gt;</span>
+<span class="kw">&lt;/head&gt;</span>
+<span class="kw">&lt;body&gt;</span>
+    <span class="com">&lt;!-- El motor se en el momento se renderiza siempre que se llame a un GoToMap --&gt;</span>
+    <span class="kw">&lt;script</span> <span class="prop">type</span>=<span class="str">"module"</span> <span class="prop">src</span>=<span class="str">"./app.js"</span><span class="kw">&gt;&lt;/script&gt;</span>
+<span class="kw">&lt;/body&gt;</span>
+<span class="kw">&lt;/html&gt;</span></code></pre>
+            </div>
+        </section>
+
+        <!-- Core Components -->
+        <section class="section" id="componentes">
+            <h2 class="section-title">Componentes Principales</h2>
+            <p class="section-subtitle">Arquitectura del motor y clases fundamentales</p>
+
+            <div class="docs-layout">
+                <div class="sidebar">
+                    <div class="sidebar-nav">
+                        <h4>Componentes</h4>
+                        <ul>
+                            <li><a href="#openworld-view">OpenWorldEngineView</a></li>
+                            <li><a href="#game-engine">GameEngine</a></li>
+                            <li><a href="#game-map">GameMap</a></li>
+                            <li><a href="#character-model">CharacterModel</a></li>
+                            <li><a href="#block-object">BlockObject</a></li>
+                            <li><a href="#camera">Camera</a></li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="content">
+                    <h3 id="openworld-view">OpenWorldEngineView</h3>
+                    <p>Web Component principal que contiene todo el motor de juego. Maneja el canvas, UI y coordinación
+                        entre sistemas.</p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">Uso Básico</span>
+                            <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+                        </div>
+                        <pre><code><span class="kw">const</span> oppenWorldEngine = <span class="kw">new</span> <span class="type">OpenWorldEngineView</span>({
+    character: Alexandra  <span class="com">// Personaje jugador</span>
+});
+
+<span class="com">// Iniciar el motor</span>
+oppenWorldEngine.<span class="fn">Start</span>();
+
+<span class="com">// Ir a un mapa específico</span>
+oppenWorldEngine.<span class="fn">GoToMap</span>(<span class="str">"Ciudad1"</span>);
+
+<span class="com">// Registrar personaje para batalla</span>
+oppenWorldEngine.<span class="fn">RegisterCharacter</span>(DanaCharacter);
+DanaCharacter.partyPosition = <span class="num">1</span>;</code></pre>
+                    </div>
+
+                    <h3 id="game-engine">GameEngine</h3>
+                    <p>Corazón del motor. Maneja el game loop, input, colisiones, renderizado y lógica del juego.</p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">Acceder al GameEngine</span>
+                            <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+                        </div>
+                        <pre><code><span class="com">// Acceso desde OpenWorldEngineView</span>
+<span class="kw">const</span> engine = oppenWorldEngine.GameEngine;
+
+<span class="com">// Cambiar mapa</span>
+engine.<span class="fn">GoToMap</span>(<span class="str">"Ciudad1"</span>);
+
+<span class="com">// Obtener mapa actual</span>
+<span class="kw">const</span> currentMap = engine.currentMap;
+
+<span class="com">// Acceder al sistema de batalla</span>
+<span class="kw">const</span> battleSystem = engine.battleSystem;</code></pre>
+                    </div>
+
+                    <h3 id="game-map">GameMap</h3>
+                    <p>Representa un mapa del juego con tiles, objetos, NPCs y configuración de fondo.</p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">Crear un Mapa</span>
+                            <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+                        </div>
+                        <pre><code><span class="kw">const</span> ciudad1 = <span class="kw">new</span> <span class="type">GameMap</span>(<span class="str">'Ciudad1'</span>, <span class="num">64</span>, <span class="num">36</span>, {
+    spawnX: <span class="num">23</span>,   <span class="com">// Punto de inicio del jugador</span>
+    spawnY: <span class="num">16</span>,
+    battleBackgrond: <span class="fn">getAsset</span>(<span class="str">"City1/battleBg.png"</span>),
+    bgColor: <span class="str">'#666'</span>,
+    NPCs: [npc1, DanaCharacter],
+    backgroundImage: <span class="fn">getAsset</span>(<span class="str">"City1/map1.png"</span>)
+});
+
+<span class="com">// Añadir al motor</span>
+oppenWorldEngine.<span class="fn">AddMap</span>(ciudad1);</code></pre>
+                    </div>
+
+                    <h3 id="character-model">CharacterModel</h3>
+                    <p>Clase base para todos los personajes (jugador, NPCs, enemigos). Soporta sprites animados,
+                        estadísticas y habilidades.</p>
+
+                    <div class="image-showcase">
+                        <img src="https://image.qwenlm.ai/public_source/ee22caf6-26c8-4460-b8ce-df3117ec1645/17e976b71-ed23-436a-a7b5-c0267bf7e4e2.png"
+                            alt="Character Sprite Sheet">
+                    </div>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">Crear Personaje</span>
+                            <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+                        </div>
+                        <pre><code><span class="kw">const</span> npc1 = <span class="kw">new</span> <span class="type">CharacterModel</span>({
+    Name: <span class="str">"Mage"</span>,
+    SpritesFrames: {
+        battle: <span class="num">25</span>,
+        attack: <span class="num">89</span>,
+        death: <span class="num">25</span>
+    },
+    Stats: {
+        hp: <span class="num">1500</span>,
+        maxHp: <span class="num">1500</span>,
+        strength: <span class="num">100</span>,
+        speed: <span class="num">30</span>,
+    },
+    MapData: [
+        {
+            name: <span class="str">"Ciudad1"</span>, 
+            posX: <span class="num">24</span>, 
+            posY: <span class="num">14</span>, 
+            action: () => {
+                vnEngine.<span class="fn">startScene</span>(<span class="str">"npc1Chat"</span>);
+            }
+        }
+    ]
+});</code></pre>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Character System -->
+        <section class="section" id="personajes">
+            <h2 class="section-title">Sistema de Personajes</h2>
+            <p class="section-subtitle">Crea personajes únicos con comportamientos personalizados</p>
+
+            <h3>Crear Personaje Personalizado</h3>
+            <div class="code-block">
+                <div class="code-header">
+                    <span class="code-title">Characters/DanaCharacter.js</span>
+                    <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+                </div>
+                <pre><code><span class="kw">import</span> { CharacterModel } <span class="kw">from</span> <span class="str">"../../Core/Common/CharacterModel.js"</span>;
+
+<span class="kw">export class</span> <span class="type">DanaCharacterModel</span> <span class="kw">extends</span> <span class="type">CharacterModel</span> {
+    Name = <span class="str">"Dana"</span>;
+    
+    <span class="com">// Estados visuales del personaje</span>
+    State = {
+        Default: <span class="str">"Character/dana_default"</span>,
+        Happy: <span class="str">"Character/dana_happy"</span>,
+        Sad: <span class="str">"Character/dana_sad"</span>,
+        Angry: <span class="str">"Character/dana_angry"</span>
+    };
+
+    <span class="com">// Configuración de batalla</span>
+    Stats = {
+        hp: <span class="num">100</span>,
+        maxHp: <span class="num">100</span>,
+        strength: <span class="num">15</span>,
+        speed: <span class="num">10</span>
+    };
+
+    <span class="com">// Habilidades especiales</span>
+    Skills = [
+        { name: <span class="str">"Ataque Fuerte"</span>, damage: <span class="num">25</span> },
+        { name: <span class="str">"Curación"</span>, heal: <span class="num">30</span> }
+    ];
+}
+
+<span class="com">// Exportar instancia singleton</span>
+<span class="kw">export const</span> DanaCharacter = <span class="kw">new</span> <span class="type">DanaCharacterModel</span>();</code></pre>
+            </div>
+
+            <h3>Posicionamiento de NPCs en Mapas</h3>
+            <div class="code-block">
+                <div class="code-header">
+                    <span class="code-title">Configurar NPC en Mapa</span>
+                    <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+                </div>
+                <pre><code><span class="com">// Añadir posición específica para un NPC en un mapa</span>
+DanaCharacter.MapData.<span class="fn">push</span>({
+    name: <span class="str">"Ciudad1"</span>, 
+    posX: <span class="num">25</span>, 
+    posY: <span class="num">12</span>, 
+    action: () => {
+        vnEngine.<span class="fn">startScene</span>(<span class="str">"danaJoinHistory"</span>);
+    }
+});
+
+<span class="com">// El NPC aparecerá en las coordenadas (25, 12) del mapa Ciudad1</span>
+<span class="com">// Al interactuar, se iniciará la escena "danaJoinHistory"</span></code></pre>
+            </div>
+
+            <h3>Interacción con Personajes</h3>
+            <div class="code-block">
+                <div class="code-header">
+                    <span class="code-title">Sistema de Diálogo</span>
+                    <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+                </div>
+                <pre><code><span class="com">// Mostrar personaje en escena VN</span>
+DanaCharacter.<span class="fn">Show</span>();  <span class="com">// Posición center por defecto</span>
+DanaCharacter.<span class="fn">ShowR</span>(); <span class="com">// Posición derecha</span>
+DanaCharacter.<span class="fn">ShowL</span>(); <span class="com">// Posición izquierda</span>
+
+<span class="com">// Diálogo del personaje</span>
+DanaCharacter.<span class="fn">Say</span>(<span class="str">"Hola, ¿cómo estás?"</span>);
+
+<span class="com">// Ocultar personaje</span>
+DanaCharacter.<span class="fn">Hide</span>();
+
+<span class="com">// Seguir a otro personaje (modo follower)</span>
+DanaCharacter.<span class="fn">follow</span>(Alexandra);</code></pre>
+            </div>
+
+            <div class="alert alert-warning">
+                <span class="alert-icon">⚠️</span>
+                <div>
+                    <strong>Importante:</strong> Los NPCs con <code class="code-inline">MapData</code> usarán las
+                    coordenadas específicas
+                    de cada mapa. Sin MapData, se posicionarán aleatoriamente en espacios no bloqueados.
+                </div>
+            </div>
+        </section>
+
+        <!-- Map System -->
+        <section class="section" id="mapas">
+            <h2 class="section-title">Sistema de Mapas</h2>
+            <p class="section-subtitle">Crea mundos explorables con objetos interactivos</p>
+
+            <h3>Crear un Mapa</h3>
+            <div class="code-block">
+                <div class="code-header">
+                    <span class="code-title">Maps/Ciudad1.js</span>
+                    <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+                </div>
+                <pre><code><span class="kw">import</span> { GameMap, BlockObject } <span class="kw">from</span> <span class="str">"../../Core/OppenWorld/OpenWordModules/Models.js"</span>;
+
+<span class="kw">const</span> getAsset = (asset) => <span class="str">"./Media/assets/Maps/"</span> + asset;
+
+<span class="kw">const</span> ciudad1 = <span class="kw">new</span> <span class="type">GameMap</span>(<span class="str">'Ciudad1'</span>, <span class="num">64</span>, <span class="num">36</span>, {
+    spawnX: <span class="num">23</span>,
+    spawnY: <span class="num">16</span>,
+    bgColor: <span class="str">'#666'</span>,
+    NPCs: [npc1, DanaCharacter],
+    backgroundImage: <span class="fn">getAsset</span>(<span class="str">"City1/map1.png"</span>)
+});
+
+<span class="com">// Añadir objetos al mapa</span>
+ciudad1.<span class="fn">addObject</span>(<span class="kw">new</span> <span class="type">BlockObject</span>(<span class="num">23</span>, <span class="num">15</span>, <span class="num">1</span>, <span class="num">1</span>, {
+    color: <span class="str">'#FFD700'</span>,
+    Action: () => {
+        <span class="fn">battle</span>();  <span class="com">// Iniciar batalla</span>
+    }
+}));
+
+<span class="com">// Añadir al motor</span>
+oppenWorldEngine.<span class="fn">AddMap</span>(ciudad1);</code></pre>
+            </div>
+
+            <h3>BlockObject - Objetos Interactivos</h3>
+            <p>Los BlockObjects son elementos colocados en el mapa que pueden tener colisión, iconos visuales y
+                acciones.</p>
+
+            <table class="api-table">
+                <thead>
+                    <tr>
+                        <th>Propiedad</th>
+                        <th>Tipo</th>
+                        <th>Descripción</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><span class="param-name">x</span></td>
+                        <td><span class="param-type">number</span></td>
+                        <td>Posición X en tiles</td>
+                    </tr>
+                    <tr>
+                        <td><span class="param-name">y</span></td>
+                        <td><span class="param-type">number</span></td>
+                        <td>Posición Y en tiles</td>
+                    </tr>
+                    <tr>
+                        <td><span class="param-name">w</span></td>
+                        <td><span class="param-type">number</span></td>
+                        <td>Ancho en tiles</td>
+                    </tr>
+                    <tr>
+                        <td><span class="param-name">h</span></td>
+                        <td><span class="param-type">number</span></td>
+                        <td>Alto en tiles</td>
+                    </tr>
+                    <tr>
+                        <td><span class="param-name">color</span></td>
+                        <td><span class="param-type">string</span></td>
+                        <td>Color de renderizado (opcional)</td>
+                    </tr>
+                    <tr>
+                        <td><span class="param-name">icon</span></td>
+                        <td><span class="param-type">string</span></td>
+                        <td>Ruta a imagen del objeto</td>
+                    </tr>
+                    <tr>
+                        <td><span class="param-name">Action</span></td>
+                        <td><span class="param-type">Function</span></td>
+                        <td>Función al interactuar</td>
+                    </tr>
+                    <tr>
+                        <td><span class="param-name">autoTrigger</span></td>
+                        <td><span class="param-type">boolean</span></td>
+                        <td>Activar automáticamente al pisar</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>Colisiones y Bloques Invisibles</h3>
+            <div class="code-block">
+                <div class="code-header">
+                    <span class="code-title">Crear Paredes Invisibles</span>
+                    <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+                </div>
+                <pre><code><span class="com">// Bloque de colisión invisible (sin color)</span>
+ciudad1.<span class="fn">addObject</span>(<span class="kw">new</span> <span class="type">BlockObject</span>(<span class="num">22</span>, <span class="num">1</span>, <span class="num">1</span>, <span class="num">1</span>, {
+    <span class="com">// Sin color = invisible pero con colisión</span>
+}));
+
+<span class="com">// Múltiples bloques para crear paredes</span>
+<span class="kw">for</span> (<span class="kw">let</span> i = <span class="num">0</span>; i < <span class="num">10</span>; i++) {
+    ciudad1.<span class="fn">addObject</span>(<span class="kw">new</span> <span class="type">BlockObject</span>(i, <span class="num">0</span>, <span class="num">1</span>, <span class="num">1</span>, {}));
+}</code></pre>
+            </div>
+        </section>
+
+        <!-- Battle System -->
+        <section class="section" id="batalla">
+            <h2 class="section-title">Sistema de Batalla</h2>
+            <p class="section-subtitle">Combate por turnos con habilidades y estadísticas</p>
+
+            <div class="image-showcase">
+                <img src="https://image.qwenlm.ai/public_source/ee22caf6-26c8-4460-b8ce-df3117ec1645/101c4ec65-8117-4257-aadc-ccdd3fc96931.png"
+                    alt="Battle System UI">
+            </div>
+
+            <h3>Iniciar Batalla</h3>
+            <div class="code-block">
+                <div class="code-header">
+                    <span class="code-title">Iniciar Combate</span>
+                    <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+                </div>
+                <pre><code><span class="kw">const</span> battle = () => {
+    <span class="com">// Crear enemigos</span>
+    <span class="kw">const</span> enemies = [
+        <span class="kw">new</span> <span class="type">CharacterModel</span>({
+            Name: <span class="str">"goblin"</span>,
+            Stats: {
+                hp: <span class="num">15</span>,
+                maxHp: <span class="num">15</span>,
+                strength: <span class="num">3</span>,
+                speed: <span class="num">3</span>,
+            },
+            isEnemy: <span class="kw">true</span>,
+            Skills: [oppenWorldEngine.GameEngine.battleSystem.<span class="fn">createBasicAttack</span>()]
+        })
+    ];
+
+    <span class="com">// Obtener equipo del jugador</span>
+    <span class="kw">const</span> party = oppenWorldEngine.<span class="fn">GetParty</span>(npc1);
+
+    <span class="com">// Iniciar batalla</span>
+    oppenWorldEngine.<span class="fn">StartBattle</span>(enemies, party);
+};</code></pre>
+            </div>
+
+            <h3>Configurar Equipo de Batalla</h3>
+            <div class="code-block">
+                <div class="code-header">
+                    <span class="code-title">Registro de Personajes</span>
+                    <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+                </div>
+                <pre><code><span class="com">// Registrar personaje para batalla</span>
+oppenWorldEngine.<span class="fn">RegisterCharacter</span>(DanaCharacter);
+
+<span class="com">// Asignar posición en el equipo (0-3)</span>
+DanaCharacter.partyPosition = <span class="num">1</span>;
+Alexandra.partyPosition = <span class="num">0</span>;
+
+<span class="com">// Iniciar batalla sin especificar equipo</span>
+<span class="com">// Usará automáticamente los personajes registrados</span>
+oppenWorldEngine.<span class="fn">StartBattle</span>(enemies);</code></pre>
+            </div>
+
+            <h3>Estadísticas de Personaje</h3>
+            <table class="api-table">
+                <thead>
+                    <tr>
+                        <th>Estadística</th>
+                        <th>Descripción</th>
+                        <th>Valor Típico</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><span class="param-name">hp</span></td>
+                        <td>Puntos de vida actuales</td>
+                        <td>100-1500</td>
+                    </tr>
+                    <tr>
+                        <td><span class="param-name">maxHp</span></td>
+                        <td>Puntos de vida máximos</td>
+                        <td>100-1500</td>
+                    </tr>
+                    <tr>
+                        <td><span class="param-name">strength</span></td>
+                        <td>Daño base de ataques</td>
+                        <td>5-100</td>
+                    </tr>
+                    <tr>
+                        <td><span class="param-name">speed</span></td>
+                        <td>Determina orden de turno</td>
+                        <td>1-50</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- VN Integration -->
+        <section class="section" id="vn-integration">
+            <h2 class="section-title">Integración con VNEngine</h2>
+            <p class="section-subtitle">Transiciones fluidas entre exploración y narrativa</p>
+
+            <h3>Definir Escenas de Novela Visual</h3>
+            <div class="code-block">
+                <div class="code-header">
+                    <span class="code-title">Escena de Diálogo</span>
+                    <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+                </div>
+                <pre><code>vnEngine.<span class="fn">defineScene</span>(<span class="str">"danaJoinHistory"</span>, [
+    <span class="type">Scene</span>.<span class="fn">Show</span>(<span class="str">"assets/Maps/City1/scene1.png"</span>),
+    DanaCharacter.<span class="fn">Show</span>(),
+    <span class="type">Flow</span>.<span class="fn">Choice</span>([
+        <span class="type">Flow</span>.<span class="fn">Action</span>(<span class="str">"Saludar"</span>, [
+            Alexandra.<span class="fn">Say</span>(<span class="str">"Hola"</span>),
+            DanaCharacter.<span class="fn">Say</span>(<span class="str">"Hola"</span>),
+            () => vnEngine.<span class="fn">Disconnect</span>()
+        ]),
+        <span class="type">Flow</span>.<span class="fn">Action</span>(<span class="str">"Solicitar que se una al equipo"</span>, [
+            Alexandra.<span class="fn">Say</span>(<span class="str">"Hola, escuche que necesitas un equipo"</span>),
+            DanaCharacter.<span class="fn">Say</span>(<span class="str">"Si yo estoy buscando equipo"</span>),
+            DanaCharacter.<span class="fn">SetVar</span>(<span class="str">"Join"</span>, <span class="kw">true</span>),
+            () => {
+                oppenWorldEngine.<span class="fn">RegisterCharacter</span>(DanaCharacter);
+                DanaCharacter.partyPosition = <span class="num">1</span>;
+                vnEngine.<span class="fn">Disconnect</span>()
+            }
+        ], { render: <span class="type">Flow</span>.<span class="fn">Var</span>(<span class="str">"DanaJoin"</span>, <span class="str">"=="</span>, <span class="kw">false</span>) })
+    ])
+]);</code></pre>
+            </div>
+
+            <h3>Transición OpenWorld ↔ VN</h3>
+            <div class="code-block">
+                <div class="code-header">
+                    <span class="code-title">Flujo de Transición</span>
+                    <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+                </div>
+                <pre><code><span class="com">// Desde OpenWorld a VN (interacción con NPC)</span>
+<span class="kw">const</span> npc1 = <span class="kw">new</span> <span class="type">CharacterModel</span>({
+    Name: <span class="str">"Mage"</span>,
+    MapData: [{
+        name: <span class="str">"Ciudad1"</span>, 
+        posX: <span class="num">24</span>, 
+        posY: <span class="num">14</span>, 
+        action: () => {
+            vnEngine.<span class="fn">startScene</span>(<span class="str">"npc1Chat"</span>);  <span class="com">// Inicia escena VN</span>
+        }
+    }]
+});
+
+<span class="com">// Desde VN a OpenWorld (volver al mapa)</span>
+vnEngine.<span class="fn">defineScene</span>(<span class="str">"start_game"</span>, [
+    <span class="type">Scene</span>.<span class="fn">Show</span>(<span class="str">"assets/Maps/City1/scene1.png"</span>),
+    Alexandra.<span class="fn">Say</span>(<span class="str">"Inicie la aventura"</span>),
+    () => {
+        vnEngine.<span class="fn">Disconnect</span>();  <span class="com">// Cierra VN</span>
+        oppenWorldEngine.<span class="fn">GoToMap</span>(<span class="str">"Ciudad1"</span>);  <span class="com">// Vuelve al mapa</span>
+    }
+]);</code></pre>
+            </div>
+
+            <div class="alert alert-info">
+                <span class="alert-icon">💡</span>
+                <div>
+                    <strong>Consejo:</strong> Usa <code class="code-inline">vnEngine.Disconnect()</code> para cerrar la
+                    escena de
+                    novela visual y volver al control del mapa. El estado del juego se mantiene entre transiciones.
+                </div>
+            </div>
+        </section>
+
+        <!-- UI Components -->
+        <section class="section" id="ui">
+            <h2 class="section-title">Componentes UI</h2>
+            <p class="section-subtitle">Pantallas y menús predefinidos</p>
+
+            <h3>GameStartScreen</h3>
+            <p>Pantalla de inicio con opciones de nuevo juego, continuar, guardar y opciones.</p>
+
+            <div class="code-block">
+                <div class="code-header">
+                    <span class="code-title">Configurar Pantalla de Inicio</span>
+                    <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+                </div>
+                <pre><code><span class="kw">import</span> { GameStartScreen } <span class="kw">from</span> <span class="str">"./Core/OppenWorld/OpenWordModules/GameStartScreen.js"</span>;
+
+<span class="kw">const</span> screenOptions = [
+    {
+        name: <span class="str">"New Game"</span>, 
+        startGame: <span class="kw">true</span>, 
+        action: () => {
+            oppenWorldEngine.<span class="fn">GoToMap</span>(<span class="str">"Ciudad1"</span>);
+        }
+    }, 
+    {
+        name: <span class="str">"Continuar"</span>, 
+        startGame: <span class="kw">false</span>, 
+        action: (screenView) => {
+            saveSystem.<span class="fn">showSaveLoadScreen</span>(<span class="kw">true</span>, () => { 
+                <span class="kw">new</span> <span class="type">GameMenu</span>(screenView).<span class="fn">Connect</span>(); 
+            });
+        }
+    },
+    {
+        name: <span class="str">"Test Scene"</span>, 
+        startGame: <span class="kw">true</span>, 
+        action: () => {
+            vnEngine.<span class="fn">startScene</span>(<span class="str">"start_game"</span>);
+        }
+    }
+];
+
+<span class="kw">const</span> screenView = <span class="kw">new</span> <span class="type">GameStartScreen</span>({
+    screenOptions: screenOptions
+});
+
+oppenWorldEngine.screenView = screenView;
+document.body.<span class="fn">append</span>(screenView);</code></pre>
+            </div>
+
+            <h3>GameMenu</h3>
+            <p>Menú de juego accesible durante la exploración.</p>
+
+            <div class="code-block">
+                <div class="code-header">
+                    <span class="code-title">Abrir Menú de Juego</span>
+                    <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+                </div>
+                <pre><code><span class="kw">import</span> { GameMenu } <span class="kw">from</span> <span class="str">"./Core/Common/UIComponents/GameMenu.js"</span>;
+
+<span class="com">// Conectar menú durante el juego</span>
+<span class="kw">new</span> <span class="type">GameMenu</span>().<span class="fn">Connect</span>();
+
+<span class="com">// El menú incluye opciones para:</span>
+<span class="com">// - Guardar partida</span>
+<span class="com">// - Cargar partida</span>
+<span class="com">// - Opciones de configuración</span>
+<span class="com">// - Volver al menú principal</span></code></pre>
+            </div>
+        </section>
+
+        <!-- API Reference -->
+        <section class="section" id="api-reference">
+            <h2 class="section-title">Referencia API Completa</h2>
+            <p class="section-subtitle">Documentación detallada de todas las clases y métodos</p>
+
+            <h3>OpenWorldEngineView</h3>
+            <table class="api-table">
+                <thead>
+                    <tr>
+                        <th>Método</th>
+                        <th>Parámetros</th>
+                        <th>Retorna</th>
+                        <th>Descripción</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><span class="param-name">constructor</span></td>
+                        <td><span class="param-type">{character: CharacterModel}</span></td>
+                        <td><span class="param-type">OpenWorldEngineView</span></td>
+                        <td>Crea instancia del motor</td>
+                    </tr>
+                    <tr>
+                        <td><span class="param-name">Start()</span></td>
+                        <td>-</td>
+                        <td><span class="param-type">void</span></td>
+                        <td>Inicia el motor y muestra pantalla de inicio</td>
+                    </tr>
+                    <tr>
+                        <td><span class="param-name">GoToMap(mapName)</span></td>
+                        <td><span class="param-type">string</span></td>
+                        <td><span class="param-type">void</span></td>
+                        <td>Cambia al mapa especificado</td>
+                    </tr>
+                    <tr>
+                        <td><span class="param-name">AddMap(map)</span></td>
+                        <td><span class="param-type">GameMap</span></td>
+                        <td><span class="param-type">void</span></td>
+                        <td>Añade un mapa al motor</td>
+                    </tr>
+                    <tr>
+                        <td><span class="param-name">RegisterCharacter(char)</span></td>
+                        <td><span class="param-type">CharacterModel</span></td>
+                        <td><span class="param-type">void</span></td>
+                        <td>Registra personaje para batalla</td>
+                    </tr>
+                    <tr>
+                        <td><span class="param-name">GetParty(leader)</span></td>
+                        <td><span class="param-type">CharacterModel</span></td>
+                        <td><span class="param-type">CharacterModel[]</span></td>
+                        <td>Obtiene equipo de batalla</td>
+                    </tr>
+                    <tr>
+                        <td><span class="param-name">StartBattle(enemies, party)</span></td>
+                        <td><span class="param-type">CharacterModel[], CharacterModel[]</span></td>
+                        <td><span class="param-type">void</span></td>
+                        <td>Inicia sistema de batalla</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>GameEngine</h3>
+            <table class="api-table">
+                <thead>
+                    <tr>
+                        <th>Método</th>
+                        <th>Parámetros</th>
+                        <th>Retorna</th>
+                        <th>Descripción</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><span class="param-name">addMap(map)</span></td>
+                        <td><span class="param-type">GameMap</span></td>
+                        <td><span class="param-type">void</span></td>
+                        <td>Añade mapa al diccionario</td>
+                    </tr>
+                    <tr>
+                        <td><span class="param-name">GoToMap(name, pos)</span></td>
+                        <td><span class="param-type">string, {x, y}</span></td>
+                        <td><span class="param-type">void</span></td>
+                        <td>Cambia mapa y posiciona jugador</td>
+                    </tr>
+                    <tr>
+                        <td><span class="param-name">update(ts)</span></td>
+                        <td><span class="param-type">number</span></td>
+                        <td><span class="param-type">void</span></td>
+                        <td>Game loop principal</td>
+                    </tr>
+                    <tr>
+                        <td><span class="param-name">draw()</span></td>
+                        <td>-</td>
+                        <td><span class="param-type">void</span></td>
+                        <td>Renderiza frame actual</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>GameMap</h3>
+            <table class="api-table">
+                <thead>
+                    <tr>
+                        <th>Método</th>
+                        <th>Parámetros</th>
+                        <th>Retorna</th>
+                        <th>Descripción</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><span class="param-name">constructor</span></td>
+                        <td><span class="param-type">name, w, h, opts</span></td>
+                        <td><span class="param-type">GameMap</span></td>
+                        <td>Crea nuevo mapa</td>
+                    </tr>
+                    <tr>
+                        <td><span class="param-name">addObject(obj)</span></td>
+                        <td><span class="param-type">BlockObject</span></td>
+                        <td><span class="param-type">void</span></td>
+                        <td>Añade objeto al mapa</td>
+                    </tr>
+                    <tr>
+                        <td><span class="param-name">addNPC(npc)</span></td>
+                        <td><span class="param-type">CharacterModel</span></td>
+                        <td><span class="param-type">void</span></td>
+                        <td>Añade NPC al mapa</td>
+                    </tr>
+                    <tr>
+                        <td><span class="param-name">isBlocked(tx, ty)</span></td>
+                        <td><span class="param-type">number, number</span></td>
+                        <td><span class="param-type">boolean</span></td>
+                        <td>Verifica si tile está bloqueado</td>
+                    </tr>
+                    <tr>
+                        <td><span class="param-name">setBackgroundImage(img)</span></td>
+                        <td><span class="param-type">Image|string</span></td>
+                        <td><span class="param-type">void</span></td>
+                        <td>Establece imagen de fondo</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>CharacterModel</h3>
+            <table class="api-table">
+                <thead>
+                    <tr>
+                        <th>Método</th>
+                        <th>Parámetros</th>
+                        <th>Retorna</th>
+                        <th>Descripción</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><span class="param-name">constructor</span></td>
+                        <td><span class="param-type">props</span></td>
+                        <td><span class="param-type">CharacterModel</span></td>
+                        <td>Crea nuevo personaje</td>
+                    </tr>
+                    <tr>
+                        <td><span class="param-name">Show(state, position)</span></td>
+                        <td><span class="param-type">string, string</span></td>
+                        <td><span class="param-type">Object</span></td>
+                        <td>Muestra personaje en VN</td>
+                    </tr>
+                    <tr>
+                        <td><span class="param-name">ShowR(state)</span></td>
+                        <td><span class="param-type">string</span></td>
+                        <td><span class="param-type">Object</span></td>
+                        <td>Muestra a la derecha</td>
+                    </tr>
+                    <tr>
+                        <td><span class="param-name">ShowL(state)</span></td>
+                        <td><span class="param-type">string</span></td>
+                        <td><span class="param-type">Object</span></td>
+                        <td>Muestra a la izquierda</td>
+                    </tr>
+                    <tr>
+                        <td><span class="param-name">Hide()</span></td>
+                        <td>-</td>
+                        <td><span class="param-type">Object</span></td>
+                        <td>Oculta personaje</td>
+                    </tr>
+                    <tr>
+                        <td><span class="param-name">Say(text, audio)</span></td>
+                        <td><span class="param-type">string, string</span></td>
+                        <td><span class="param-type">Object</span></td>
+                        <td>Diálogo del personaje</td>
+                    </tr>
+                    <tr>
+                        <td><span class="param-name">GetVar(name)</span></td>
+                        <td><span class="param-type">string</span></td>
+                        <td><span class="param-type">any</span></td>
+                        <td>Obtiene variable del juego</td>
+                    </tr>
+                    <tr>
+                        <td><span class="param-name">SetVar(name, value)</span></td>
+                        <td><span class="param-type">string, any</span></td>
+                        <td><span class="param-type">Object</span></td>
+                        <td>Establece variable</td>
+                    </tr>
+                    <tr>
+                        <td><span class="param-name">follow(character)</span></td>
+                        <td><span class="param-type">CharacterModel</span></td>
+                        <td><span class="param-type">void</span></td>
+                        <td>Hace que siga a otro personaje</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- Examples -->
+        <section class="section" id="ejemplos">
+            <h2 class="section-title">Ejemplos Completos</h2>
+            <p class="section-subtitle">Código de referencia para casos de uso comunes</p>
+
+            <h3>Ejemplo 1: Juego Completo desde Cero</h3>
+            <div class="code-block">
+                <div class="code-header">
+                    <span class="code-title">app.js - Configuración Completa</span>
+                    <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+                </div>
+                <pre><code><span class="com">// Importaciones</span>
+<span class="kw">import</span> { CharacterModel, CharacterRegistry } <span class="kw">from</span> <span class="str">"./Core/Common/CharacterModel.js"</span>;
+<span class="kw">import</span> { GameMenu } <span class="kw">from</span> <span class="str">"./Core/Common/UIComponents/GameMenu.js"</span>;
+<span class="kw">import</span> { GameStartScreen } <span class="kw">from</span> <span class="str">"./Core/OppenWorld/OpenWordModules/GameStartScreen.js"</span>;
+<span class="kw">import</span> { BlockObject, GameMap } <span class="kw">from</span> <span class="str">"./Core/OppenWorld/OpenWordModules/Models.js"</span>;
+<span class="kw">import</span> { OpenWorldEngineView } <span class="kw">from</span> <span class="str">"./Core/OppenWorld/OpenWorldEngineView.js"</span>;
+<span class="kw">import</span> { saveSystem, vnEngine } <span class="kw">from</span> <span class="str">"./Core/VisualNovel/VisualNovelEngine.js"</span>;
+<span class="kw">import</span> { Dialogue, Flow, Scene } <span class="kw">from</span> <span class="str">"./Core/VisualNovel/VisualNovelModules.js"</span>;
+<span class="kw">import</span> { Alexandra } <span class="kw">from</span> <span class="str">"./Characters/AlexandraCharacter.js"</span>;
+<span class="kw">import</span> { DanaCharacter } <span class="kw">from</span> <span class="str">"./Characters/DanaCharacter.js"</span>;
+
+<span class="com">// Helper para rutas de assets</span>
+<span class="kw">const</span> getAsset = (asset) => <span class="str">"./Media/assets/Maps/"</span> + asset;
+
+<span class="com">// Registrar personajes singleton</span>
+CharacterRegistry.<span class="fn">registerSingleton</span>(Alexandra);
+CharacterRegistry.<span class="fn">registerSingleton</span>(DanaCharacter);
+
+<span class="com">// Crear NPC</span>
+<span class="kw">const</span> npc1 = <span class="kw">new</span> <span class="type">CharacterModel</span>({
+    Name: <span class="str">"Mage"</span>,
+    MapData: [{
+        name: <span class="str">"Ciudad1"</span>, 
+        posX: <span class="num">24</span>, 
+        posY: <span class="num">14</span>, 
+        action: () => vnEngine.<span class="fn">startScene</span>(<span class="str">"npc1Chat"</span>)
+    }]
+});
+
+<span class="com">// Configurar posición de Dana en mapa</span>
+DanaCharacter.MapData.<span class="fn">push</span>({
+    name: <span class="str">"Ciudad1"</span>, 
+    posX: <span class="num">25</span>, 
+    posY: <span class="num">12</span>, 
+    action: () => vnEngine.<span class="fn">startScene</span>(<span class="str">"danaJoinHistory"</span>)
+});
+
+<span class="com">// Definir escena VN</span>
+vnEngine.<span class="fn">defineScene</span>(<span class="str">"danaJoinHistory"</span>, [
+    <span class="type">Scene</span>.<span class="fn">Show</span>(<span class="fn">getAsset</span>(<span class="str">"City1/scene1.png"</span>)),
+    DanaCharacter.<span class="fn">Show</span>(),
+    <span class="type">Flow</span>.<span class="fn">Choice</span>([
+        <span class="type">Flow</span>.<span class="fn">Action</span>(<span class="str">"Saludar"</span>, [
+            Alexandra.<span class="fn">Say</span>(<span class="str">"Hola"</span>),
+            DanaCharacter.<span class="fn">Say</span>(<span class="str">"Hola"</span>),
+            () => vnEngine.<span class="fn">Disconnect</span>()
+        ]),
+        <span class="type">Flow</span>.<span class="fn">Action</span>(<span class="str">"Unir al equipo"</span>, [
+            DanaCharacter.<span class="fn">SetVar</span>(<span class="str">"Join"</span>, <span class="kw">true</span>),
+            () => {
+                oppenWorldEngine.<span class="fn">RegisterCharacter</span>(DanaCharacter);
+                DanaCharacter.partyPosition = <span class="num">1</span>;
+                vnEngine.<span class="fn">Disconnect</span>();
+            }
+        ])
+    ])
+]);
+
+<span class="com">// Crear motor</span>
+<span class="kw">const</span> oppenWorldEngine = <span class="kw">new</span> <span class="type">OpenWorldEngineView</span>({
+    character: Alexandra
+});
+
+<span class="com">// Crear mapa</span>
+<span class="kw">const</span> ciudad1 = <span class="kw">new</span> <span class="type">GameMap</span>(<span class="str">'Ciudad1'</span>, <span class="num">64</span>, <span class="num">36</span>, {
+    spawnX: <span class="num">23</span>,
+    spawnY: <span class="num">16</span>,
+    bgColor: <span class="str">'#666'</span>,
+    NPCs: [npc1, DanaCharacter],
+    backgroundImage: <span class="fn">getAsset</span>(<span class="str">"City1/map1.png"</span>)
+});
+
+<span class="com">// Añadir objeto interactivo</span>
+ciudad1.<span class="fn">addObject</span>(<span class="kw">new</span> <span class="type">BlockObject</span>(<span class="num">23</span>, <span class="num">15</span>, <span class="num">1</span>, <span class="num">1</span>, {
+    color: <span class="str">'#FFD700'</span>,
+    Action: () => <span class="fn">battle</span>()
+}));
+
+<span class="com">// Añadir mapa al motor</span>
+oppenWorldEngine.<span class="fn">AddMap</span>(ciudad1);
+
+<span class="com">// Función de batalla</span>
+<span class="kw">const</span> battle = () => {
+    <span class="kw">const</span> enemies = [
+        <span class="kw">new</span> <span class="type">CharacterModel</span>({
+            Name: <span class="str">"goblin"</span>,
+            Stats: { hp: <span class="num">15</span>, maxHp: <span class="num">15</span>, strength: <span class="num">3</span>, speed: <span class="num">3</span> },
+            isEnemy: <span class="kw">true</span>
+        })
+    ];
+    oppenWorldEngine.<span class="fn">StartBattle</span>(enemies);
+};
+
+<span class="com">// Configurar pantalla de inicio</span>
+<span class="kw">const</span> screenOptions = [
+    {
+        name: <span class="str">"New Game"</span>, 
+        startGame: <span class="kw">true</span>, 
+        action: () => {
+            oppenWorldEngine.<span class="fn">GoToMap</span>(<span class="str">"Ciudad1"</span>);
+            <span class="kw">new</span> <span class="type">GameMenu</span>().<span class="fn">Connect</span>();
+        }
+    }
+];
+
+<span class="kw">const</span> screenView = <span class="kw">new</span> <span class="type">GameStartScreen</span>({ screenOptions });
+oppenWorldEngine.screenView = screenView;
+document.body.<span class="fn">append</span>(screenView);</code></pre>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container footer-content">
+            <div class="footer-text">
+                © 2025 OpenWorld Engine. Desarrollado por Wilber Jose Matus Gonzalez.
+            </div>
+            <div class="footer-links">
+                <a href="https://github.com/Wilber1987" target="_blank">GitHub</a>
+                <a href="#inicio">Volver arriba</a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Copy code functionality
+        function copyCode(btn) {
+            const codeBlock = btn.closest('.code-block');
+            const code = codeBlock.querySelector('code');
+            const text = code.innerText;
+
+            navigator.clipboard.writeText(text).then(() => {
+                const originalText = btn.innerText;
+                btn.innerText = '¡Copiado!';
+                btn.style.borderColor = 'var(--success)';
+                btn.style.color = 'var(--success)';
+
+                setTimeout(() => {
+                    btn.innerText = originalText;
+                    btn.style.borderColor = '';
+                    btn.style.color = '';
+                }, 2000);
+            });
+        }
+
+        // Smooth scroll for navigation
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Active nav highlighting
+        const sections = document.querySelectorAll('.section');
+        const navLinks = document.querySelectorAll('nav a');
+
+        window.addEventListener('scroll', () => {
+            let current = '';
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop;
+                const sectionHeight = section.clientHeight;
+                if (scrollY >= sectionTop - 200) {
+                    current = section.getAttribute('id');
+                }
+            });
+
+            navLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === `#${current}`) {
+                    link.classList.add('active');
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>

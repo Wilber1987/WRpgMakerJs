@@ -3,7 +3,7 @@
 // Sistema de Batalla - Versión FINAL con Animación y Cámara
 
 import { CharacterModel } from "../../Common/CharacterModel.js";
-import { SkillModel } from "../../Common/SkillModel.js";
+import { SkillModel, SkillsType } from "../../Common/SkillModel.js";
 import { ComponentsManager, html } from "../../WDevCore/WModules/WComponentsTools.js";
 import { Camera } from "../Camera.js";
 import { DPR, TILE_SIZE } from "../OpenWorldEngineView.js";
@@ -21,8 +21,8 @@ export class BattleSystem extends HTMLElement {
         this.isActive = false;
 
         // === CONFIGURACIÓN DEL GRID ===
-        this.gridCols = 8;
-        this.gridRows = 4;
+        this.gridCols = 12;
+        this.gridRows = 8;
         this.cellWidth = 0;
         this.cellHeight = 0;
 
@@ -50,7 +50,8 @@ export class BattleSystem extends HTMLElement {
         /** @type {CharacterModel[]} */
         this.combatants = [];
         /**
-         * @type {{ target?: CharacterModel; damage: number; isCritical: boolean; startTime: number | null; spriteSkillAnimation?: HTMLImageElement[]; }[]}
+         * @type {{ target?: CharacterModel; skillElement?: string;  damage: number; isCritical: boolean; 
+         * startTime: number | null; spriteSkillAnimation?: HTMLImageElement[]; }[]}
          */
         this.targetDamage = [];
         /**
@@ -85,6 +86,16 @@ export class BattleSystem extends HTMLElement {
          * @type {CharacterModel | undefined}
          */
         this.selectedAllyTarget = undefined;
+
+        // 2. NUEVO: Array para rastrear movimientos de ataque          
+        /**
+         *  @type {{ character: CharacterModel, startX: number, startY: number, 
+         * targetX: number, targetY: number, progress: number, speed: number,
+         * damageTriggered: boolean, skill: SkillModel, target: CharacterModel,
+         * direction: string, onComplete: () => void,
+         * elapsedTime: number ,frameCount: number, duration: number }[]} 
+         * */
+        this.activeMovements = [];
     }
     Draw = async () => {
         const layout = html`<div id="battle-overlay">
@@ -171,7 +182,7 @@ export class BattleSystem extends HTMLElement {
             this.engine.GameEngine.resume();
             this.remove();
             this.isActive = false;
-        }, 500);
+        }, 10);
     }
 
     _resizeCanvas() {
@@ -204,18 +215,18 @@ export class BattleSystem extends HTMLElement {
         const baseCol = isAlly ? 0 : 4;
         if (isAlly) {
             switch (index) {
-                case 0: return { col: 1, row: 0 };
-                case 1: return { col: 1, row: 1 };
-                case 2: return { col: 0, row: 0.2 };
-                case 3: return { col: 0, row: 1.2 };
+                case 0: return { col: 1, row: 1.5 };
+                case 1: return { col: 1, row: 4 };
+                case 2: return { col: 2.5, row: 3 };
+                case 3: return { col: 2.5, row: 5 };
                 default: break
             }
         } else {
             switch (index) {
-                case 0: return { col: 4, row: 0 };
-                case 1: return { col: 4, row: 1 };
-                case 2: return { col: 5, row: 0.2 };
-                case 3: return { col: 5, row: 1.2 };
+                case 0: return { col: 8, row: 1.5 };
+                case 1: return { col: 8, row: 4 };
+                case 2: return { col: 6.5, row: 3 };
+                case 3: return { col: 6.5, row: 5 };
                 default: break
             }
         }
@@ -248,33 +259,81 @@ export class BattleSystem extends HTMLElement {
     _drawCharacter(ctx, npc, col, row, direction) {
         const pos = this._gridToCanvas(col, row);
         const cam = this.battleCamera;
+
+
+        // 3.1 VERIFICAR SI HAY MOVIMIENTO ACTIVO PARA ESTE PERSONAJE
+        let drawPos = { x: pos.x, y: pos.y };
+        const movement = this.activeMovements.find(m => m.character === npc);
+        let renderdamage = false;
+        if (movement) {
+            // Interpolación lineal con PAUSA en el punto de impacto
+            let lerpFactor = 0;
+
+            // === CONFIGURACIÓN DE FASES ===
+            // 0.0 - 0.45: Ida (45% del tiempo)
+            // 0.45 - 0.55: Pausa en target (10% del tiempo) ⬅️ NUEVO
+            // 0.55 - 1.0: Vuelta (45% del tiempo)
+
+            const pauseStart = movement.skill.animationPause ?? 0.45;
+            const pauseEnd =  movement.skill.animationPauseEnd ?? 0.7;
+
+            if (movement.progress < pauseStart) {
+                // === FASE 1: IDA ===
+                // Mapear 0.0->0.45 a 0.0->1.0
+                lerpFactor = movement.progress / pauseStart;
+
+            } else if (movement.progress <= pauseEnd) {
+                // === FASE 2: PAUSA ===
+                // Mantener en posición del target (lerpFactor = 1.0)
+                lerpFactor = 1.0;
+                renderdamage = true
+
+            } else {
+                // === FASE 3: VUELTA ===
+                // Mapear 0.55->1.0 a 1.0->0.0
+                const returnProgress = (movement.progress - pauseEnd) / (1.0 - pauseEnd);
+                lerpFactor = 1.0 - returnProgress;
+                renderdamage = false;
+            }
+
+            // Aplicar interpolación
+            drawPos.x = movement.startX + (movement.targetX - movement.startX) * lerpFactor;
+            drawPos.y = movement.startY + (movement.targetY - movement.startY) * lerpFactor;
+        }
+
         // Verificar que el NPC tenga sprites cargados
         if (!npc.Sprites || !npc.Sprites.idle || !npc.Sprites.idle[direction]) {
-            this._drawCharacterFallback(ctx, npc, pos);
+            this._drawCharacterFallback(ctx, npc, drawPos);
         } else {
             const currentState = npc.BattleState ?? this.BasicSprite;
             const currentDirection = direction;
             if (npc.Sprites[currentState] && npc.Sprites[currentState][currentDirection]) {
                 const spriteList = npc.Sprites[currentState][currentDirection];
-                const animFrame = npc.animFrame || 0;
+                //const animFrame = npc.animFrame || 0;
+
+                const animFrame = movement ? movement.character.animFrame : (npc.animFrame || 0);
+
                 if (spriteList[animFrame]) {
                     const img = spriteList[animFrame];
                     if (img && img.complete && img.naturalWidth > 0) {
                         // Calcular tamaño con zoom
-                        const maxHeight = this.cellHeight * 1.5 * cam.zoom;
+                        const maxHeight = this.cellHeight * npc.height * cam.zoom;
                         const aspect = img.naturalWidth / img.naturalHeight;
                         const drawH = maxHeight;
                         const drawW = drawH * aspect;
                         // Dibujar con transformaciones de cámara
                         ctx.save();
-                        ctx.translate(pos.x, pos.y);
+                        ctx.translate(drawPos.x, drawPos.y);
                         ctx.scale(cam.zoom, cam.zoom);
                         const isAlly = !npc.isEnemy;
                         // === SELECCIÓN: Dibujar anillo en el piso ===
                         if (npc === this.selectedEnemyTarget || npc === this.selectedAllyTarget) {
-                            this._drawSelectionRing(ctx, pos, isAlly, cam);
+                            this._drawSelectionRing(ctx, drawPos, isAlly, cam, npc);
                         }
-                        this._drawShadow(ctx, pos, cam);
+                        if (npc.BattleState?.includes("attack")) {
+                            this._drawChargeAuraAnimation(ctx, drawPos, cam, npc);
+                        }
+                        this._drawShadow(ctx, drawPos, cam);
                         ctx.drawImage(
                             img,
                             -drawW / 2 / cam.zoom,
@@ -286,7 +345,7 @@ export class BattleSystem extends HTMLElement {
                             const targetDamage = this.targetDamage.find(t => t.target == npc)
                             if (targetDamage) {
                                 // @ts-ignore
-                                this._drawSelectionDamage(ctx, targetDamage, !npc.isEnemy, cam);
+                                this._drawSelectionDamage(ctx, targetDamage, !npc.isEnemy, cam, targetDamage.skillElement);
                             }
                         }
                         ctx.restore();
@@ -295,11 +354,11 @@ export class BattleSystem extends HTMLElement {
             }
         }
         // HP bar
-        this._drawHPBar(ctx, npc, pos.x, pos.y + 10 * cam.zoom, this.cellWidth * 0.7 * cam.zoom);
+        this._drawHPBar(ctx, npc, drawPos.x, drawPos.y + 10 * cam.zoom, this.cellWidth * 0.7 * cam.zoom);
 
         // Turn indicator
         if (npc === this.turnOrder[this.currentTurnIndex]) {
-            this._drawTurnIndicator(ctx, pos.x, pos.y - 40 * cam.zoom);
+            this._drawTurnIndicator(ctx, drawPos.x, drawPos.y - 40 * cam.zoom);
         }
     }
 
@@ -312,7 +371,7 @@ export class BattleSystem extends HTMLElement {
      */
     _drawCharacterFallback(ctx, character, pos) {
         const cam = this.battleCamera;
-        const radius = Math.min(this.cellWidth, this.cellHeight) * 0.3 * cam.zoom;
+        const radius = Math.min(this.cellWidth, this.cellHeight) * 0.3 * cam.zoom * character.height;
 
         ctx.beginPath();
         ctx.arc(pos.x, pos.y - radius / 2, radius, 0, Math.PI * 2);
@@ -469,6 +528,135 @@ export class BattleSystem extends HTMLElement {
             this._drawCharacter(ctx, enemy, col + 1, row + 1, "left");
         });
     }
+    // 4. NUEVA FUNCIÓN: Finalizar ataque (Daño y Siguiente Turno)
+    /**
+     * @param {CharacterModel} user
+     * @param {SkillModel} skill
+     * @param {CharacterModel} target
+     * @param {string} direction
+     */
+    finalizeAttack(user, skill, target, direction) {
+        // Lógica de daño original
+        user.BattleState = this.BasicSprite;
+        if (skill.skillType == SkillsType.LONG_RANGE) {            
+            this.setDamage(skill, target, user, direction);
+        }
+        this.updateBattleUI();
+        this._renderBattleScene();
+        const verify = this.verifyBattleState();
+        if (verify) {
+            setTimeout(() => {
+                user.Skills.forEach(skill => skill.reduceCooldDown());
+                this.startNextTurn();
+            }, 100);
+        }
+    }
+
+
+    /**
+     * @param {SkillModel} skill
+     * @param {CharacterModel} target
+     * @param {CharacterModel} user
+     * @param {string} direction
+     */
+    setDamage(skill, target, user, direction) {
+        if (skill.numberTargets == 1) {
+            this.setSkillDamage(target, user, skill, direction);
+        } else {
+            if (user.isEnemy) {
+                for (let index = 0; index < skill.numberTargets; index++) {
+                    const elementTarget = this.combatants.filter(c => !c.isEnemy && c.Stats.hp > 0)[index];
+                    if (elementTarget) {
+                        this.setSkillDamage(elementTarget, user, skill, direction);
+                    }
+                }
+            } else {
+                const combatants = this.combatants.filter(c => c.isEnemy && c.Stats.hp > 0);
+                for (let index = 0; index < skill.numberTargets; index++) {
+                    const elementTarget = combatants[index];
+                    if (elementTarget) {
+                        this.setSkillDamage(elementTarget, user, skill, direction);
+                    }
+                }
+            }
+        }
+    }
+
+    // 5. NUEVA FUNCIÓN: Ejecutar Ataque Melee con Movimiento Sincronizado
+    /**
+     * @param {CharacterModel} user
+     * @param {SkillModel} skill
+     * @param {CharacterModel} target
+     * @param {string} direction
+     */
+    executeMeleAttack(user, skill, target, direction) {
+        // Obtener posiciones actuales en Canvas
+        const userIndex = this.combatants.filter(c => c.isEnemy === user.isEnemy).indexOf(user);
+        const targetIndex = this.combatants.filter(c => c.isEnemy === target.isEnemy).indexOf(target);
+
+        // Calcular posiciones grid
+        const userGrid = this._getGridPosition(userIndex, !user.isEnemy);
+        const targetGrid = this._getGridPosition(targetIndex, !target.isEnemy);
+
+        // Convertir a Canvas
+        const startPos = this._gridToCanvas(userGrid.col + 1, userGrid.row + 1);
+        const targetPos = this._gridToCanvas(targetGrid.col + 1, targetGrid.row + 1);
+
+        // Calcular punto de impacto (no encima del target, sino cerca)
+        const dx = targetPos.x - startPos.x;
+        const dy = targetPos.y - startPos.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        const meleeRange = this.cellWidth * 0.8; // Distancia para detenerse
+
+        let endX = startPos.x;
+        let endY = startPos.y;
+
+        if (distance > meleeRange) {
+            const ratio = (distance - meleeRange) / distance;
+            endX = startPos.x + dx * ratio;
+            endY = startPos.y + dy * ratio;
+        } else {
+            endX = startPos.x + dx * 0.5;
+            endY = startPos.y + dy * 0.5;
+        }
+
+        // 5.1 CALCULAR DURACIÓN BASADA EN FRAMES DEL SPRITE
+        const spriteData = user.Sprites[this.AttackSprite];
+        let frameCount = 1;
+        if (spriteData && spriteData[direction] && Array.isArray(spriteData[direction])) {
+            frameCount = spriteData[direction].length;
+        }
+        // Duración total = frames / fps (Ej: 75 frames / 25 fps = 3 segundos)
+        const totalDuration = frameCount / this.SpriteFPS;
+
+        // 5.2 CONFIGURAR MOVIMIENTO
+        const movement = {
+            character: user,
+            startX: startPos.x,
+            startY: startPos.y,
+            targetX: endX,
+            targetY: endY,
+            progress: 0,          // 0.0 a 1.0 (toda la animación)
+            duration: totalDuration,
+            elapsedTime: 0,
+            damageTriggered: false,
+            skill: skill,
+            target: target,
+            direction: direction,
+            frameCount: frameCount,
+            onComplete: () => {
+                this.finalizeAttack(user, skill, target, direction);
+            }
+        };
+
+        // Activar estado de ataque
+        user.BattleState = this.AttackSprite;
+        user.animFrame = 0; // Resetear frame al inicio
+        // @ts-ignore
+        this.activeMovements.push(movement);
+    }
+
+
     /**
      * @param {CharacterModel} character
      * @param {string} spriteKey
@@ -500,8 +688,54 @@ export class BattleSystem extends HTMLElement {
     _updateAnimations(dt) {
         let needsRender = true;
         this.combatants.forEach(char => {
-            char.updateAnimation(dt, false, true)
+            const isMoving = this.activeMovements.some(m => m.character === char);
+            if (!isMoving) {
+                char.updateAnimation(dt, false, true);
+            }
         });
+
+
+        // 6.1 Actualizar movimientos de ataque
+        for (let i = this.activeMovements.length - 1; i >= 0; i--) {
+            const move = this.activeMovements[i];
+
+            // Actualizar tiempo y progreso
+            move.elapsedTime += dt;
+            move.progress = Math.min(move.elapsedTime / move.duration, 1.0);
+
+            // 6.2 SINCRONIZAR FRAME DEL SPRITE MANUALMENTE
+            // El sprite debe avanzar constantemente durante TODA la duración
+            if (move.character.Sprites[this.AttackSprite]?.[move.direction]) {
+                const totalFrames = move.frameCount;
+                // Frame actual basado en el tiempo transcurrido (0 a totalFrames)
+                const currentFrame = Math.floor((move.elapsedTime / move.duration) * totalFrames);
+                move.character.animFrame = Math.min(currentFrame, totalFrames - 1);
+            }
+
+            // 6.3 LÓGICA DE IDA Y VUELTA (Movimiento)
+            // Progreso 0.0 a 0.5: Ida hacia el enemigo (50% del tiempo)
+            // Progreso 0.5 a 1.0: Vuelta a la posición original (50% del tiempo)
+            let lerpFactor = 0;
+
+            if (move.progress <= 0.5) {
+                // === IDA: 0.0 -> 0.5 se mapea a 0.0 -> 1.0 ===
+                lerpFactor = move.progress * 2; // 0.5 * 2 = 1.0 (llega al target)
+            } else {
+                // === VUELTA: 0.5 -> 1.0 se mapea a 1.0 -> 0.0 ===
+                lerpFactor = 1.0 - ((move.progress - 0.5) * 2); // 0.5 -> 1.0 = 1.0 -> 0.0
+            }
+
+            // 6.4 DISPARAR DAÑO EN EL PUNTO MEDIO (0.5) - Exactamente cuando llega al target
+            if (move.progress >= 0.5 && !move.damageTriggered) {
+                move.damageTriggered = true;
+                this.setDamage( move.skill, move.target, move.character,  move.direction);
+            }
+            // 6.5 FINALIZAR MOVIMIENTO
+            if (move.progress >= 1.0) {
+                move.onComplete();
+                this.activeMovements.splice(i, 1);
+            }
+        }
 
         return needsRender;
     }
@@ -615,7 +849,7 @@ export class BattleSystem extends HTMLElement {
         this.logBattleMessage(`Turno de ${currentCombatant.Name}`);
         this._renderBattleScene();
         if (currentCombatant.isEnemy) {
-            setTimeout(() => this.executeEnemyTurn(currentCombatant), 1000);
+            setTimeout(() => this.executeEnemyTurn(currentCombatant), 10);
         } else {
             this.showSkills(currentCombatant);
         }
@@ -671,12 +905,33 @@ export class BattleSystem extends HTMLElement {
         this.skillButtonsEl.appendChild(html`<button class='skill-btn' onclick="${() => this.close()}">salir</button>`);
     }
 
+    // 8. MODIFICAR useSkill para branchear según tipo
     /**
      * @param {CharacterModel} user
      * @param {SkillModel} skill
      * @param {CharacterModel} target
      */
     useSkill(user, skill, target) {
+        const direction = user.isEnemy ? "left" : "right";
+
+        // 8.1 VERIFICAR TIPO DE SKILL
+        if (skill.skillType === SkillsType.MELE) {
+            // Animación de movimiento + ataque
+            this.executeMeleAttack(user, skill, target, direction);
+        } else {
+            // Comportamiento original (Long Range)
+            this._startAnimation(user, this.AttackSprite, this.SpriteFPS, () => {
+                this.finalizeAttack(user, skill, target, direction);
+            }, direction);
+        }
+    }
+
+    /**
+     * @param {CharacterModel} user
+     * @param {SkillModel} skill
+     * @param {CharacterModel} target
+     */
+    useSkillOld(user, skill, target) {
         // Iniciar animación de ataque
         const direction = user.isEnemy ? "left" : "right";
         this._startAnimation(user, this.AttackSprite, this.SpriteFPS, () => {
@@ -710,7 +965,7 @@ export class BattleSystem extends HTMLElement {
                 setTimeout(() => {
                     user.Skills.forEach(skill => skill.reduceCooldDown());
                     this.startNextTurn();
-                }, 1000);
+                }, 100);
             }
 
         }, direction);
@@ -730,6 +985,7 @@ export class BattleSystem extends HTMLElement {
             this.targetDamage.push({
                 target: target,
                 damage: damage,
+                skillElement: skill.element,
                 spriteSkillAnimation: skill.spriteSkillAnimation,
                 isCritical: false,              // Opcional: golpe crítico
                 startTime: null                 // Se asigna automáticamente en el primer frame
@@ -832,7 +1088,7 @@ export class BattleSystem extends HTMLElement {
                     this.hideBattleEndMessage(battleMessage);
                     this.close()
                 }, 3000);
-            }, 500);
+            }, 50);
 
             return false;
         } else if (aliveParty.length === 0 && aliveEnemies.length > 0) {
@@ -844,7 +1100,7 @@ export class BattleSystem extends HTMLElement {
                     this.hideBattleEndMessage(battleMessage);
                     this.close()
                 }, 3000);
-            }, 500);
+            }, 50);
             this.combatants.forEach(combatant => {
                 combatant.BattleState = undefined;
             });
@@ -858,7 +1114,7 @@ export class BattleSystem extends HTMLElement {
                     this.hideBattleEndMessage(battleMessage);
                     this.close()
                 }, 3000);
-            }, 500);
+            }, 50);
             return false;
         }
         this.logBattleMessage("La batalla continua");
@@ -977,9 +1233,10 @@ export class BattleSystem extends HTMLElement {
      * @param {{x: number, y: number}} pos - Posición en canvas (pies del personaje)
      * @param {boolean} isAlly - true para aliado (verde), false para enemigo (naranjo)
      * @param {Camera} cam - Cámara de batalla para aplicar zoom
+     * @param {CharacterModel} npc 
      * @private
      */
-    _drawSelectionRing(ctx, pos, isAlly, cam) {
+    _drawSelectionRing(ctx, pos, isAlly, cam, npc) {
         ctx.save();
 
         // Colores según bando
@@ -994,8 +1251,8 @@ export class BattleSystem extends HTMLElement {
 
         // Efecto de pulso suave
         const pulse = 1 + 0.05 * Math.sin(Date.now() / 150);
-        const scaledWidth = ringWidth * pulse;
-        const scaledHeight = ringHeight * pulse;
+        const scaledWidth = ringWidth * pulse * npc.height;
+        const scaledHeight = ringHeight * pulse * npc.height;
 
         // Posición: centrada en pos.x, anclada en los pies (pos.y)
         const x = 0;
@@ -1020,6 +1277,194 @@ export class BattleSystem extends HTMLElement {
         ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
         ctx.lineWidth = 1 * cam.zoom;
         ctx.stroke();
+
+        ctx.restore();
+    }
+
+
+
+    /**
+ * Dibuja un aura de carga mágica con anillos horizontales ascendentes
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {{x: number, y: number}} pos - Posición (NO USADA: contexto ya trasladado)
+ * @param {Camera} cam - Cámara para aplicar zoom
+ * @param {string} [element='light'] - Elemento: 'fire', 'water', 'earth', 'air', 'light', 'dark', 'lightning'
+ * @param {CharacterModel} npc 
+ * @private
+ */
+    _drawChargeAuraAnimation(ctx, pos, cam, npc, element = 'light') {
+        ctx.save();
+
+        // === POSICIÓN: (0,0) porque el contexto YA está trasladado al personaje ===
+        const centerX = 0;
+        const centerY = 0;
+
+        // === PALETA DE COLORES POR ELEMENTO ===
+        const elementColors = {
+            fire: { r: 255, g: 100, b: 30, glow: 'rgba(255, 150, 50, 0.7)', trail: 'rgba(255, 80, 0, 0.5)' },
+            water: { r: 50, g: 180, b: 255, glow: 'rgba(100, 200, 255, 0.7)', trail: 'rgba(50, 150, 255, 0.5)' },
+            earth: { r: 139, g: 90, b: 43, glow: 'rgba(160, 120, 70, 0.6)', trail: 'rgba(100, 70, 30, 0.5)' },
+            air: { r: 200, g: 230, b: 255, glow: 'rgba(220, 240, 255, 0.7)', trail: 'rgba(180, 210, 255, 0.5)' },
+            light: { r: 255, g: 240, b: 180, glow: 'rgba(255, 255, 200, 0.8)', trail: 'rgba(255, 255, 150, 0.6)' },
+            dark: { r: 120, g: 80, b: 180, glow: 'rgba(180, 120, 255, 0.6)', trail: 'rgba(80, 40, 120, 0.5)' },
+            lightning: { r: 255, g: 255, b: 100, glow: 'rgba(255, 255, 150, 0.9)', trail: 'rgba(255, 255, 50, 0.7)' },
+            default: { r: 100, g: 180, b: 255, glow: 'rgba(150, 200, 255, 0.7)', trail: 'rgba(100, 150, 255, 0.5)' }
+        };
+
+        // @ts-ignore
+        const colors = elementColors[element] || elementColors.default;
+        const time = Date.now() / 1000;
+
+        // === CONFIGURACIÓN DE ANILLOS HORIZONTALES ASCENDENTES ===
+        const ringCount = 4;                     // Número de anillos horizontales
+        const baseRadiusX = this.cellWidth * 0.7 * cam.zoom;   // Radio horizontal (ancho)
+        const baseRadiusY = this.cellHeight * 0.25 * cam.zoom; // Radio vertical (alto - achatado)
+        const ascentHeight = baseRadiusX * 2.0 * npc.height / 2;   // Altura total del recorrido ascendente
+        const ascentSpeed = 1.2;                  // Velocidad de ascenso
+
+        // === Capa 0: Aura base difusa (fondo sutil en los pies) ===
+        const basePulse = 1 + 0.1 * Math.sin(time * 2.5);
+        const baseGradient = ctx.createRadialGradient(
+            centerX, centerY, 0,
+            centerX, centerY, baseRadiusX * 1.2 * basePulse
+        );
+        baseGradient.addColorStop(0, `rgba(${colors.r}, ${colors.g}, ${colors.b}, 0.5)`);
+        baseGradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+
+        ctx.beginPath();
+        ctx.ellipse(centerX, centerY, baseRadiusX * 0.9, baseRadiusY * 0.8, 0, 0, Math.PI * 2);
+        ctx.fillStyle = baseGradient;
+        ctx.fill();
+
+        // === Capa principal: Anillos HORIZONTALES ascendentes ===
+        // ✅ ESTOS son los anillos que suben (como en tu dibujo)
+        for (let i = 0; i < ringCount; i++) {
+            // Cada anillo tiene su propio ciclo de vida desfasado
+            const ringDelay = i * 0.35;
+            const ringCycle = (time * ascentSpeed + ringDelay) % 2.0;
+
+            // Progreso de ascenso: 0 = pies (abajo), 1 = cabeza (arriba, desaparece)
+            const riseProgress = ringCycle < 1.4 ? ringCycle / 1.4 : 1;
+            const fadeProgress = ringCycle >= 1.4 ? (ringCycle - 1.4) / 0.6 : 0;
+
+            const isActive = ringCycle < 2.0;
+            if (!isActive) continue;
+
+            // Posición vertical: desde los pies (centerY) hacia arriba
+            const verticalOffset = -ascentHeight * riseProgress;
+            const currentY = centerY + verticalOffset;
+
+            // Tamaño: se expande ligeramente al subir
+            const sizeFactor = 0.8 + riseProgress * 0.3;
+            const currentRadiusX = baseRadiusX * sizeFactor;
+            const currentRadiusY = baseRadiusY * sizeFactor;
+
+            // Opacidad: aparece suave, se mantiene, luego desaparece
+            const alpha = riseProgress < 0.15
+                ? riseProgress / 0.15 * 0.7
+                : 0.7 * (1 - fadeProgress);
+
+            // Grosor de línea: más fino arriba
+            const lineWidth = (3 - i * 0.3) * cam.zoom * (1 - fadeProgress * 0.5);
+
+            // === Anillo horizontal principal (elipse achatada) ===
+            ctx.beginPath();
+            ctx.ellipse(
+                centerX,
+                currentY,
+                currentRadiusX,
+                currentRadiusY,
+                0, 0, Math.PI * 2
+            );
+            ctx.strokeStyle = `rgba(${colors.r}, ${colors.g}, ${colors.b}, ${alpha})`;
+            ctx.lineWidth = lineWidth;
+            ctx.stroke();
+
+            // === Brillo interior del anillo ===
+            if (alpha > 0.3 && riseProgress > 0.2) {
+                ctx.beginPath();
+                ctx.ellipse(
+                    centerX,
+                    currentY,
+                    currentRadiusX * 0.85,
+                    currentRadiusY * 0.85,
+                    0, 0, Math.PI * 2
+                );
+                ctx.strokeStyle = `rgba(255, 255, 255, ${alpha * 0.5})`;
+                ctx.lineWidth = lineWidth * 0.4;
+                ctx.stroke();
+            }
+
+            // === Partículas en el borde del anillo ===
+            if (riseProgress > 0.15 && fadeProgress < 0.6) {
+                const particleCount = 4;
+                for (let p = 0; p < particleCount; p++) {
+                    const pAngle = (p / particleCount) * Math.PI * 2 + time * 0.5 + i;
+                    const px = centerX + Math.cos(pAngle) * currentRadiusX;
+                    const py = currentY + Math.sin(pAngle) * currentRadiusY;
+
+                    ctx.beginPath();
+                    ctx.arc(px, py, (2 + riseProgress * 2) * cam.zoom, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(${colors.r}, ${colors.g}, ${colors.b}, ${alpha * 0.8})`;
+                    ctx.fill();
+                }
+            }
+        }
+
+        // === LÍNEAS VERTICALES FIRMES (rectas, conectan los anillos) ===
+        ctx.save();
+        ctx.translate(centerX, centerY);
+
+        const streamCount = 6;
+        for (let s = 0; s < streamCount; s++) {
+            const streamAngle = (s / streamCount) * Math.PI * 2;
+            const streamX = Math.cos(streamAngle) * baseRadiusX * 0.7;
+            const streamY = Math.sin(streamAngle) * baseRadiusY * 0.7;
+
+            // ✅ LÍNEA COMPLETAMENTE RECTA VERTICAL (sin ondulación)
+            ctx.beginPath();
+            ctx.moveTo(streamX, baseRadiusY);           // Inicio: en los pies
+            ctx.lineTo(streamX, -ascentHeight * 0.85);  // Final: arriba del aura
+            ctx.strokeStyle = colors.trail;
+            ctx.lineWidth = 2 * cam.zoom;
+            ctx.lineCap = 'round';
+
+            // Efecto de pulso en opacidad (cada línea parpadea independientemente)
+            const streamPulse = 0.35 + 0.65 * Math.sin(time * 2.5 + s * 1.3);
+            ctx.globalAlpha = streamPulse;
+            ctx.stroke();
+            ctx.globalAlpha = 1.0;
+        }
+        ctx.restore();
+
+        // === Glow exterior pulsante (en los pies) ===
+        const glowPulse = 1 + 0.08 * Math.sin(time * 3);
+        ctx.beginPath();
+        ctx.ellipse(
+            centerX,
+            centerY,
+            baseRadiusX * 1.1 * glowPulse,
+            baseRadiusY * 0.9 * glowPulse,
+            0, 0, Math.PI * 2
+        );
+        ctx.strokeStyle = colors.glow;
+        ctx.lineWidth = 4 * cam.zoom;
+        ctx.stroke();
+
+        // === Destello central intermitente (en los pies) ===
+        const flashIntensity = 0.3 + 0.7 * Math.sin(time * 6);
+        if (flashIntensity > 0.5) {
+            ctx.beginPath();
+            ctx.ellipse(centerX, centerY, baseRadiusX * 0.3 * flashIntensity, baseRadiusY * 0.3 * flashIntensity, 0, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(255, 255, 255, ${(flashIntensity - 0.5) * 2})`;
+            ctx.fill();
+        }
+
+        // === Sombra proyectada en el suelo ===
+        ctx.beginPath();
+        ctx.ellipse(centerX, centerY + 3, baseRadiusX * 0.6, baseRadiusY * 0.5, 0, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+        ctx.fill();
 
         ctx.restore();
     }
@@ -1059,158 +1504,200 @@ export class BattleSystem extends HTMLElement {
     }
 
     /**
-     * Dibuja indicador visual de daño recibido (número flotante + efecto de impacto)
+     * Dibuja indicador visual de daño recibido (impacto fuerte + elemento)
      * @param {CanvasRenderingContext2D} ctx
-     * @param {boolean} isAlly - true para aliado, false para enemigo
-     * @param {Camera} cam - Cámara para aplicar zoom     * 
-     * @param {{ startTime: number; damage: number; isCritical: boolean; spriteSkillAnimation: HTMLImageElement[] }} targetDamage
+     * @param  {{ target?: CharacterModel; damage: number; isCritical: boolean; startTime: number | null; spriteSkillAnimation?: HTMLImageElement[]; }} targetDamage
+     * @param {boolean} isAlly
+     * @param {Camera} cam
+     * @param {string} elementType - 'fire' | 'ice' | 'thunder' | 'poison' | 'earth' | undefined
      */
-    _drawSelectionDamage(ctx, targetDamage, isAlly, cam) {
-        // ⚠️ Este método se llama DENTRO del contexto transformado del sprite
-        // El origen (0,0) corresponde a pos.x, pos.y gracias al translate()
+    _drawSelectionDamage(ctx, targetDamage, isAlly, cam, elementType) {
 
-        // === 🎛️ CONFIGURACIÓN CENTRALIZADA ===
         const CONFIG = {
-            // ⏱️ Animación
-            duration: 0.8,
-            ringMaxProgress: 0.7,
-            flashMaxProgress: 0.2,
+            duration: 0.9,
+            ringMaxProgress: 0.6,
+            flashMaxProgress: targetDamage?.isCritical ? 0.35 : 0.2,
 
-            // 🎨 Colores
-            colors: {
-                ally: { primary: 'rgba(249, 115, 22, 1)', glow: 'rgba(249, 115, 22, 0.4)' },
-                enemy: { primary: 'rgba(74, 222, 128, 1)', glow: 'rgba(74, 222, 128, 0.4)' }
-            },
-
-            // 💥 Anillo de impacto
-            ring: {
-                baseWidthFactor: 0.4,
-                baseHeightFactor: 0.12,
-                lineWidth: 5,
-                maxAlpha: 0.8
-            },
-
-            // 🔢 Texto de daño
-            damageText: {
-                startYOffset: -40,
-                floatDistance: 35,
-                floatEasePower: 3,
-                scaleStart: 0.8,
-                scaleEnd: 1.2,
-                fontSize: 24,
-                shadowOffsetX: 2,
-                shadowOffsetY: 2,
-                shadowAlpha: 0.6,
-                gradientStartY: -12,
-                gradientEndY: 12,
-                critBorderWidth: 2
-            },
-
-            // ✨ Flash
-            flash: {
-                yOffset: -30,
-                radius: 20,
-                maxAlpha: 0.5
+            elements: {
+                none: { primary: 'rgba(255,255,255,1)', glow: 'rgba(255,255,255,0.5)' },
+                fire: { primary: 'rgba(255,90,0,1)', glow: 'rgba(255,120,0,0.5)' },
+                ice: { primary: 'rgba(120,220,255,1)', glow: 'rgba(180,240,255,0.5)' },
+                thunder: { primary: 'rgba(255,240,0,1)', glow: 'rgba(255,255,150,0.5)' },
+                poison: { primary: 'rgba(170,0,255,1)', glow: 'rgba(200,120,255,0.5)' },
+                earth: { primary: 'rgba(160,110,60,1)', glow: 'rgba(200,160,120,0.5)' },
+                light: { primary: 'rgba(160,110,60,1)', glow: 'rgba(200,160,120,0.5)' },
+                dark: { primary: 'rgba(160,110,60,1)', glow: 'rgba(200,160,120,0.5)' }
             }
         };
 
-        // === 📍 VARIABLES DE POSICIÓN BASE (ajustar aquí si hay que desplazar todo) ===
-        // Estas coordenadas son RELATIVAS al contexto transformado (origen = pies del personaje)
-        const basePosX = 0;  // ← Ajustar para desplazar horizontalmente el efecto completo
-        const basePosY = -200;  // ← Ajustar para desplazar verticalmente el efecto completo
+        const basePosX = 0;
+        const basePosY = -200;
 
-        // === ⏱️ TIEMPO DE ANIMACIÓN ===
         const now = performance.now();
-        if (!targetDamage?.startTime) {
-            // @ts-ignore
+        if (!targetDamage.startTime) {
             targetDamage.startTime = now;
+            // @ts-ignore
+            targetDamage.particles = this._createElementParticles(elementType);
         }
-        // @ts-ignore
+
         const elapsed = (now - targetDamage.startTime) / 1000;
         const t = Math.min(elapsed / CONFIG.duration, 1);
 
-        // === 🎨 COLORES ===
-        const colorSet = isAlly ? CONFIG.colors.ally : CONFIG.colors.enemy;
+        // @ts-ignore
+        const colorSet = CONFIG.elements[elementType] || CONFIG.elements.none;
 
-        // === 💥 1. ANILLO DE IMPACTO ===
-        if (t < CONFIG.ringMaxProgress) {
-            const ringT = Math.min(t / CONFIG.ringMaxProgress, 1);
-            const ringRadiusX = this.cellWidth * CONFIG.ring.baseWidthFactor * ringT * cam.zoom;
-            const ringRadiusY = this.cellHeight * CONFIG.ring.baseHeightFactor * ringT * cam.zoom;
-            const ringAlpha = (1 - ringT) * CONFIG.ring.maxAlpha;
+        /* ============================
+           💥 PARTÍCULAS ELEMENTALES
+        ============================ */
 
-            // Posición del anillo (centrado en basePosX, basePosY)
-            const ringPosX = basePosX;
-            const ringPosY = basePosY;
+        // @ts-ignore
+        if (targetDamage.particles) {
+            ctx.save();
+            ctx.translate(basePosX, basePosY);
 
-            ctx.beginPath();
-            ctx.ellipse(ringPosX, ringPosY, ringRadiusX, ringRadiusY, 0, 0, Math.PI * 2);
-            ctx.strokeStyle = colorSet.glow.replace('1)', `${ringAlpha})`);
-            ctx.lineWidth = CONFIG.ring.lineWidth * (1 - ringT) * cam.zoom;
-            ctx.stroke();
+            // @ts-ignore
+            targetDamage.particles.forEach(p => {
+                p.life -= 0.016;
+                p.x += p.vx;
+                p.y += p.vy;
+                p.vy += p.gravity;
+
+                const alpha = Math.max(p.life / p.maxLife, 0);
+
+                ctx.globalAlpha = alpha;
+                ctx.fillStyle = p.color;
+
+                ctx.beginPath();
+                ctx.arc(p.x * cam.zoom, p.y * cam.zoom, p.size * cam.zoom, 0, Math.PI * 2);
+                ctx.fill();
+            });
+
+            ctx.globalAlpha = 1;
+
+            // @ts-ignore
+            targetDamage.particles = targetDamage.particles.filter(p => p.life > 0);
+            ctx.restore();
         }
 
-        // === 🔢 2. NÚMERO DE DAÑO FLOTANTE ===
-        const easeFactor = 1 - Math.pow(1 - t, CONFIG.damageText.floatEasePower);
-        const floatOffset = CONFIG.damageText.floatDistance * easeFactor * cam.zoom;
-        const damageYOffset = CONFIG.damageText.startYOffset * cam.zoom - floatOffset;
+        /* ============================
+           💥 SHOCKWAVE
+        ============================ */
 
-        // Posición del texto (X centrada, Y con offset desde basePosY)
-        const textPosX = basePosX;
-        const textPosY = basePosY + damageYOffset;
+        if (t < CONFIG.ringMaxProgress) {
+            const ringT = t / CONFIG.ringMaxProgress;
+            const radius = 60 * ringT * cam.zoom;
+            const alpha = (1 - ringT) * 0.8;
+
+            ctx.save();
+            ctx.beginPath();
+            ctx.arc(basePosX, basePosY, radius, 0, Math.PI * 2);
+            ctx.strokeStyle = colorSet.glow.replace('0.5', alpha.toString());
+            ctx.lineWidth = 8 * (1 - ringT);
+            ctx.stroke();
+            ctx.restore();
+        }
+
+        /* ============================
+           🔢 TEXTO DAÑO IMPACTO
+        ============================ */
+
+        const floatOffset = 45 * (1 - Math.pow(1 - t, 3)) * cam.zoom;
+        const textPosY = basePosY - 40 * cam.zoom - floatOffset;
 
         ctx.save();
-        ctx.translate(textPosX, textPosY);
 
-        const scale = CONFIG.damageText.scaleStart + t * (CONFIG.damageText.scaleEnd - CONFIG.damageText.scaleStart);
-        const alpha = 1 - t;
+        const shake = (1 - t) * 6;
+        ctx.translate(basePosX + (Math.random() - 0.5) * shake,
+            textPosY + (Math.random() - 0.5) * shake);
+
+        let scale = t < 0.15
+            ? 1.8 - (t * 4)
+            : 1.2 - ((t - 0.15) * 0.3);
+
+        if (targetDamage.isCritical) scale *= 1.4;
+
         ctx.scale(scale, scale);
 
-        // Sombra
-        ctx.fillStyle = `rgba(0, 0, 0, ${alpha * CONFIG.damageText.shadowAlpha})`;
-        ctx.font = `bold ${CONFIG.damageText.fontSize}px Arial`;
+        ctx.font = `bold 30px Arial`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        // @ts-ignore
-        ctx.fillText(`-${targetDamage?.damage}`, CONFIG.damageText.shadowOffsetX, CONFIG.damageText.shadowOffsetY);
 
-        // Texto principal con gradiente
-        const gradient = ctx.createLinearGradient(0, CONFIG.damageText.gradientStartY, 0, CONFIG.damageText.gradientEndY);
-        gradient.addColorStop(0, `rgba(255, 255, 255, ${alpha})`);
-        gradient.addColorStop(1, colorSet.primary.replace('1)', `${alpha})`));
+        const alpha = 1 - t;
+
+        ctx.fillStyle = `rgba(0,0,0,${alpha * 0.7})`;
+        ctx.fillText(`-${targetDamage.damage}`, 3, 3);
+
+        const gradient = ctx.createLinearGradient(0, -15, 0, 15);
+
+        if (targetDamage.isCritical) {
+            gradient.addColorStop(0, `rgba(255,255,180,${alpha})`);
+            gradient.addColorStop(1, `rgba(255,215,0,${alpha})`);
+        } else {
+            gradient.addColorStop(0, `rgba(255,255,255,${alpha})`);
+            gradient.addColorStop(1, colorSet.primary.replace('1)', `${alpha})`));
+        }
 
         ctx.fillStyle = gradient;
-        ctx.fillText(`-${targetDamage?.damage}`, 0, 0);
-
-        // Borde para crítico
-        if (targetDamage?.isCritical) {
-            ctx.strokeStyle = `rgba(255, 255, 255, ${alpha})`;
-            ctx.lineWidth = CONFIG.damageText.critBorderWidth;
-            ctx.strokeText(`-${targetDamage?.damage}`, 0, 0);
-        }
+        ctx.fillText(`-${targetDamage.damage}`, 0, 0);
 
         ctx.restore();
 
-        // === ✨ 3. FLASH DE IMPACTO ===
+        /* ============================
+           ✨ FLASH
+        ============================ */
+
         if (t < CONFIG.flashMaxProgress) {
-            const flashAlpha = (1 - t / CONFIG.flashMaxProgress) * CONFIG.flash.maxAlpha;
-
-            // Posición del flash
-            const flashPosX = basePosX;
-            const flashPosY = basePosY + (CONFIG.flash.yOffset * cam.zoom);
-
-            ctx.fillStyle = `rgba(255, 255, 255, ${flashAlpha})`;
+            const flashAlpha = (1 - t / CONFIG.flashMaxProgress) * 0.9;
+            ctx.save();
+            ctx.fillStyle = `rgba(255,255,255,${flashAlpha})`;
             ctx.beginPath();
-            ctx.arc(flashPosX, flashPosY, CONFIG.flash.radius * cam.zoom, 0, Math.PI * 2);
+            ctx.arc(basePosX, basePosY, 70 * cam.zoom, 0, Math.PI * 2);
             ctx.fill();
+            ctx.restore();
         }
 
-        // === 🧹 LIMPIEZA ===
         if (t >= 1) {
             this.targetDamage.splice(this.targetDamage.indexOf(targetDamage), 1);
         }
     }
 
+
+    /**
+     * @param {string} elementType
+     */
+    _createElementParticles(elementType) {
+
+        const particles = [];
+        const count = 20;
+
+        for (let i = 0; i < count; i++) {
+
+            let color = "white";
+            let gravity = 0.05;
+
+            switch (elementType) {
+                case "fire": color = "orange"; break;
+                case "ice": color = "cyan"; gravity = 0.01; break;
+                case "thunder": color = "yellow"; break;
+                case "poison": color = "violet"; gravity = -0.01; break;
+                case "earth": color = "#8B5A2B"; gravity = 0.15; break;
+            }
+
+            particles.push({
+                x: 0,
+                y: 0,
+                vx: (Math.random() - 0.5) * 6,
+                vy: (Math.random() - 0.5) * 6,
+                size: 3 + Math.random() * 3,
+                life: 0.6,
+                maxLife: 0.6,
+                gravity,
+                color
+            });
+        }
+
+        return particles;
+    }
     /**
      * Limpia la selección actual
      * @private

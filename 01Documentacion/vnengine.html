@@ -1,0 +1,1302 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Documentación - WVn.Js</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+      <link rel="stylesheet" href="css/style.css">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap"
+        rel="stylesheet">    
+</head>
+
+<body>
+    <!-- Header -->
+    <header>
+        <div class="container header-content">
+            <div class="logo">
+                <div class="logo-icon">VN</div>
+                <span class="logo-text">WVn.Js</span>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="#inicio" class="active">Inicio</a></li>
+                    <li><a href="#primeros-pasos">Guías</a></li>
+                    <li><a href="#modulos">Módulos</a></li>
+                    <li><a href="#api-reference">API</a></li>
+                    <li><a href="https://github.com/Wilber1987/WVnJs" target="_blank">GitHub</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero" id="inicio">
+        <div class="hero-content">
+            <h1><span>W</span><span>Vn.js</span></h1>
+            <p>Un motor de juegos visual hecho en JavaScript, web-first. Crea novelas visuales interactivas directamente
+                en el navegador.</p>
+            <div class="hero-buttons">
+                <a href="#primeros-pasos" class="btn btn-primary">Comenzar</a>
+                <a href="#modulos" class="btn btn-secondary">Ver Módulos</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main Content -->
+    <main class="container">
+        <!-- Table of Contents -->
+        <div class="toc">
+            <h3>📋 Tabla de Contenidos</h3>
+            <ul>
+                <li><a href="#introduccion">Introducción</a></li>
+                <li><a href="#caracteristicas">Características Principales</a></li>
+                <li><a href="#instalacion">Instalación y Configuración</a></li>
+                <li><a href="#primeros-pasos">Guía de Inicio Rápido</a></li>
+                <li><a href="#modulos">Referencia de Módulos</a></li>
+                <li><a href="#mapas">Mapas Interactivos</a></li>
+                <li><a href="#personajes">Personajes Personalizados</a></li>
+                <li><a href="#api-reference">Referencia API Completa</a></li>
+            </ul>
+        </div>
+
+        <!-- Introduction -->
+        <section class="section" id="introduccion">
+            <h2 class="section-title">Introducción</h2>
+            <p class="section-subtitle">Motor de novelas visuales modular y extensible para la web</p>
+
+            <p style="color: var(--text-secondary); margin-bottom: 24px;">
+                Este motor permite crear novelas visuales en el navegador usando solo HTML, CSS y JavaScript.
+                Es modular, extensible y está diseñado para soportar múltiples tipos de escena, menús flotantes,
+                sistema de tiempo y guardado local.
+            </p>
+
+            <div class="cards-grid">
+                <div class="card">
+                    <div class="card-icon">🎬</div>
+                    <h3>Escenas Dinámicas</h3>
+                    <p>Sistema de escenas con imágenes o videos, transiciones suaves y audio ambiental configurable.</p>
+                </div>
+                <div class="card">
+                    <div class="card-icon">💬</div>
+                    <h3>Diálogos Avanzados</h3>
+                    <p>Diálogos con nombre, texto, audio opcional y soporte para narraciones sin hablante.</p>
+                </div>
+                <div class="card">
+                    <div class="card-icon">🎮</div>
+                    <h3>Menús Interactivos</h3>
+                    <p>Tres tipos de menús: TAB (cuadriculado), MENU (lateral) y FLOATING (no bloqueante).</p>
+                </div>
+                <div class="card">
+                    <div class="card-icon">💾</div>
+                    <h3>Guardado Local</h3>
+                    <p>Sistema completo de guardado/carga usando localStorage con slots gráficos.</p>
+                </div>
+                <div class="card">
+                    <div class="card-icon">⏰</div>
+                    <h3>Sistema de Tiempo</h3>
+                    <p>Control de hora, día y temporada con fondos que cambian automáticamente.</p>
+                </div>
+                <div class="card">
+                    <div class="card-icon">🎭</div>
+                    <h3>Personajes Animados</h3>
+                    <p>Soporte para sprites estáticos y animaciones WebM con canal alfa.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Features -->
+        <section class="section" id="caracteristicas">
+            <h2 class="section-title">Características Principales</h2>
+            <p class="section-subtitle">Todo lo que necesitas para crear tu novela visual</p>
+
+            <div class="docs-layout">
+                <div class="sidebar">
+                    <div class="sidebar-nav">
+                        <h4>Funcionalidades</h4>
+                        <ul>
+                            <li><a href="#escenas">Escenas</a></li>
+                            <li><a href="#dialogos">Diálogos</a></li>
+                            <li><a href="#opciones">Opciones y Menús</a></li>
+                            <li><a href="#guardado">Sistema de Guardado</a></li>
+                            <li><a href="#tiempo">Sistema de Tiempo</a></li>
+                            <li><a href="#personajes-section">Personajes</a></li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="content">
+                    <h3 id="escenas">Escenas</h3>
+                    <p style="color: var(--text-secondary); margin-bottom: 16px;">
+                        Las escenas se definen con fondos (imágenes o videos) y pueden tener efectos de transición.
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">Mostrar Escena</span>
+                            <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+                        </div>
+                        <pre><code><span class="com">// Mostrar una escena con fondo y audio</span>
+<span class="type">Scene</span>.<span class="fn">Show</span>(<span class="str">"home_day"</span>, <span class="str">"house_ambience"</span>, <span class="kw">true</span>);
+
+<span class="com">// Parámetros:</span>
+<span class="com">// - image: ruta a imagen o video</span>
+<span class="com">// - audio: música o ambiente sonoro</span>
+<span class="com">// - isAffectedByTime: si cambia según la hora del día</span></code></pre>
+                    </div>
+
+                    <h3 id="dialogos">Diálogos</h3>
+                    <p style="color: var(--text-secondary); margin-bottom: 16px;">
+                        Muestra diálogos con nombre, texto y opcionalmente audio. El diálogo espera automáticamente
+                        a que termine el audio o el usuario haga click.
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">Diálogo con Audio</span>
+                            <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+                        </div>
+                        <pre><code><span class="com">// Diálogo con nombre y audio</span>
+<span class="type">Dialogue</span>.<span class="fn">Say</span>(<span class="str">"Laura"</span>, <span class="str">"Hola, ¿cómo estás?"</span>, <span class="str">"./Audio/dialogue_laura.mp3"</span>);
+
+<span class="com">// Narración sin hablante</span>
+<span class="type">Dialogue</span>.<span class="fn">Narrate</span>(<span class="str">"La luz parpadea... algo va mal."</span>);</code></pre>
+                    </div>
+
+                    <h3 id="opciones">Opciones y Menús</h3>
+                    <p style="color: var(--text-secondary); margin-bottom: 16px;">
+                        Crea opciones interactivas con iconos y condiciones. Tres tipos de menús disponibles.
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">Menú de Opciones</span>
+                            <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+                        </div>
+                        <pre><code><span class="type">Flow</span>.<span class="fn">Choice</span>([
+    <span class="type">Flow</span>.<span class="fn">Action</span>(<span class="str">"Ir a Cocina"</span>, 
+        [<span class="type">Scene</span>.<span class="fn">Show</span>(<span class="str">"kitchen"</span>)], 
+        { icon: <span class="str">"Icons/kitchen.png"</span>, typeMenu: <span class="str">"TAB"</span> }
+    ),
+    <span class="type">Flow</span>.<span class="fn">Action</span>(<span class="str">"Guardar Partida"</span>, 
+        [<span class="type">SaveSystem</span>.instance.<span class="fn">showSaveLoadScreen</span>(<span class="kw">false</span>)], 
+        { typeMenu: <span class="str">"FLOATING"</span> }
+    )
+]);
+
+<span class="com">// typeMenu: "TAB" → Menú cuadriculado</span>
+<span class="com">// typeMenu: "MENU" → Menú lateral</span>
+<span class="com">// typeMenu: "FLOATING" → No bloquea flujo</span></code></pre>
+                    </div>
+
+                    <h3 id="guardado">Sistema de Guardado</h3>
+                    <p style="color: var(--text-secondary); margin-bottom: 16px;">
+                        Guarda el estado completo del juego y muestra una pantalla de guardado/carga con slots gráficos.
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">Guardar y Cargar</span>
+                            <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+                        </div>
+                        <pre><code><span class="com">// Guardar en slot específico</span>
+<span class="type">SaveSystem</span>.instance.<span class="fn">saveToSlot</span>(<span class="str">"slot1"</span>);
+
+<span class="com">// Cargar desde slot</span>
+<span class="type">SaveSystem</span>.instance.<span class="fn">loadFromSlot</span>(<span class="str">"slot1"</span>);
+
+<span class="com">// Mostrar pantalla de carga</span>
+<span class="type">SaveSystem</span>.instance.<span class="fn">showSaveLoadScreen</span>(<span class="kw">true</span>);
+
+<span class="com">// Mostrar pantalla de guardado</span>
+<span class="type">SaveSystem</span>.instance.<span class="fn">showSaveLoadScreen</span>(<span class="kw">false</span>);</code></pre>
+                    </div>
+
+                    <h3 id="tiempo">Sistema de Tiempo</h3>
+                    <p style="color: var(--text-secondary); margin-bottom: 16px;">
+                        Controla la hora, día y temporada. Los fondos pueden cambiar automáticamente si estan bien configurados según la hora.
+                        ademas puedes programar caracteristicas únicas según el horario
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">Control de Tiempo</span>
+                            <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+                        </div>
+                        <pre><code><span class="com">// Avanzar tiempo</span>
+timeSystem.<span class="fn">advanceTime</span>(<span class="num">3</span>); <span class="com">// Avanza 3 horas</span>
+
+<span class="com">// Obtener hora actual</span>
+console.<span class="fn">log</span>(timeSystem.<span class="fn">getFormattedHour</span>());
+
+<span class="com">// Usar en condiciones</span>
+<span class="kw">if</span> (time.hour >= <span class="num">6</span> && time.hour < <span class="num">12</span>) {
+    <span class="type">Scene</span>.<span class="fn">Show</span>(<span class="str">"plaza_morning"</span>);
+}</code></pre>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <span class="alert-icon">ℹ️</span>
+                        <div>
+                            <strong>Sufijos de tiempo:</strong> El sistema usa sufijos automáticos para fondos:
+                            <code class="code-inline">_morning</code> (5-12h),
+                            <code class="code-inline">_afternoon</code> (12-17h),
+                            <code class="code-inline">_sunset</code> (17-20h),
+                            <code class="code-inline">_night</code> (20-5h)
+                        </div>
+                    </div>
+
+                    <h3 id="personajes-section">Personajes</h3>
+                    <p style="color: var(--text-secondary); margin-bottom: 16px;">
+                        Muestra personajes dentro de scenas con posición y transparencia. Soporta imágenes o videos WebM o PNG con canal alfa.
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">Mostrar Personaje</span>
+                            <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+                        </div>
+                        <pre><code><span class="com">// Mostrar personaje en posición específica dentro de una scena</span>
+<span class="type">Character</span>.<span class="fn">Show</span>(<span class="str">"Laura"</span>, <span class="str">"laura_happy"</span>, <span class="str">"right"</span>);
+
+<span class="com">// Versiones abreviadas dentro de una scena</span>
+<span class="type">Character</span>.<span class="fn">ShowR</span>(<span class="str">"Laura"</span>, <span class="str">"happy"</span>); <span class="com">// Derecha</span>
+<span class="type">Character</span>.<span class="fn">ShowL</span>(<span class="str">"Laura"</span>, <span class="str">"angry"</span>);  <span class="com">// Izquierda</span>
+
+<span class="com">// Ocultar personaje dentro de una scena</span>
+<span class="type">Character</span>.<span class="fn">Hide</span>(<span class="str">"Laura"</span>);</code></pre>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Installation -->
+        <section class="section" id="instalacion">
+            <h2 class="section-title">Instalación y Configuración</h2>
+            <p class="section-subtitle">Configura tu proyecto en minutos</p>
+
+            <div class="guide-step">
+                <h3><span class="step-number">1</span>Descargar el Repositorio</h3>
+                <p style="color: var(--text-secondary); margin-bottom: 16px;">
+                    Primero, necesitas obtener una copia del código fuente del motor. Puedes hacerlo clonando el
+                    repositorio desde GitHub o descargándolo como un archivo ZIP.
+                </p>
+
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="code-title">Clonar Repositorio</span>
+                        <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+                    </div>
+                    <pre><code><span class="com"># Clonar desde GitHub con sus submodulos incluidos</span>
+git clone --recurse-submodules -j8 https://github.com/Wilber1987/WOpenWorldJs 
+
+<span class="com"># O descargar como ZIP desde la página del repositorio</span>
+<span class="com"># Haz clic en "Code" → "Download ZIP"</span></code></pre>
+                </div>
+            </div>
+
+            <div class="guide-step">
+                <h3><span class="step-number">2</span>Estructura del Proyecto</h3>
+                <p style="color: var(--text-secondary); margin-bottom: 16px;">
+                    Después de descargar el repositorio, revisa la estructura básica de carpetas y archivos, podras importar desde cualquier parte de tu aplicación los módulos.
+                </p>
+            </div>
+
+            <div class="code-block">
+                <div class="code-header">
+                    <span class="code-title">Estructura de Carpetas</span>
+                    <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+                </div>
+<pre><code>.
+├── Core/
+│   ├── Common/
+│   │   ├── CharacterModel.js
+│   │   ├── CharacterRegistry.js
+│   │   └── UIComponents/
+│   ├── OppenWorld/
+│   │   ├── OpenWorldEngineView.js
+│   │   ├── GameEngine.js
+│   │   ├── Camera.js
+│   │   └── OpenWordModules/
+│   │       ├── Models.js
+│   │       ├── BattleSystem.js
+│   │       └── GameStartScreen.js
+│   └── VisualNovel/
+│       ├── VisualNovelEngine.js
+│       └── VisualNovelModules.js
+├── Characters/
+│   ├── DanaCharacter.js
+│   └── AlexandraCharacter.js
+├── Maps/
+│   └── MainMap.js
+├── Media/
+│   └── assets/
+└── app.js</code></pre>
+            </div>
+
+            <div class="guide-step">
+                <h3><span class="step-number">3</span>Configuración Inicial</h3>
+                <p style="color: var(--text-secondary); margin-bottom: 16px;">
+                    Por defecto el index.html tendrá los elementos necesarios para arrancar el motor.
+                    Asegúrate de cargar los archivos necesarios en tu archivo HTML principal.
+                </p>
+
+                <div class="alert alert-success">
+                    <span class="alert-icon">✓</span>
+                    <div>
+                        <strong>Nota:</strong> El archivo HTML principal ya incluye un acaceso directo a los ejemplos y todas las dependencias necesarias.
+                        Solo necesitas visualizarlo para guiarte, luego podrás llamar a los módulos desde cualquier parte de tu APP 
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Quick Start Guide -->
+        <section class="section" id="primeros-pasos">
+            <h2 class="section-title">Guía de Inicio Rápido</h2>
+            <p class="section-subtitle">Crea escena</p>
+
+            <div class="guide-step">
+                <h3><span class="step-number">4</span>Crear Escena</h3>
+                <p style="color: var(--text-secondary); margin-bottom: 16px;">
+                    En <code class="code-inline">app.js</code>, inicia el motor y define una escena simple.
+                </p>
+
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="code-title">app.js - Escena Básica</span>
+                        <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+                    </div>
+                    <pre><code><span class="com">// Importar el motor</span>
+<span class="kw">const</span> vnEngine = <span class="kw">new</span> <span class="type">VisualNovelEngine</span>();
+
+<span class="com">// Definir una escena</span>
+vnEngine.<span class="fn">defineScene</span>(<span class="str">'Home'</span>, [
+    <span class="type">Scene</span>.<span class="fn">Show</span>(<span class="str">"home_day"</span>, <span class="str">"house_ambience"</span>),
+    <span class="type">Dialogue</span>.<span class="fn">Say</span>(<span class="str">"Narrador"</span>, <span class="str">"Has llegado a casa. ¿A dónde deseas ir?"</span>),
+    <span class="type">Flow</span>.<span class="fn">Choice</span>([
+        <span class="type">Flow</span>.<span class="fn">Action</span>(<span class="str">"Ir a Cocina"</span>, 
+            [<span class="type">Flow</span>.<span class="fn">Jump</span>(<span class="str">"Kitchen"</span>)], 
+            { icon: <span class="str">"Icons/icon_kitchen.png"</span> }
+        ),
+        <span class="type">Flow</span>.<span class="fn">Action</span>(<span class="str">"Dormitorio"</span>, 
+            [<span class="type">Flow</span>.<span class="fn">Jump</span>(<span class="str">"Bedroom"</span>)], 
+            { icon: <span class="str">"Icons/icon_bedroom.png"</span> }
+        )
+    ])
+]);
+
+<span class="com">// Iniciar la escena</span>
+vnEngine.<span class="fn">startScene</span>(<span class="str">'Home'</span>);</code></pre>
+                </div>
+            </div>
+
+            <div class="guide-step">
+                <h3><span class="step-number">5</span>Personalizar el Motor</h3>
+                <p style="color: var(--text-secondary); margin-bottom: 16px;">
+                    Puedes personalizar fácilmente el motor añadiendo tus propias escenas, diálogos y opciones.
+                </p>
+
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="code-title">Escena Personalizada</span>
+                        <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+                    </div>
+                    <pre><code>vnEngine.<span class="fn">defineScene</span>(<span class="str">'Kitchen'</span>, [
+    <span class="type">Scene</span>.<span class="fn">Show</span>(<span class="str">"kitchen_day"</span>, <span class="str">"kitchen_ambience"</span>),
+    <span class="type">Dialogue</span>.<span class="fn">Say</span>(<span class="str">"Narrador"</span>, <span class="str">"Estás en la cocina..."</span>),
+    <span class="type">Flow</span>.<span class="fn">Choice</span>([
+        <span class="type">Flow</span>.<span class="fn">Action</span>(<span class="str">"Ir a Sala"</span>, [<span class="type">Flow</span>.<span class="fn">Jump</span>(<span class="str">"LivingRoom"</span>)]),
+        <span class="type">Flow</span>.<span class="fn">Action</span>(<span class="str">"Volver"</span>, [<span class="type">Flow</span>.<span class="fn">Jump</span>(<span class="str">"Home"</span>)])
+    ])
+]);</code></pre>
+                </div>
+            </div>
+
+            <div class="guide-step">
+                <h3><span class="step-number">6</span>Ejemplo Completo</h3>
+                <p style="color: var(--text-secondary); margin-bottom: 16px;">
+                    Ejemplo con menús flotantes, tablas y opciones posicionadas manualmente.
+                </p>
+
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="code-title">Escena Avanzada</span>
+                        <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+                    </div>
+                    <pre><code>vnEngine.<span class="fn">defineScene</span>(<span class="str">'Bedroom'</span>, [
+    <span class="type">Scene</span>.<span class="fn">Show</span>(<span class="str">"bedroom_day"</span>, <span class="str">"bedroom_ambience"</span>, <span class="kw">true</span>, <span class="kw">true</span>),
+    <span class="type">Dialogue</span>.<span class="fn">Say</span>(<span class="str">"Tú"</span>, <span class="str">"Estoy en mi dormitorio..."</span>),
+    <span class="type">Flow</span>.<span class="fn">Choice</span>([
+        <span class="type">Flow</span>.<span class="fn">Action</span>(<span class="str">"Ir a Cocina"</span>, 
+            [<span class="type">Flow</span>.<span class="fn">Jump</span>(<span class="str">"Kitchen"</span>)], 
+            { typeMenu: <span class="str">"TAB"</span> }
+        ),
+        <span class="type">Flow</span>.<span class="fn">Action</span>(<span class="str">"Mirar por la ventana"</span>, [
+            <span class="type">Dialogue</span>.<span class="fn">Say</span>(<span class="str">"Tú"</span>, <span class="str">"Ya está oscuro afuera..."</span>),
+            <span class="type">Flow</span>.<span class="fn">Refresh</span>()
+        ])
+    ]),
+    <span class="type">Flow</span>.<span class="fn">Action</span>(<span class="str">"Seguir"</span>, 
+        [<span class="type">Flow</span>.<span class="fn">Jump</span>(<span class="str">"LivingRoom"</span>)], 
+        { typeMenu: <span class="str">"FLOATING"</span> }
+    ),
+    <span class="type">Flow</span>.<span class="fn">Action</span>(<span class="str">"Posicionado"</span>, 
+        [<span class="type">Flow</span>.<span class="fn">Jump</span>(<span class="str">"Backyard"</span>)], 
+        { xpos: <span class="num">70</span>, ypos: <span class="num">30</span> }
+    )
+]);</code></pre>
+                </div>
+            </div>
+        </section>
+
+        <!-- Modules Reference -->
+        <section class="section" id="modulos">
+            <h2 class="section-title">Referencia de Módulos</h2>
+            <p class="section-subtitle">Cada clase tiene un propósito específico en el motor</p>
+
+            <div class="docs-layout">
+                <div class="sidebar">
+                    <div class="sidebar-nav">
+                        <h4>Módulos</h4>
+                        <ul>
+                            <li><a href="#module-scene">Scene</a></li>
+                            <li><a href="#module-character">Character</a></li>
+                            <li><a href="#module-dialogue">Dialogue</a></li>
+                            <li><a href="#module-flow">Flow</a></li>
+                            <li><a href="#module-charactermodel">CharacterModel</a></li>
+                            <li><a href="#module-savesystem">SaveSystem</a></li>
+                            <li><a href="#module-timesystem">TimeSystem</a></li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="content">
+                    <!-- Scene Module -->
+                    <div class="module-section" id="module-scene">
+                        <h3>Módulo: Scene</h3>
+                        <p style="color: var(--text-secondary);">Gestiona la carga de escenas con imágenes o videos,
+                            opcionalmente con audio ambiental.</p>
+
+                        <h4>Scene.Show(url, audio, loopAudio = true, isAffectedByTime = false)</h4>
+                        <ul class="feature-list">
+                            <li><strong>@param {string} url</strong> - Ruta relativa a imagen (sin extensión)</li>
+                            <li><strong>@param {string|undefined} [audio]</strong> - Nombre del ambiente sonoro</li>
+                            <li><strong>@param {boolean} [loopAudio=true]</strong> - Si el audio debe repetirse</li>
+                            <li><strong>@param {boolean} [isAffectedByTime=false]</strong> - Fondo cambia según la hora
+                                del día</li>
+                            <li><strong>@returns {Object}</strong> - Comando de tipo "scene"</li>
+                        </ul>
+
+                        <div class="code-block">
+                            <div class="code-header">
+                                <span class="code-title">Ejemplo de Uso</span>
+                                <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+                            </div>
+                            <pre><code><span class="com">// Mostrar escena con fondo y música ambiental</span>
+<span class="type">Scene</span>.<span class="fn">Show</span>(<span class="str">"home_day"</span>, <span class="str">"house_ambience"</span>, <span class="kw">true</span>, <span class="kw">true</span>);</code></pre>
+                        </div>
+
+                        <h4>Scene.ShowV(url, audio, loopScene = true, loopAudio = true)</h4>
+                        <p style="color: var(--text-secondary);">Muestra una escena con video como fondo, opcionalmente
+                            con audio asociado.</p>
+
+                        <div class="code-block">
+                            <div class="code-header">
+                                <span class="code-title">Video como Fondo</span>
+                                <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+                            </div>
+                            <pre><code><span class="com">// Reproducir intro con video y música</span>
+<span class="type">Scene</span>.<span class="fn">ShowV</span>(<span class="str">"intro_video"</span>, <span class="str">"intro_music"</span>);</code></pre>
+                        </div>
+                    </div>
+
+                    <!-- Character Module -->
+                    <div class="module-section" id="module-character">
+                        <h3>Módulo: Character</h3>
+                        <p style="color: var(--text-secondary);">Clase para mostrar personajes estáticos o animados
+                            (WebM) en pantalla.</p>
+
+                        <h4>Character.Show(who, image, position = "center")</h4>
+                        <ul class="feature-list">
+                            <li><strong>@param {string} who</strong> - Nombre del personaje</li>
+                            <li><strong>@param {string} image</strong> - Ruta base del personaje</li>
+                            <li><strong>@param {string} [position='center']</strong> - Posición: left, right, center
+                            </li>
+                            <li><strong>@returns {Object}</strong> - Comando de tipo "show"</li>
+                        </ul>
+
+                        <div class="code-block">
+                            <div class="code-header">
+                                <span class="code-title">Mostrar Personaje</span>
+                                <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+                            </div>
+                            <pre><code><span class="com">// Mostrar personaje en posición derecha</span>
+<span class="type">Character</span>.<span class="fn">Show</span>(<span class="str">"Laura"</span>, <span class="str">"laura_happy"</span>, <span class="str">"right"</span>);
+
+<span class="com">// Versiones abreviadas</span>
+<span class="type">Character</span>.<span class="fn">ShowR</span>(<span class="str">"Laura"</span>, <span class="str">"happy"</span>);
+<span class="type">Character</span>.<span class="fn">ShowL</span>(<span class="str">"Laura"</span>, <span class="str">"angry"</span>);
+
+<span class="com">// Ocultar personaje</span>
+<span class="type">Character</span>.<span class="fn">Hide</span>(<span class="str">"Laura"</span>);</code></pre>
+                        </div>
+                    </div>
+
+                    <!-- Dialogue Module -->
+                    <div class="module-section" id="module-dialogue">
+                        <h3>Módulo: Dialogue</h3>
+                        <p style="color: var(--text-secondary);">Muestra diálogos con soporte para audio y narraciones.
+                        </p>
+
+                        <h4>Dialogue.Say(name, text, audio)</h4>
+                        <ul class="feature-list">
+                            <li><strong>@param {string} name</strong> - Nombre del hablante</li>
+                            <li><strong>@param {string} text</strong> - Texto a mostrar</li>
+                            <li><strong>@param {string|undefined} [audio]</strong> - Archivo de audio asociado</li>
+                            <li><strong>@returns {Object}</strong> - Comando de tipo "say"</li>
+                        </ul>
+
+                        <div class="code-block">
+                            <div class="code-header">
+                                <span class="code-title">Diálogos</span>
+                                <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+                            </div>
+                            <pre><code><span class="com">// Diálogo con audio</span>
+<span class="type">Dialogue</span>.<span class="fn">Say</span>(<span class="str">"Laura"</span>, <span class="str">"Hola, ¿cómo estás?"</span>, <span class="str">"dialogue_laura.mp3"</span>);
+
+<span class="com">// Narración sin hablante</span>
+<span class="type">Dialogue</span>.<span class="fn">Narrate</span>(<span class="str">"La luz parpadea... algo va mal."</span>);</code></pre>
+                        </div>
+                    </div>
+
+                    <!-- Flow Module -->
+                    <div class="module-section" id="module-flow">
+                        <h3>Módulo: Flow</h3>
+                        <p style="color: var(--text-secondary);">Lógica del juego: saltos, condiciones, guardado,
+                            menús...</p>
+
+                        <h4>Flow.Jump(target)</h4>
+                        <div class="code-block">
+                            <div class="code-header">
+                                <span class="code-title">Saltar a Escena</span>
+                                <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+                            </div>
+                            <pre><code><span class="type">Flow</span>.<span class="fn">Jump</span>(<span class="str">"MainMenu"</span>);</code></pre>
+                        </div>
+
+                        <h4>Flow.Action(text, action, config)</h4>
+                        <ul class="feature-list">
+                            <li><strong>@param {string} text</strong> - Texto del botón</li>
+                            <li><strong>@param {Array} action</strong> - Acciones a ejecutar</li>
+                            <li><strong>@param {Object} [config]</strong> - Configuración visual (icon, typeMenu,
+                                position)</li>
+                            <li><strong>@returns {Object}</strong> - Opción de menú</li>
+                        </ul>
+
+                        <div class="code-block">
+                            <div class="code-header">
+                                <span class="code-title">Acción de Menú</span>
+                                <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+                            </div>
+                            <pre><code><span class="type">Flow</span>.<span class="fn">Action</span>(<span class="str">"Ir a Cocina"</span>, 
+    [<span class="type">Scene</span>.<span class="fn">Show</span>(<span class="str">"kitchen.jpg"</span>)], 
+    { icon: <span class="str">"Icons/kitchen.png"</span>, typeMenu: <span class="str">"TAB"</span> }
+);</code></pre>
+                        </div>
+
+                        <h4>Flow.Choice(options)</h4>
+                        <div class="code-block">
+                            <div class="code-header">
+                                <span class="code-title">Menú de Opciones</span>
+                                <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+                            </div>
+                            <pre><code><span class="type">Flow</span>.<span class="fn">Choice</span>([
+    <span class="type">Flow</span>.<span class="fn">Action</span>(<span class="str">"Dormitorio"</span>, [<span class="type">Flow</span>.<span class="fn">Jump</span>(<span class="str">"Bedroom"</span>)]),
+    <span class="type">Flow</span>.<span class="fn">Action</span>(<span class="str">"Cocina"</span>, [<span class="type">Flow</span>.<span class="fn">Jump</span>(<span class="str">"Kitchen"</span>)])
+]);</code></pre>
+                        </div>
+
+                        <h4>Flow.If(condition, thenBlock, elseBlock)</h4>
+                        <div class="code-block">
+                            <div class="code-header">
+                                <span class="code-title">Condicionales</span>
+                                <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+                            </div>
+                            <pre><code><span class="type">Flow</span>.<span class="fn">If</span>(<span class="type">Flow</span>.<span class="fn">Var</span>(<span class="str">"danaFriendshipLevel"</span>, <span class="str">">="</span>, <span class="num">2</span>), [
+    <span class="type">Dialogue</span>.<span class="fn">Say</span>(<span class="str">"Dana"</span>, <span class="str">"¿Quieres jugar?"</span>)
+]);
+
+<span class="com">// Condiciones lógicas</span>
+<span class="type">Flow</span>.<span class="fn">And</span>(...conditions)
+<span class="type">Flow</span>.<span class="fn">Or</span>(...conditions)
+<span class="type">Flow</span>.<span class="fn">Not</span>(condition)</code></pre>
+                        </div>
+
+                        <h4>Otros Comandos Flow</h4>
+                        <div class="code-block">
+                            <div class="code-header">
+                                <span class="code-title">Comandos Adicionales</span>
+                                <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+                            </div>
+                            <pre><code><span class="com">// Establecer variable</span>
+<span class="type">Flow</span>.<span class="fn">Set</span>(<span class="str">"energy"</span>, <span class="num">50</span>);
+
+<span class="com">// Esperar tiempo (ms)</span>
+<span class="type">Flow</span>.<span class="fn">Wait</span>(<span class="num">2000</span>);
+
+<span class="com">// Menú con configuración</span>
+<span class="type">Flow</span>.<span class="fn">Menu</span>([
+    <span class="type">Flow</span>.<span class="fn">Action</span>(<span class="str">"Guardar"</span>, [() => saveSystem.<span class="fn">showSaveLoadScreen</span>(<span class="kw">false</span>)]),
+    <span class="type">Flow</span>.<span class="fn">Action</span>(<span class="str">"Cargar"</span>, [() => saveSystem.<span class="fn">showSaveLoadScreen</span>(<span class="kw">true</span>)])
+], { typeMenu: <span class="str">"FLOATING"</span> });
+
+<span class="com">// Condición por hora</span>
+<span class="type">Flow</span>.<span class="fn">Time</span>(<span class="str">">"</span>, <span class="num">20</span>); <span class="com">// Si la hora > 20</span></code></pre>
+                        </div>
+                    </div>
+
+                    <!-- CharacterModel Module -->
+                    <div class="module-section" id="module-charactermodel">
+                        <h3>Módulo: CharacterModel</h3>
+                        <p style="color: var(--text-secondary);">Clase base para definir personajes reutilizables.</p>
+
+                        <h4>new CharacterModel()</h4>
+                        <ul class="feature-list">
+                            <li><strong>@property {string} Name</strong> - Nombre del personaje</li>
+                            <li><strong>@property {Object} State</strong> - Estados/animaciones</li>
+                        </ul>
+
+                        <div class="code-block">
+                            <div class="code-header">
+                                <span class="code-title">Crear Personaje</span>
+                                <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+                            </div>
+                            <pre><code><span class="kw">const</span> Dana = <span class="kw">new</span> <span class="type">CharacterModel</span>();
+Dana.Name = <span class="str">"Dana"</span>;
+Dana.State.Normal = <span class="str">"dana_default"</span>;
+Dana.State.Happy = <span class="str">"dana_smile"</span>;
+
+<span class="com">// Mostrar personaje</span>
+Dana.<span class="fn">Show</span>(<span class="str">"Happy"</span>, <span class="str">"right"</span>);
+Dana.<span class="fn">ShowR</span>(<span class="str">"Angry"</span>);
+Dana.<span class="fn">ShowL</span>(<span class="str">"Smile"</span>);
+
+<span class="com">// Diálogo del personaje</span>
+Dana.<span class="fn">Say</span>(<span class="str">"No me interrumpas."</span>);
+
+<span class="com">// Variables del juego</span>
+<span class="kw">if</span> (Dana.<span class="fn">GetVar</span>(<span class="str">"dana_sleeping"</span>)) {
+    <span class="kw">return</span> <span class="type">Dialogue</span>.<span class="fn">Say</span>(<span class="str">"Tú"</span>, <span class="str">"Está durmiendo..."</span>);
+}
+
+<span class="com">// Ocultar personaje</span>
+Dana.<span class="fn">Hide</span>();</code></pre>
+                        </div>
+                    </div>
+
+                    <!-- SaveSystem Module -->
+                    <div class="module-section" id="module-savesystem">
+                        <h3>Módulo: SaveSystem</h3>
+                        <p style="color: var(--text-secondary);">Sistema de guardado local usando localStorage.</p>
+
+                        <h4>saveSystem.saveToSlot(slot)</h4>
+                        <div class="code-block">
+                            <div class="code-header">
+                                <span class="code-title">Guardar Partida</span>
+                                <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+                            </div>
+                            <pre><code>saveSystem.<span class="fn">saveToSlot</span>(<span class="str">"slot1"</span>);</code></pre>
+                        </div>
+
+                        <h4>saveSystem.loadFromSlot(slot)</h4>
+                        <div class="code-block">
+                            <div class="code-header">
+                                <span class="code-title">Cargar Partida</span>
+                                <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+                            </div>
+                            <pre><code>saveSystem.<span class="fn">loadFromSlot</span>(<span class="str">"slot1"</span>);</code></pre>
+                        </div>
+
+                        <h4>saveSystem.showSaveLoadScreen(isLoadMode = true)</h4>
+                        <div class="code-block">
+                            <div class="code-header">
+                                <span class="code-title">Pantalla de Guardado/Carga</span>
+                                <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+                            </div>
+                            <pre><code>saveSystem.<span class="fn">showSaveLoadScreen</span>(<span class="kw">true</span>);  <span class="com">// Cargar</span>
+saveSystem.<span class="fn">showSaveLoadScreen</span>(<span class="kw">false</span>); <span class="com">// Guardar</span></code></pre>
+                        </div>
+                    </div>
+
+                    <!-- TimeSystem Module -->
+                    <div class="module-section" id="module-timesystem">
+                        <h3>Módulo: TimeSystem</h3>
+                        <p style="color: var(--text-secondary);">Sistema de tiempo del día, semana y temporada.</p>
+
+                        <h4>this.TimeSystem.advanceTime(hoursToAdd = 1)</h4>
+                        <div class="code-block">
+                            <div class="code-header">
+                                <span class="code-title">Avanzar Tiempo</span>
+                                <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+                            </div>
+                            <pre><code><span class="kw">this</span>.TimeSystem.<span class="fn">advanceTime</span>(<span class="num">3</span>); <span class="com">// Avanzar 3 horas</span></code></pre>
+                        </div>
+
+                        <h4>this.TimeSystem.getTimeSuffix()</h4>
+                        <div class="code-block">
+                            <div class="code-header">
+                                <span class="code-title">Obtener Sufijo de Tiempo</span>
+                                <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+                            </div>
+                            <pre><code><span class="kw">const</span> suffix = <span class="kw">this</span>.TimeSystem.<span class="fn">getTimeSuffix</span>();
+<span class="com">// Devuelve: _morning, _afternoon, _sunset, _night</span></code></pre>
+                        </div>
+
+                        <div class="alert alert-info">
+                            <span class="alert-icon">ℹ️</span>
+                            <div>
+                                <strong>Sufijos automáticos:</strong>
+                                <code class="code-inline">_morning</code> (5-12h) |
+                                <code class="code-inline">_afternoon</code> (12-17h) |
+                                <code class="code-inline">_sunset</code> (17-20h) |
+                                <code class="code-inline">_night</code> (20-5h)
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Interactive Maps -->
+        <section class="section" id="mapas">
+            <h2 class="section-title">Mapas Interactivos</h2>
+            <p class="section-subtitle">Crea escenas iniciales con mapas donde el jugador puede hacer click en
+                diferentes zonas</p>
+
+            <div class="guide-step">
+                <h3><span class="step-number">1</span>Inicio del Juego – app.js</h3>
+                <p style="color: var(--text-secondary); margin-bottom: 16px;">
+                    En el archivo principal <code class="code-inline">app.js</code>, defines la escena inicial y el menú
+                    de opciones.
+                </p>
+
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="code-title">app.js - Escena Inicial</span>
+                        <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+                    </div>
+                    <pre><code><span class="kw">import</span> { saveSystem, vnEngine } <span class="kw">from</span> <span class="str">"./WOpenWorldJs/Core/VisualNovelEngine.js"</span>;
+<span class="kw">import</span> { Flow, Scene } <span class="kw">from</span> <span class="str">"./WOpenWorldJs/Core/VisualNovelModules.js"</span>;
+<span class="kw">import</span> <span class="str">"./Maps/MainMap.js"</span>;
+
+<span class="com">// Escena de inicio</span>
+vnEngine.<span class="fn">defineScene</span>(<span class="str">'start'</span>, [
+    <span class="type">Scene</span>.<span class="fn">Show</span>(<span class="str">"Scene/main_background"</span>),
+    <span class="type">Flow</span>.<span class="fn">Choice</span>([
+        <span class="type">Flow</span>.<span class="fn">Action</span>(<span class="str">"New Game"</span>, [<span class="type">Flow</span>.<span class="fn">Jump</span>(<span class="str">'MainMap'</span>)], { typeMenu: <span class="str">"MENU"</span> }),
+        <span class="type">Flow</span>.<span class="fn">Action</span>(<span class="str">"Load"</span>, [() => saveSystem.<span class="fn">showSaveLoadScreen</span>(<span class="kw">true</span>)], { typeMenu: <span class="str">"MENU"</span> }),
+        <span class="type">Flow</span>.<span class="fn">Action</span>(<span class="str">"Options"</span>, [<span class="type">Flow</span>.<span class="fn">Jump</span>(<span class="str">'OptionsMenu'</span>)], { typeMenu: <span class="str">"MENU"</span> })
+    ])
+]);
+
+<span class="com">// Iniciar desde 'start'</span>
+vnEngine.<span class="fn">startScene</span>(<span class="str">'start'</span>);</code></pre>
+                </div>
+            </div>
+
+            <div class="guide-step">
+                <h3><span class="step-number">2</span>Fondo de Escena – Carpeta Media/Scene</h3>
+                <p style="color: var(--text-secondary); margin-bottom: 16px;">
+                    La imagen usada en <code class="code-inline">Scene.Show("Scene/main_background")</code> debe estar
+                    en la carpeta:
+                </p>
+
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="code-title">Ruta de Imagen</span>
+                        <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+                    </div>
+                    <pre><code>./Media/Scene/main_background.webp</code></pre>
+                </div>
+
+                <div class="alert alert-info">
+                    <span class="alert-icon">ℹ️</span>
+                    <div>
+                        Puedes usar cualquier formato compatible (.webp, .png, .jpg) y cambiarlo según la hora del día
+                        si lo deseas, usando <code class="code-inline">isAffectedByTime</code>.
+                    </div>
+                </div>
+            </div>
+
+            
+
+            <div class="guide-step">
+                <h3><span class="step-number">4</span>Posicionamiento de Opciones – Uso de xpos e ypos</h3>
+                <p style="color: var(--text-secondary); margin-bottom: 16px;">
+                    Los valores <code class="code-inline">xpos</code> e <code class="code-inline">ypos</code> dentro de
+                    <code class="code-inline">position: { xpos: X, ypos: Y }</code> son porcentajes del ancho/alto del
+                    fondo,
+                    no píxeles absolutos.
+                </p>
+
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="code-title">Ejemplos de Posicionamiento</span>
+                        <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+                    </div>
+                    <pre><code><span class="com">// Centrar opción en pantalla</span>
+position: { xpos: <span class="num">50</span>, ypos: <span class="num">50</span> }
+
+<span class="com">// 25% del ancho y 75% del alto</span>
+position: { xpos: <span class="num">25</span>, ypos: <span class="num">75</span> }
+
+<span class="com">// 70% del ancho y 30% del alto</span>
+position: { xpos: <span class="num">70</span>, ypos: <span class="num">30</span> }</code></pre>
+                </div>
+
+                <div class="alert alert-success">
+                    <span class="alert-icon">✓</span>
+                    <div>
+                        <strong>Ventajas del posicionamiento relativo:</strong>
+                        Adapta automáticamente las opciones a distintas resoluciones, no necesitas ajustar coordenadas
+                        manualmente por dispositivo, y permite usar imágenes grandes como mapas reutilizables.
+                    </div>
+                </div>
+            </div>
+
+            <div class="guide-step">
+                <h3><span class="step-number">5</span>Recomendaciones Visuales</h3>
+                <p style="color: var(--text-secondary); margin-bottom: 16px;">
+                    Para los mapas, se recomienda usar imágenes grandes y bien organizadas. También puedes tener
+                    variantes por hora del día.
+                </p>
+
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="code-title">Variantes por Hora</span>
+                        <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+                    </div>
+                    <pre><code>./Media/Scene/home_menu.webp
+./Media/Scene/home_menu_morning.webp
+./Media/Scene/home_menu_night.webp</code></pre>
+                </div>
+
+                <div class="alert alert-info">
+                    <span class="alert-icon">ℹ️</span>
+                    <div>
+                        <strong>Sufijos de tiempo automáticos:</strong><br>
+                        <code class="code-inline">(hour >= 5 && hour < 12)</code> → <code
+                            class="code-inline">"_morning"</code><br>
+                        <code class="code-inline">(hour >= 12 && hour < 17)</code> → <code
+                            class="code-inline">"_afternoon"</code><br>
+                        <code class="code-inline">(hour >= 17 && hour < 20)</code> → <code
+                            class="code-inline">"_sunset"</code><br>
+                        <code class="code-inline">(hour >= 20 || hour < 1)</code> → <code
+                            class="code-inline">"_night"</code><br>
+                        <code class="code-inline">(hour >= 1 && hour < 5)</code> → <code
+                            class="code-inline">"_night2"</code>
+                    </div>
+                </div>
+            </div>
+
+            <div class="guide-step">
+                <h3><span class="step-number">6</span>Iconos del Mapa</h3>
+                <p style="color: var(--text-secondary); margin-bottom: 16px;">
+                    Los iconos del mapa deben estar en la carpeta Icons dentro de la carpeta Media.
+                </p>
+
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="code-title">Ruta de Iconos</span>
+                        <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+                    </div>
+                    <pre><code><span class="com">// Ruta del archivo</span>
+./Media/Icons/icon_mansion.png
+
+<span class="com">// Uso en código</span>
+<span class="type">Flow</span>.<span class="fn">Action</span>(<span class="str">"Home"</span>, [...], {
+    icon: <span class="str">"Icons/icon_mansion"</span>
+});
+
+<span class="com">// El motor completa automáticamente la ruta con:</span>
+<span class="com">// ./Media/Icons/${icon}.png</span></code></pre>
+                </div>
+            </div>
+        </section>
+
+        <!-- Custom Characters -->
+        <section class="section" id="personajes">
+            <h2 class="section-title">Personajes Personalizados</h2>
+            <p class="section-subtitle">Crea personajes únicos extendiendo la clase base CharacterModel</p>
+
+            <div class="guide-step">
+                <h3><span class="step-number">1</span>Estructura Básica de un Personaje</h3>
+                <p style="color: var(--text-secondary); margin-bottom: 16px;">
+                    Crea un archivo en la carpeta <code class="code-inline">./Characters/Dana.js</code>.
+                </p>
+
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="code-title">Characters/Dana.js</span>
+                        <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+                    </div>
+                    <pre><code><span class="kw">import</span> { CharacterModel } <span class="kw">from</span> <span class="str">"../WOpenWorldJs/Core/VisualNovelModules.js"</span>;
+
+<span class="kw">export class</span> <span class="type">DanaModel</span> <span class="kw">extends</span> <span class="type">CharacterModel</span> {
+    Name = <span class="str">"Dana"</span>;
+    State = {
+        Default: <span class="str">"Character/dana_default"</span>,
+        Happy: <span class="str">"Character/dana_happy"</span>,
+        Sad: <span class="str">"Character/dana_sad"</span>,
+        Angry: <span class="str">"Character/dana_angry"</span>
+    };
+}
+
+<span class="com">// Exportar instancia única</span>
+<span class="kw">export const</span> Dana = <span class="kw">new</span> <span class="type">DanaModel</span>();</code></pre>
+                </div>
+
+                <ul class="feature-list">
+                    <li><strong>Name</strong>: Nombre del personaje</li>
+                    <li><strong>State</strong>: Diccionario de estados visuales (ej: emociones)</li>
+                    <li><strong>Exportación</strong>: Se exporta una instancia lista para usar en escenas</li>
+                </ul>
+            </div>
+
+            <div class="guide-step">
+                <h3><span class="step-number">2</span>Mostrar Personaje en Escena</h3>
+                <p style="color: var(--text-secondary); margin-bottom: 16px;">
+                    Una vez creado, puedes usar tu personaje desde cualquier bloque de historia.
+                </p>
+
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="code-title">Escena con Personaje</span>
+                        <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+                    </div>
+                    <pre><code><span class="com">// Escena donde aparece Dana</span>
+vnEngine.<span class="fn">defineScene</span>(<span class="str">'house_history'</span>, [
+    <span class="type">Flow</span>.<span class="fn">If</span>(<span class="type">Flow</span>.<span class="fn">Var</span>(<span class="str">"DanaFriendshipLevel"</span>, <span class="str">"=="</span>, <span class="num">0</span>), [
+        <span class="type">Scene</span>.<span class="fn">Show</span>(<span class="str">"Scene/home/home_day"</span>),
+        <span class="type">Dialogue</span>.<span class="fn">Say</span>(<span class="str">"Tú"</span>, <span class="str">"¡Estoy en casa!"</span>),
+        Dana.<span class="fn">Show</span>(),
+        Dana.<span class="fn">Say</span>(<span class="str">"que haces en casa deberias estar en la escuela"</span>),
+        <span class="type">Dialogue</span>.<span class="fn">Say</span>(<span class="str">"Tú"</span>, <span class="str">"No queria estar en clases"</span>),
+        <span class="type">Flow</span>.<span class="fn">Set</span>(<span class="str">"DanaFriendshipLevel"</span>, <span class="num">1</span>),
+        Dana.<span class="fn">Say</span>(<span class="str">"Ok"</span>),
+        <span class="type">Flow</span>.<span class="fn">Jump</span>(<span class="str">'Home'</span>)
+    ], [
+        <span class="type">Flow</span>.<span class="fn">Jump</span>(<span class="str">'Home'</span>)
+    ])
+]);
+
+<span class="com">// Otra escena</span>
+vnEngine.<span class="fn">defineScene</span>(<span class="str">'Dana_Home_0'</span>, [
+    <span class="type">Scene</span>.<span class="fn">Show</span>(<span class="str">"Scene/home/home_day"</span>, <span class="str">"Audio/house_ambience"</span>),
+    Dana.<span class="fn">Show</span>(<span class="str">"Happy"</span>), <span class="com">// Muestra Dana feliz</span>
+    <span class="type">Dialogue</span>.<span class="fn">Say</span>(<span class="str">"Dana"</span>, <span class="str">"¿Otra vez perdiendo el tiempo?"</span>),
+    <span class="type">Flow</span>.<span class="fn">Choice</span>([
+        <span class="type">Flow</span>.<span class="fn">Action</span>(<span class="str">"Disculparse"</span>, [<span class="type">Flow</span>.<span class="fn">Set</span>(<span class="str">"danaFriendshipLevel"</span>, <span class="num">2</span>)]),
+        <span class="type">Flow</span>.<span class="fn">Action</span>(<span class="str">"Reírse"</span>, [Dana.<span class="fn">Say</span>(<span class="str">"No es gracioso"</span>)])
+    ])
+]);</code></pre>
+                </div>
+
+                <div class="alert alert-info">
+                    <span class="alert-icon">ℹ️</span>
+                    <div>
+                        Esto usará automáticamente las imágenes o videos desde <code
+                            class="code-inline">./Media/Character/</code>.
+                    </div>
+                </div>
+            </div>
+
+            <div class="guide-step">
+                <h3><span class="step-number">3</span>Uso en Escenas con RoomScene.Go(...)</h3>
+                <p style="color: var(--text-secondary); margin-bottom: 16px;">
+                    Puedes integrar personajes dentro de escenas con menús automáticos.
+                </p>
+
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="code-title">HomeHistory.js</span>
+                        <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+                    </div>
+                    <pre><code><span class="kw">import</span> { vnEngine } <span class="kw">from</span> <span class="str">"../WOpenWorldJs/Core/VisualNovelEngine.js"</span>;
+<span class="kw">import</span> { RoomScene, Scene, Dialogue, Flow } <span class="kw">from</span> <span class="str">"../WOpenWorldJs/Core/VisualNovelModules.js"</span>;
+<span class="kw">import</span> { Dana } <span class="kw">from</span> <span class="str">"../Characters/Dana.js"</span>;
+
+<span class="kw">const</span> HomeMenu = [
+    <span class="type">Flow</span>.<span class="fn">Action</span>(<span class="str">"Dormitorio"</span>, [<span class="type">Flow</span>.<span class="fn">Jump</span>(<span class="str">"Bedroom"</span>)], { icon: <span class="str">"Icons/home/myroom_day"</span> }),
+    <span class="type">Flow</span>.<span class="fn">Action</span>(<span class="str">"Sala"</span>, [<span class="type">Flow</span>.<span class="fn">Jump</span>(<span class="str">"LivingRoom"</span>)], { icon: <span class="str">"Icons/home/livingroom_day"</span> }),
+    <span class="type">Flow</span>.<span class="fn">Action</span>(<span class="str">"Cocina"</span>, [<span class="type">Flow</span>.<span class="fn">Jump</span>(<span class="str">"Kitchen"</span>)], { icon: <span class="str">"Icons/home/kitchen_day"</span> }),
+    <span class="type">Flow</span>.<span class="fn">Action</span>(<span class="str">"Baño"</span>, [<span class="type">Flow</span>.<span class="fn">Jump</span>(<span class="str">"Bathroom"</span>)], { icon: <span class="str">"Icons/home/hometoilet_day"</span> }),
+    <span class="type">Flow</span>.<span class="fn">Action</span>(<span class="str">"Jardín"</span>, [<span class="type">Flow</span>.<span class="fn">Jump</span>(<span class="str">"Backyard"</span>)], { icon: <span class="str">"Icons/home/yard_day"</span> }),
+    <span class="type">Flow</span>.<span class="fn">Action</span>(<span class="str">"Regresar"</span>, [<span class="type">Flow</span>.<span class="fn">Jump</span>(<span class="str">"Home"</span>)], { icon: <span class="str">"Icons/icon_back"</span> })
+];
+
+<span class="com">// Escena inicial con mapa interactivo</span>
+vnEngine.<span class="fn">defineScene</span>(<span class="str">'Home'</span>,
+    <span class="type">RoomScene</span>.<span class="fn">Go</span>(<span class="str">"Scene/home/home_day"</span>, [
+        HomeStreetRandomEvent,
+        <span class="type">Dialogue</span>.<span class="fn">Say</span>(<span class="str">"Narrador"</span>, <span class="str">"Has llegado a casa. ¿A dónde deseas ir?"</span>)
+    ], [...HomeMenu], <span class="str">"house_ambience"</span>)
+);</code></pre>
+                </div>
+            </div>
+
+            <div class="guide-step">
+                <h3><span class="step-number">4</span>Eventos Aleatorios y Funciones Dinámicas</h3>
+                <p style="color: var(--text-secondary); margin-bottom: 16px;">
+                    El motor permite usar funciones como parte del flujo de escenas.
+                </p>
+
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="code-title">Funciones Dinámicas</span>
+                        <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+                    </div>
+                    <pre><code><span class="kw">function</span> <span class="fn">HomeStreetRandomEvent</span>() {
+    <span class="kw">const</span> random = Math.<span class="fn">floor</span>(Math.<span class="fn">random</span>() * <span class="num">4</span>);
+    <span class="kw">switch</span> (random) {
+        <span class="kw">case</span> <span class="num">0</span>:
+            <span class="kw">return</span> <span class="type">Flow</span>.<span class="fn">Jump</span>(<span class="str">"Dana_Home_0"</span>);
+        <span class="kw">case</span> <span class="num">1</span>:
+            <span class="kw">return</span> <span class="type">Flow</span>.<span class="fn">Jump</span>(<span class="str">"Dana_Talk_Late"</span>);
+        <span class="kw">case</span> <span class="num">2</span>:
+            <span class="kw">return</span> <span class="type">Flow</span>.<span class="fn">Jump</span>(<span class="str">"Dana_CheckIn"</span>);
+        <span class="kw">default</span>:
+            <span class="kw">return</span> Heero.<span class="fn">Say</span>(<span class="str">"No hay nada por acá"</span>);
+    }
+}
+
+<span class="com">// Ejemplo con condicionales</span>
+<span class="kw">function</span> <span class="fn">HomeBedroomRandomEvent</span>() {
+    <span class="kw">const</span> random = Math.<span class="fn">floor</span>(Math.<span class="fn">random</span>() * <span class="num">4</span>);
+    <span class="kw">switch</span> (random) {
+        <span class="kw">case</span> <span class="num">0</span>:
+            <span class="kw">return</span> Dana.<span class="fn">GetVar</span>(<span class="str">"Bedroom_Dana_01"</span>) != <span class="kw">true</span>
+                && vnEngine.<span class="fn">GetCurrenTime</span>().hour >= <span class="num">8</span>
+                && vnEngine.<span class="fn">GetCurrenTime</span>().hour <= <span class="num">12</span>
+                ? <span class="type">Flow</span>.<span class="fn">Jump</span>(<span class="str">"Bedroom_Dana_01"</span>) 
+                : Heero.<span class="fn">Say</span>(<span class="str">"No hay nada por acá"</span>);
+        <span class="kw">default</span>:
+            <span class="kw">return</span> Heero.<span class="fn">Say</span>(<span class="str">"No hay nada por acá"</span>);
+    }
+}</code></pre>
+                </div>
+
+                <div class="alert alert-success">
+                    <span class="alert-icon">✓</span>
+                    <div>
+                        <strong>Nota:</strong> Esta función puede usarse directamente en cualquier escena y retorna
+                        comandos válidos para el motor.
+                    </div>
+                </div>
+            </div>
+
+            <div class="guide-step">
+                <h3><span class="step-number">5</span>Recomendación de Organización</h3>
+                <p style="color: var(--text-secondary); margin-bottom: 16px;">
+                    Sigue esta estructura para mantener modularidad, pero puedes usar tu propia estructura.
+                </p>
+
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="code-title">Estructura Recomendada</span>
+                        <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+                    </div>
+                    <pre><code>.
+├── Characters/
+│   ├── Dana.js
+│   └── Heero.js
+├── Maps/
+│   └── MainMap.js
+├── History/
+│   └── HomeHistory.js
+├── Menus/
+│   └── HomeMenu.js
+├── Media/
+│   └── Character/
+│       ├── dana_default.webp
+│       ├── dana_happy.webp
+│       └── dana_angry.webp
+└── app.js</code></pre>
+                </div>
+            </div>
+        </section>
+
+        <!-- API Reference -->
+        <section class="section" id="api-reference">
+            <h2 class="section-title">Referencia API Completa</h2>
+            <p class="section-subtitle">Documentación detallada de todas las clases principales</p>
+
+            <div class="api-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Clase</th>
+                            <th>Descripción</th>
+                            <th>Métodos Principales</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="param-name">VisualNovelEngine</span></td>
+                            <td>El motor principal</td>
+                            <td><code class="code-inline">defineScene()</code>, <code
+                                    class="code-inline">startScene()</code>, <code
+                                    class="code-inline">RegisterCharacter()</code></td>
+                        </tr>
+                        <tr>
+                            <td><span class="param-name">Scene</span></td>
+                            <td>Para mostrar escenas</td>
+                            <td><code class="code-inline">Show()</code>, <code class="code-inline">ShowV()</code></td>
+                        </tr>
+                        <tr>
+                            <td><span class="param-name">Dialogue</span></td>
+                            <td>Para mostrar diálogos</td>
+                            <td><code class="code-inline">Say()</code>, <code class="code-inline">Narrate()</code></td>
+                        </tr>
+                        <tr>
+                            <td><span class="param-name">Character</span></td>
+                            <td>Para mostrar personajes</td>
+                            <td><code class="code-inline">Show()</code>, <code class="code-inline">ShowR()</code>, <code
+                                    class="code-inline">ShowL()</code>, <code class="code-inline">Hide()</code></td>
+                        </tr>
+                        <tr>
+                            <td><span class="param-name">Flow</span></td>
+                            <td>Comandos lógicos</td>
+                            <td><code class="code-inline">If()</code>, <code class="code-inline">Jump()</code>, <code
+                                    class="code-inline">Set()</code>, <code class="code-inline">Choice()</code>, <code
+                                    class="code-inline">Action()</code></td>
+                        </tr>
+                        <tr>
+                            <td><span class="param-name">SaveSystem</span></td>
+                            <td>Guardado local</td>
+                            <td><code class="code-inline">saveToSlot()</code>, <code
+                                    class="code-inline">loadFromSlot()</code>, <code
+                                    class="code-inline">showSaveLoadScreen()</code></td>
+                        </tr>
+                        <tr>
+                            <td><span class="param-name">TimeSystem</span></td>
+                            <td>Manejo del tiempo</td>
+                            <td><code class="code-inline">advanceTime()</code>, <code
+                                    class="code-inline">getTimeSuffix()</code>, <code
+                                    class="code-inline">getFormattedHour()</code></td>
+                        </tr>
+                        <tr>
+                            <td><span class="param-name">CharacterModel</span></td>
+                            <td>Clase base para personajes</td>
+                            <td><code class="code-inline">Show()</code>, <code class="code-inline">Say()</code>, <code
+                                    class="code-inline">GetVar()</code>, <code class="code-inline">Hide()</code></td>
+                        </tr>                       
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="code-block">
+                <div class="code-header">
+                    <span class="code-title">Ejemplo Completo de Uso</span>
+                    <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+                </div>
+                <pre><code><span class="com">// Definición de una escena con personaje, condición y menú</span>
+vnEngine.<span class="fn">defineScene</span>(<span class="str">'Bedroom'</span>, [
+    <span class="type">Scene</span>.<span class="fn">Show</span>(<span class="str">"bedroom_day"</span>, <span class="str">"bedroom_ambience"</span>, <span class="kw">true</span>, <span class="kw">true</span>),
+    <span class="type">Dialogue</span>.<span class="fn">Say</span>(<span class="str">"Tú"</span>, <span class="str">"¿Dana está despierta ya?"</span>),
+    <span class="type">Flow</span>.<span class="fn">If</span>(<span class="type">Flow</span>.<span class="fn">Var</span>(<span class="str">"dana_sleeping"</span>, <span class="str">"!="</span>, <span class="kw">true</span>), [
+        <span class="type">Flow</span>.<span class="fn">Action</span>(<span class="str">"Despertarla"</span>, [
+            <span class="type">Flow</span>.<span class="fn">Set</span>(<span class="str">"dana_sleeping"</span>, <span class="kw">false</span>),
+            <span class="type">Dialogue</span>.<span class="fn">Say</span>(<span class="str">"Dana"</span>, <span class="str">"¿Qué quieres?"</span>)
+        ])
+    ], [
+        <span class="type">Flow</span>.<span class="fn">Action</span>(<span class="str">"Dejarla dormir"</span>, [
+            <span class="type">Dialogue</span>.<span class="fn">Say</span>(<span class="str">"Tú"</span>, <span class="str">"Mejor la dejo descansar..."</span>)
+        ])
+    ]),
+    <span class="type">Flow</span>.<span class="fn">Action</span>(<span class="str">"Mirar por la ventana"</span>, [
+        <span class="type">Dialogue</span>.<span class="fn">Say</span>(<span class="str">"Tú"</span>, <span class="str">"Ya está oscuro afuera..."</span>),
+        <span class="type">Flow</span>.<span class="fn">Refresh</span>()
+    ])
+]);</code></pre>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container footer-content">
+            <div class="footer-text">
+                © 2025 WVn.Js - Wilber Jose Matus Gonzalez
+            </div>
+            <div class="footer-links">
+                <a href="https://github.com/Wilber1987/WVnJs" target="_blank">GitHub</a>
+                <a href="#inicio">Volver arriba</a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Copy code functionality
+        function copyCode(btn) {
+            const codeBlock = btn.closest('.code-block');
+            const code = codeBlock.querySelector('code');
+            const text = code.innerText;
+
+            navigator.clipboard.writeText(text).then(() => {
+                const originalText = btn.innerText;
+                btn.innerText = '¡Copiado!';
+                btn.style.borderColor = 'var(--success)';
+                btn.style.color = 'var(--success)';
+
+                setTimeout(() => {
+                    btn.innerText = originalText;
+                    btn.style.borderColor = '';
+                    btn.style.color = '';
+                }, 2000);
+            });
+        }
+
+        // Smooth scroll for navigation
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Active nav highlighting
+        const sections = document.querySelectorAll('.section');
+        const navLinks = document.querySelectorAll('nav a');
+
+        window.addEventListener('scroll', () => {
+            let current = '';
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop;
+                const sectionHeight = section.clientHeight;
+                if (scrollY >= sectionTop - 200) {
+                    current = section.getAttribute('id');
+                }
+            });
+
+            navLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === `#${current}`) {
+                    link.classList.add('active');
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>

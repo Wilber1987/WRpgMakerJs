@@ -8,13 +8,15 @@ import { CharacterContainer } from "./CharacterContainer.js";
 const domainUrl = "./Media";
 class CharacterDetailView extends HTMLElement {
 
+
     /**
      * @param {CharacterModel} Character
      */
     constructor(Character) {
         super();
+        this.attachShadow({ mode: 'open' });
         this.Character = Character;
-        this.append(this.CustomStyle);
+        this.shadowRoot?.append(this.CustomStyle);
         this.Draw();
     }
     connectedCallback() {
@@ -26,65 +28,15 @@ class CharacterDetailView extends HTMLElement {
             this.remove();
         }, 500);
     }
-    Draw = async () => {
-        const { Name, isFemale, Sprites, Stats, Skills, Backstory, Level, Experience, Inventory }
-            = this.Character;
-
+    Draw = async () => {        
         const content = html`<div class="character-detail-view">
-            <div class="close-btn" onclick="${() => this.close()}" id="closeBtn">×</div>
-            <div class="character-sprite">
-                ${this.GetSprites()}               
-            </div>
-            <div class="character-detail">
-                <h1>${this.Character.Name}</h1>
-                <p>${Backstory}</p>
-                <div class="detail-content">
-                    <div class="detail-sidebar">
-                        <div class="section">
-                            <div class="section-title">Estadísticas</div>
-                                <div class="stats-grid">
-                                     ${Object.entries(Stats).map(([statName, value]) => html`<div class="stat-item">
-                                            <span>${statName}</span>
-                                            <span class="stat-value">${value}</span>
-                                        </div>`)}
-                                </div>
-                            </div>
-                        </div>                            
-                        <div class="detail-main">
-                        <div class="section">
-                            <div class="section-title">Habilidades</div>
-                            <div class="skills-list">
-                                ${Skills.map(skill => html`<div class="skill-item">
-                                    <div class="skill-header">
-                                        <img src="${skill.icon}"/>
-                                        <span class="skill-name">${skill.name}</span>
-                                        <span class="skill-level">Target: ${skill.numberTargets}</span>
-                                    </div>
-                                    <div class="skill-description">${skill.description}</div>
-                                </div>`)}
-                            </div>
-                        </div>
-
-                        <div class="section">
-                            <div class="section-title">Historia</div>
-                            <div class="backstory">${Backstory}</div>
-                        </div>
-
-                        <div class="section">
-                            <div class="section-title">Inventario</div>
-                            <div class="inventory-grid">
-                                ${Inventory.map(item => html`<div class="inventory-item">
-                                    <div class="item-name">${item.name}</div>
-                                    <div class="item-type">${item.type}</div>
-                                    <div class="item-rarity rarity-${item.rarity.toLowerCase()}">${item.rarity}</div>
-                                </div>`)}
-                            </div>
-                        </div>
-                    </div>                
+                <div class="close-btn" onclick="${() => this.close()}" id="closeBtn">×</div>
+                <div class="character-sprite">
+                    ${this.GetSprites()}               
                 </div>
-            </div> 
-    </div>`
-        this.append(content)
+                ${this.CharacterDetail(this.Character)}
+        </div>`
+        this.shadowRoot?.append(content)
     }
 
     GetSprites() {
@@ -95,23 +47,91 @@ class CharacterDetailView extends HTMLElement {
             .map(
                 // @ts-ignore
                 prop => new CharacterContainer(this.Character.Name,
-                     this.Character.Sprites[prop].map((/** @type {String} */ img) => `${domainUrl}/${img}`))
+                    this.Character.Sprites[prop].map((/** @type {String} */ img) => `${domainUrl}/${img}`))
             ));
+    }
+
+    /**
+    * @param {CharacterModel} Character
+    */
+    CharacterDetail(Character) {
+        return html`<div class="character-detail">
+            <h1>${Character.Name}</h1>
+            <p>${Character.Backstory}</p>
+            <div class="detail-content">
+                <div class="detail-sidebar">    
+                    <div class="section">
+                        <div class="section-title">Estadísticas</div>
+                            <div class="stats-grid">
+                            ${Object.entries(Character.Stats).map(([statName, value]) => html`<div class="stat-item">
+                                <span>${statName}</span>
+                                <span class="stat-value">${value}</span>
+                            </div>`)}
+                            </div>
+                        </div>
+                    </div>        
+                    <div class="detail-main">
+                    <div class="section">
+                        <div class="section-title">Habilidades</div>
+                        <div class="skills-list">
+                            ${this.GetSkills(Character)}
+                        </div>
+                    </div>
+
+                    <div class="section">
+                        <div class="section-title">Historia</div>
+                        <div class="backstory">${Character.Backstory}</div>
+                    </div>
+
+                    <div class="section">
+                        <div class="section-title">Inventario</div>
+                        <div class="inventory-grid">    
+                            ${this.GetInventory(Character)}
+                        </div>
+                    </div>
+                </div>                
+            </div>
+        </div>` 
+    }
+
+    /**
+     * @param {CharacterModel} Character
+     */
+    GetSkills(Character) {
+        return Character.Skills.map(skill => html`<div class="skill-item">
+            <div class="skill-header">
+                <img src="${skill.icon}"/>
+                <span class="skill-name">${skill.name}</span>
+                <span class="skill-level">Target: ${skill.numberTargets}</span>
+            </div>
+            <div class="skill-description">${skill.description}</div>
+                            </div>`);
+    }
+
+    /**
+     * @param {CharacterModel} Character
+     */
+    GetInventory(Character) {
+        return Character.Inventory.map(item => html`<div class="inventory-item">
+            <div class="item-name">${item.name}</div>
+            <div class="item-type">${item.type}</div>
+            <div class="item-rarity rarity-${item.rarity.toLowerCase()}">${item.rarity}</div>
+        </div>`);
     }
 
     update() {
         this.Draw();
     }
     CustomStyle = css`
-        w-character-detail-view {
-            position: absolute;
+        :host {
+            position: fixed;
             opacity: 0;
             pointer-events: none;
             top: 0;
             left: 0;
             right: 0;
             bottom: 0;
-            z-index: 10001;
+            z-index: 10002;
             transition: all 1s;
             background-color: #fff;
             display: block;
