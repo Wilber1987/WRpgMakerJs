@@ -5,7 +5,7 @@ import { TILE_SIZE, clamp, lerp } from "./OpenWorldEngineView.js";
 //CORE
 
 export class Camera {
-    
+
     /**
      * @param {number} viewW
      * @param {number} viewH
@@ -35,34 +35,39 @@ export class Camera {
      * @param {GameMap | null} currentMap
      * @returns {number}
     */
-    GetMaxZoom(currentMap) {
-        //TODO AGREGAR CORTES POR ANCHO DE PANTALLA PARA MEJOR CONTROL
-        if (currentMap?.w <= 16) {
-            return 10
-        }
-        else if (currentMap?.w <= 24) {
-            return 4
-        }
-        else if (currentMap?.w <= 48) {
-            return 6;
-        } 
-        return 5    
+    GetMinZoom(currentMap) {
+        if (!currentMap) return 1;
+
+        // Zoom mínimo para que el mapa llene el viewport (no ver fuera del mapa)
+        const zoomToFitW = (this.screenW / TILE_SIZE) / currentMap.w;
+        const zoomToFitH = (this.screenH / TILE_SIZE) / currentMap.h;
+        const zoomToFit = Math.max(zoomToFitW, zoomToFitH); // El mayor para cubrir ambos ejes
+
+        // Si hay perspectiva, necesitamos más zoom mínimo para que el personaje
+        // en y=0 no se vea demasiado pequeño
+        const perspectiveFactor = currentMap.factorPerspectiva ?? 0;
+        const minScale = currentMap.minScalePerspectiva ?? 0.4;
+
+        // Compensar: si el personaje se achica por perspectiva, subir zoom mínimo
+        const perspectiveCompensation = perspectiveFactor > 0 ? (1 / perspectiveFactor) * 0.5 : 1;
+
+        return Math.max(zoomToFit, zoomToFit * perspectiveCompensation);
     }
+
     /**
      * @param {GameMap | null} currentMap
      * @returns {number}
     */
-    GetMinZoom(currentMap) {
-        //TODO AGREGAR CORTES POR ANCHO DE PANTALLA PARA MEJOR CONTROL
-        if (currentMap?.w <= 16) {
-            return 3.8;
-        }
-        else if (currentMap?.w <= 24) {
-            return 2.5;
-        }
-        else if (currentMap?.w <= 48) {
-            return 2;
-        } 
-        return 1.3;
+    GetMaxZoom(currentMap) {
+        if (!currentMap) return 5;
+
+        // Zoom máximo: que al menos 3x3 tiles sean visibles (no hacer zoom infinito)
+        const minVisibleTiles = 3;
+        const zoomMaxW = (this.screenW / TILE_SIZE) / minVisibleTiles;
+        const zoomMaxH = (this.screenH / TILE_SIZE) / minVisibleTiles;
+        const zoomMax = Math.min(zoomMaxW, zoomMaxH); // El menor para respetar ambos ejes
+
+        // Hard cap razonable
+        return Math.min(zoomMax, 10);
     }
 }

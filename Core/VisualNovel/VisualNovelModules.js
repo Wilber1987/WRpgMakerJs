@@ -86,6 +86,17 @@ export class Dialogue {
     }
 }
 
+
+export class FlowData {  /**@type {String?} */
+    type = null
+    /**@type {String?} */
+    var = null
+    /**@type {String?} */
+    operator = null
+    /**@type {any?} */
+    value = null
+}
+
 export class Flow {
     /**
      * @param {string} target
@@ -96,14 +107,16 @@ export class Flow {
     /**
     * @param {string} text
     * @param {Array<any>} action
-    * @param {{ icon?: string, typeMenu?: string, render?: { type?: string, var?: string, operator?: string , value?: any } , position?: { xpos: number, ypos: number, heightPercent?: number, widthPercent?: number} }} [config] 
-    * @returns {any}
+    * @param {{ icon?: string, typeMenu?: string, 
+    * render?: { type?: string, var?: string, operator?: string , value?: any } | boolean | Function
+    * , position?: { xpos: number, ypos: number, heightPercent?: number, widthPercent?: number} }} [config] 
+    * @returns {import("./VisualNovelEngine").ChoiceOption}
     */
     static Action(text, action, config) {
         if (config?.position?.heightPercent) {
             console.log(config);
         }
-        const translated = translate.find((/** @type {{ old: string; }} */ x) => x.old == text)?.new;
+        const translated = translate.filter((/** @type {null | undefined} */ x) => x != null &&  x != undefined).find((/** @type {{ old: string; }} */ x) => x.old == text)?.new;
         return {
             text: translated ?? text,
             action,
@@ -119,7 +132,7 @@ export class Flow {
 
     /**
      * @param {( import("./VisualNovelEngine").SceneCommand 
-     * | (() => {  }))[] } commands
+     * | Function)[] } commands
      */
     static Block(commands) {
         return { type: "block", commands: commands };
@@ -162,7 +175,7 @@ export class Flow {
      * @param {string} name
      * @param {string | undefined} [operator]
      * @param {number | boolean | undefined | string} [value]
-      *  @returns {{ type: String, var: String, operator: String, value: any } }
+      *  @returns {FlowData}
      */
     static Var(name, operator, value) {
         return { type: "variable", var: name, operator: operator ?? "==", value: value ?? true };
@@ -172,7 +185,7 @@ export class Flow {
     /**
      * @param {string} name
      * @param {number} [value]
-      *  @returns {{ type: String, var: String, operator: String, value: any } }
+      *  @returns {FlowData}
      */
     static Sum(name, value) {
         return { type: "sum", var: name, operator: "+", value: value ?? 1 };
@@ -180,21 +193,21 @@ export class Flow {
     /**
     * @param {string} name
     * @param {number} [value]
-     *  @returns {{ type: String, var: String, operator: String, value: any } }
+     *  @returns {FlowData}
     */
     static Substract(name, value) {
         return { type: "substrac", var: name, operator: "-", value: value ?? 1 };
     }
 
     /**
-     * @param {{ type: string; operator: any; value: any; var?: string; }[]} conditions
+     * @param {FlowData[]} conditions
      */
     static And(...conditions) {
         return { type: "and", conditions };
     }
-/**
-     * @param {{ type: string; operator: any; value: any; var?: string; }[]} conditions
-     */
+    /**
+         * @param {FlowData[]} conditions
+         */
     static Or(...conditions) {
         return { type: "or", conditions };
     }

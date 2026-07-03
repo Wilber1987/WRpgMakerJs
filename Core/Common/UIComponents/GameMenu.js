@@ -32,9 +32,20 @@ export class GameMenu extends HTMLElement {
                 <img src="./Media/assets/icons/icon_download.png" class="menu-icon">
                 <label>Cargar Partida</label>
             </button>
-            <button class="choice-button menu-floating-item" onclick="${this.handlerTimeSkip}">
+             <button 
+             class="choice-button menu-floating-item ${vnEngine ? "" : "hidden"}
+              ${vnEngine.autoPlay ? " autoplayActive" : ""}" 
+                onclick="${this.handlerAutoPlay}">
+                <img src="./Media/assets/icons/icon_mainmenu.png" class="menu-icon">
+                <label>Auto</label>
+            </button>
+            <button class="choice-button menu-floating-item" onclick="${this.handlerTimeSkipX2}">
                 <img src="./Media/assets/icons/time_skip.png" class="menu-icon">
-                <label></label>
+                <label>X2</label>
+            </button>
+             <button class="choice-button menu-floating-item" onclick="${this.handlerTimeSkipX4}">
+                <img src="./Media/assets/icons/time_skip.png" class="menu-icon">
+                <label>X4</label>
             </button>
             <button class="choice-button menu-floating-item" onclick="${this.handlerCharacters}">
                 <img src="./Media/assets/icons/icon_character.png" class="menu-icon">
@@ -61,6 +72,19 @@ export class GameMenu extends HTMLElement {
             document.body.append(this);
         }
     }
+
+
+    /**
+     * @param {{ stopPropagation: () => void; target: { className: string; }; }} ev
+     */
+    handlerAutoPlay(ev) {
+        ev.stopPropagation();
+        vnEngine.autoPlay = vnEngine.autoPlay ? false : true;
+        ev.target.className = vnEngine.autoPlay
+            ? `${ev.target.className} autoplayActive`
+            : ev.target.className.replaceAll(" autoplayActive", "")
+
+    }
     close() {
         ComponentsManager.modalFunction(this);
         setTimeout(() => {
@@ -74,7 +98,10 @@ export class GameMenu extends HTMLElement {
         saveSystem.showSaveLoadScreen(true);
         this.screenView?.hide();
     }
-    handlerTimeSkip = () => {
+    handlerTimeSkipX2 = () => {
+        vnEngine.TimeSystem.autoAdvanceTime(4)
+    }
+    handlerTimeSkipX4 = () => {
         vnEngine.TimeSystem.autoAdvanceTime(4)
     }
     handlerCharacters = () => {
@@ -179,7 +206,18 @@ export class GameMenu extends HTMLElement {
             background-color: #111;
             opacity: 0.6;
             cursor: not-allowed;
-        }        
+        }  
+
+        .hidden {
+            display: none;
+        }  
+        .autoplayActive {
+            color: #f2c936;
+        }  
+        .choice-button * {
+            pointer-events: none;
+        }
+          
     `
 }
 customElements.define('w-component', GameMenu);

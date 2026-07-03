@@ -43,6 +43,20 @@ export class BlockObject {
     }
 }
 
+export class TeleportTrigger extends BlockObject {
+    /**
+     * @param {number} x
+     * @param {number} y
+     * @param {number} w
+     * @param {number} h
+     * @param {{ col?: any; Action?: any; durability?: any; weight?: any; movable?: any; color?: any; ActionQuestion?: any; autoTrigger?: any; icon?: any; }} opts
+     */
+    constructor(x, y, w, h, opts) {
+        super(x, y, w, h, opts)
+        this.IsTeleport = true;
+    }
+}
+
 export class GameMap {
 
     /**
@@ -58,7 +72,7 @@ export class GameMap {
          * @type {BlockObject[]}
          */
         this.objects = [];
-       
+
         this.bgColor = opts.bgColor || '#4aa3ff';
         this.bgImage = null;
         this.spawnX = opts.spawnX ?? 2;
@@ -80,14 +94,24 @@ export class GameMap {
         }
 
         this.factorPerspectiva = opts.factorPerspectiva ?? 0.5;
-        this.usarPerspectiva = this.factorPerspectiva > 0;
-         this.addLimits();
+        this.usarPerspectiva = opts.factorPerspectiva > 0;
+        this.minScalePerspectiva = opts.minScalePerspectiva ?? this.getMinScale();
+        this.addLimits();
         this.NPCs.forEach(npc => {
             npc.ChargeBasicSprites()
         });
+        this.mapOverlay = null
+        if (opts.mapOverlay) {
+            this.mapOverlay = this.getBackgroundImage(opts.mapOverlay)
+        }
+    }
+    getMinScale() {
+        console.log( this.minScalePerspectiva);
+        
+        return 0.3 //-1 / (this.factorPerspectiva + 1)/TODO
     }
     addLimits() {
-        this.objects.push(new BlockObject(0, 0, this.w, this.factorPerspectiva + 1, {
+        this.objects.push(new BlockObject(0, 0, this.w, this.minScalePerspectiva + 1, {
             color: "rgba(0,0,0,0.05)"
         }))
         this.objects.push(new BlockObject(0, this.h - 1, this.w, 1, {
@@ -120,8 +144,9 @@ export class GameMap {
     /**
      * @param {number} tx
      * @param {number} ty
+     * @param {number} scale
      */
-    isBlocked(tx, ty) {
+    isBlocked(tx, ty, scale) {
         if (tx < 0 || ty < 0 || tx >= this.w || ty >= this.h) return true;
 
         // 1. Verificar objetos bloqueantes
@@ -145,7 +170,7 @@ export class GameMap {
                         npcY = mapData.posY;
                     }
                     // @ts-ignore
-                    if (npc.occupies(tx, ty, mapData)) return true;
+                    if (npc.occupies(tx, ty, mapData, scale)) return true;
                 }
             }
         }
@@ -200,9 +225,10 @@ export class GameMap {
      * Verifica si una posición está bloqueada (incluyendo otros NPCs)
      * @param {number} x 
      * @param {number} y 
+     * @param {number} [scale] 
      * @returns {boolean}
      */
-    _isPositionBlocked(x, y) {
+    _isPositionBlocked(x, y, scale = 1) {
         const tileX = Math.floor(x);
         const tileY = Math.floor(y);
 
@@ -212,7 +238,7 @@ export class GameMap {
         }
 
         // Verificar objetos bloqueantes
-        if (this.isBlocked(tileX, tileY)) {
+        if (this.isBlocked(tileX, tileY, scale)) {
             return true;
         }
 

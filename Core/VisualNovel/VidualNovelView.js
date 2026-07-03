@@ -21,9 +21,11 @@ export class VisualNovelView extends HTMLElement {
     };
     /**
      * @param {string} uiElementId
+     * @returns {HTMLElement}
      */
     GetUIElement(uiElementId) {
         let uiElement = this.shadowRoot?.querySelector(`#${uiElementId}`);
+        // @ts-ignore
         return uiElement;
     }
     update() {

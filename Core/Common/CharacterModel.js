@@ -33,13 +33,27 @@ export class CharacterModel {
         // @ts-ignore
         /**@type {String} */
         this.Name = props?.Name ?? this.constructor.name.replace("Model", "").replace("Character", "");
+        this.SpritesDataAssets = this.Name;
+        // dentro del constructor, después de asignar this.SpritesDataAssets = this.Name;
+        this._makeObservable('SpritesDataAssets', this.SpritesDataAssets);
+
+        this.onChange('SpritesDataAssets', async (newVal, oldVal) => {
+            console.log(`🔄 SpritesDataAssets cambió: ${oldVal} → ${newVal}, recargando sprites...`);
+
+            // resetea los flags de carga para forzar recarga
+            this.isBasicRegistered = false;
+            this.isWordMapRegistered = false;
+            this.isBattleRegistered = false;
+
+            await this.RegisterWordMapCharacter(this.isFullPerspective);
+        });
         //esta propiedad refleja la ruta imagen que debe usar segun cada estado
         /**@type {Object.<string, any>} */
         this.Sprites = {
-            Angry: props?.Sprites?.Angry ?? Array.from({ length: 25 }, (_, i) => `assets/sprites/${this.Name}/Angry/${i}.png`),
-            Fear: props?.Sprites?.Fear ?? Array.from({ length: 25 }, (_, i) => `assets/sprites/${this.Name}/Normal/${i}.png`),
-            Happy: props?.Sprites?.Happy ?? Array.from({ length: 25 }, (_, i) => `assets/sprites/${this.Name}/Normal/${i}.png`),
-            Normal: props?.Sprites?.Normal ?? Array.from({ length: 25 }, (_, i) => `assets/sprites/${this.Name}/Normal/${i}.png`),
+            Angry: props?.Sprites?.Angry ?? Array.from({ length: 25 }, (_, i) => `assets/sprites/${this.SpritesDataAssets}/Angry/${i}.png`),
+            Fear: props?.Sprites?.Fear ?? Array.from({ length: 25 }, (_, i) => `assets/sprites/${this.SpritesDataAssets}/Normal/${i}.png`),
+            Happy: props?.Sprites?.Happy ?? Array.from({ length: 25 }, (_, i) => `assets/sprites/${this.SpritesDataAssets}/Normal/${i}.png`),
+            Normal: props?.Sprites?.Normal ?? Array.from({ length: 25 }, (_, i) => `assets/sprites/${this.SpritesDataAssets}/Normal/${i}.png`),
             idle: {
                 down: [], up: [], left: [], right: [],
                 up_left: [], up_right: [], down_left: [], down_right: [],
@@ -85,7 +99,7 @@ export class CharacterModel {
         /**
          * @type {SkillModel[]}
          */
-        this.Skills = []
+        this.Skills = props?.Skills ?? []
         /**@type {Number} */
         this.animFrame = props?.animFrame ?? 0;
         /**@type {Number} */
@@ -157,6 +171,11 @@ export class CharacterModel {
         this.partyLeader = undefined;
         /** @type {Boolean} */
         this.isFullPerspective = false;
+        /**
+         * @type {string[]}
+         */
+        this.Outfits = [];
+        this.CharacterActive = undefined;
     }
 
     RegisterWordMapCharacter = async (isFullPerspective = this.isFullPerspective) => {
@@ -165,33 +184,35 @@ export class CharacterModel {
         }
         this.isFullPerspective = isFullPerspective;
         this.ChargeBasicSprites(isFullPerspective);
+        console.log("this.Sprites.walk");
+
         this.Sprites.walk = {
             down: await this._loadSpriteSequence(
-                `Media/assets/sprites/${this.Name}/walk_down/`, this.SpritesFrames.walk
+                `Media/assets/sprites/${this.SpritesDataAssets}/wd/`, this.SpritesFrames.walk
             ),
             up: await this._loadSpriteSequence(
-                `Media/assets/sprites/${this.Name}/walk_up/`, this.SpritesFrames.walk
+                `Media/assets/sprites/${this.SpritesDataAssets}/wu/`, this.SpritesFrames.walk
             ),
             left: await this._loadSpriteSequence(
-                `Media/assets/sprites/${this.Name}/walk_left/`, this.SpritesFrames.walk
+                `Media/assets/sprites/${this.SpritesDataAssets}/wl/`, this.SpritesFrames.walk
             ),
             right: await this._loadSpriteSequence(
-                `Media/assets/sprites/${this.Name}/walk_right/`, this.SpritesFrames.walk
+                `Media/assets/sprites/${this.SpritesDataAssets}/wr/`, this.SpritesFrames.walk
             ),
         };
 
         if (isFullPerspective) {
             this.Sprites.walk.up_left = await this._loadSpriteSequence(
-                `Media/assets/sprites/${this.Name}/walk_up_left/`, this.SpritesFrames.walk
+                `Media/assets/sprites/${this.SpritesDataAssets}/wul/`, this.SpritesFrames.walk
             );
             this.Sprites.walk.up_right = await this._loadSpriteSequence(
-                `Media/assets/sprites/${this.Name}/walk_up_right/`, this.SpritesFrames.walk
+                `Media/assets/sprites/${this.SpritesDataAssets}/wur/`, this.SpritesFrames.walk
             );
             this.Sprites.walk.down_left = await this._loadSpriteSequence(
-                `Media/assets/sprites/${this.Name}/walk_down_left/`, this.SpritesFrames.walk
+                `Media/assets/sprites/${this.SpritesDataAssets}/wdl/`, this.SpritesFrames.walk
             );
             this.Sprites.walk.down_right = await this._loadSpriteSequence(
-                `Media/assets/sprites/${this.Name}/walk_down_right/`, this.SpritesFrames.walk
+                `Media/assets/sprites/${this.SpritesDataAssets}/wdr/`, this.SpritesFrames.walk
             );
         }
         this.isWordMapRegistered = true;
@@ -203,30 +224,30 @@ export class CharacterModel {
         }
         this.Sprites.idle = {
             down: await this._loadSpriteSequence(
-                `Media/assets/sprites/${this.Name}/idle_down/`, this.SpritesFrames.idle
+                `Media/assets/sprites/${this.SpritesDataAssets}/id/`, this.SpritesFrames.idle
             ),
             up: await this._loadSpriteSequence(
-                `Media/assets/sprites/${this.Name}/idle_up/`, this.SpritesFrames.idle
+                `Media/assets/sprites/${this.SpritesDataAssets}/iu/`, this.SpritesFrames.idle
             ),
             left: await this._loadSpriteSequence(
-                `Media/assets/sprites/${this.Name}/idle_left/`, this.SpritesFrames.idle
+                `Media/assets/sprites/${this.SpritesDataAssets}/il/`, this.SpritesFrames.idle
             ),
             right: await this._loadSpriteSequence(
-                `Media/assets/sprites/${this.Name}/idle_right/`, this.SpritesFrames.idle
+                `Media/assets/sprites/${this.SpritesDataAssets}/ir/`, this.SpritesFrames.idle
             ),
         };
         if (isFullPerspective) {
             this.Sprites.idle.up_left = await this._loadSpriteSequence(
-                `Media/assets/sprites/${this.Name}/idle_up_left/`, this.SpritesFrames.idle
+                `Media/assets/sprites/${this.SpritesDataAssets}/iul/`, this.SpritesFrames.idle
             );
             this.Sprites.idle.up_right = await this._loadSpriteSequence(
-                `Media/assets/sprites/${this.Name}/idle_up_right/`, this.SpritesFrames.idle
+                `Media/assets/sprites/${this.SpritesDataAssets}/iur/`, this.SpritesFrames.idle
             );
             this.Sprites.idle.down_left = await this._loadSpriteSequence(
-                `Media/assets/sprites/${this.Name}/idle_down_left/`, this.SpritesFrames.idle
+                `Media/assets/sprites/${this.SpritesDataAssets}/idl/`, this.SpritesFrames.idle
             );
             this.Sprites.idle.down_right = await this._loadSpriteSequence(
-                `Media/assets/sprites/${this.Name}/idle_down_right/`, this.SpritesFrames.idle
+                `Media/assets/sprites/${this.SpritesDataAssets}/idr/`, this.SpritesFrames.idle
             );
         }
         this.isBasicRegistered = true;
@@ -238,26 +259,26 @@ export class CharacterModel {
         }
         this.Sprites.attack = {
             left: this.isEnemy ? await this._loadSpriteSequence(
-                `Media/assets/sprites/${this.Name}/attack_left/`, this.SpritesFrames.attack
+                `Media/assets/sprites/${this.SpritesDataAssets}/al/`, this.SpritesFrames.attack
             ) : [],
             right: this.isEnemy == false ? await this._loadSpriteSequence(
-                `Media/assets/sprites/${this.Name}/attack_right/`, this.SpritesFrames.attack
+                `Media/assets/sprites/${this.SpritesDataAssets}/ar/`, this.SpritesFrames.attack
             ) : [],
         };
         this.Sprites.battle = {
             left: this.isEnemy ? await this._loadSpriteSequence(
-                `Media/assets/sprites/${this.Name}/battle_left/`, this.SpritesFrames.battle
+                `Media/assets/sprites/${this.SpritesDataAssets}/bl/`, this.SpritesFrames.battle
             ) : [],
             right: !this.isEnemy ? await this._loadSpriteSequence(
-                `Media/assets/sprites/${this.Name}/battle_right/`, this.SpritesFrames.battle
+                `Media/assets/sprites/${this.SpritesDataAssets}/br/`, this.SpritesFrames.battle
             ) : [],
         };
         this.Sprites.death = {
             left: this.isEnemy ? await this._loadSpriteSequence(
-                `Media/assets/sprites/${this.Name}/death_left/`, this.SpritesFrames.death
+                `Media/assets/sprites/${this.SpritesDataAssets}/dl/`, this.SpritesFrames.death
             ) : [],
             right: !this.isEnemy ? await this._loadSpriteSequence(
-                `Media/assets/sprites/${this.Name}/death_right/`, this.SpritesFrames.death
+                `Media/assets/sprites/${this.SpritesDataAssets}/dr/`, this.SpritesFrames.death
             ) : [],
         };
         this.isBattleRegistered = true;
@@ -308,7 +329,7 @@ export class CharacterModel {
                 };
                 img.onerror = (err) => {
                     console.warn(`❌ Failed to load sprite: ${src}`, err);
-                    CharacterModel.SpriteCache.set(src, img); 
+                    CharacterModel.SpriteCache.set(src, img);
                     resolve(img);
                 };
                 img.src = src;
@@ -327,7 +348,7 @@ export class CharacterModel {
      * @param {any|undefined} audio
      */
     Say(text, audio = undefined) {
-        const translated = translate.find((/** @type {{ old: any; }} */ x) => x.old == text)?.new;
+        const translated = translate.filter((/** @type {null | undefined} */ x) => x != null && x != undefined).find((/** @type {{ old: any; }} */ x) => x.old == text)?.new;
         return Dialogue.Say(this.Name, translated ?? text, audio, this.isFemale);
     }
     /**
@@ -484,9 +505,9 @@ export class CharacterModel {
         const npcTileY = Math.floor(mapData.posY);
 
         // Tamaño del NPC en tiles
-        const width = this.width ?? 1;
+        const width = (this.width ?? 1) * this.scale;
         const height = this.height ?? 1.5;
-
+        console.log(this.Name, width, height);
         // 🔄 CORRECCIÓN: El personaje se dibuja hacia ARRIBA desde (posX, posY)
         // Por lo tanto, ocupa tiles desde Y hacia valores MENORES (hacia arriba en pantalla)
         const tilesHeight = Math.ceil(height);
@@ -614,7 +635,7 @@ export class CharacterModel {
      * @param {MapData} mapData
      */
     RegistrerNpcMapData(map, mapData) {
-        const actualMapData = this.MapData.find( mapData => mapData.name == map.name);
+        const actualMapData = this.MapData.find(mapData => mapData.name == map.name);
         if (actualMapData) {
             actualMapData.posX = mapData.posX;
             actualMapData.posY = mapData.posY;
@@ -651,6 +672,68 @@ export class CharacterModel {
 
     GetLocation() {
         return "TODO";
+    }
+
+    /**
+ * Muestra un mensaje flotante sobre el personaje en el mundo 2D (In-World)
+ * @param {string} text - El texto a mostrar
+ * @param {number} [duration=3000] - Duración en milisegundos
+ * @param {{ color?: String,bgColor?: String,fontSize?: String,}} [options] - Opciones de estilo (color, bgColor, fontSize)
+ */
+    SayIW(text, duration = 3000, options = {}) {
+        this.floatingMessage = {
+            text: text,
+            startTime: performance.now(),
+            duration: duration,
+            color: options.color || "#FFFFFF",
+            bgColor: options.bgColor || "rgba(0, 0, 0, 0.85)",
+            fontSize: options.fontSize || 14
+        };
+    }
+
+
+    // --- Sistema de observación de propiedades ---
+
+    /**
+     * Convierte una propiedad plana en una accessor property observable.
+     * @param {string} prop
+     * @param {*} initialValue
+     */
+    _makeObservable(prop, initialValue) {
+        let value = initialValue;
+        Object.defineProperty(this, prop, {
+            get: () => value,
+            set: (newVal) => {
+                const oldVal = value;
+                if (newVal === oldVal) return; // evita disparos innecesarios
+                value = newVal;
+                this._triggerWatchers(prop, newVal, oldVal);
+            },
+            configurable: true,
+            enumerable: true
+        });
+    }
+    /**@type {Object.<string, any>} */
+    _watchers = {}
+
+    /**
+     * Registra un callback para cuando `prop` cambie.
+     * @param {string} prop
+     * @param {(newVal:any, oldVal:any, self:CharacterModel)=>void} callback
+     */
+    onChange(prop, callback) {
+        if (!this._watchers) this._watchers = {};
+        if (!this._watchers[prop]) this._watchers[prop] = [];
+        this._watchers[prop].push(callback);
+    }
+
+    /**
+     * @param {string} prop
+     * @param {*} newVal
+     * @param {*} oldVal
+     */
+    _triggerWatchers(prop, newVal, oldVal) {
+        (this._watchers?.[prop]).forEach((/** @type {(arg0: any, arg1: any, arg2: this) => any} */ cb) => cb(newVal, oldVal, this));
     }
 }
 

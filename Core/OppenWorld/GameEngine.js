@@ -2,7 +2,7 @@
 import { CharacterModel } from "../Common/CharacterModel.js";
 import { clamp, DPR, lerp, OpenWorldEngineView, TILE_SIZE } from "./OpenWorldEngineView.js";
 import { Camera } from "./Camera.js";
-import { GameMap } from "./OpenWordModules/Models.js";
+import { GameMap, TeleportTrigger } from "./OpenWordModules/Models.js";
 import { BattleSystem } from "./BattleModule/BattleSystem.js";
 import { vnEngine } from "../VisualNovel/VisualNovelEngine.js";
 import { CharactersUtil } from "../Common/CharactersUtil.js";
@@ -158,14 +158,19 @@ export class GameEngine {
         const target = this.maps[name];
         if (!target) { console.warn('Mapa no encontrado:', name); return; }
         this.currentMap = target;
+        console.log(pos);
+
 
         if (pos && typeof pos.x === 'number' && typeof pos.y === 'number') {
             this.SelectedCharacter.x = pos.x;
             this.SelectedCharacter.y = pos.y;
+
         } else {
             this.SelectedCharacter.x = target.spawnX;
             this.SelectedCharacter.y = target.spawnY;
         }
+        console.log(this.SelectedCharacter);
+
         const followers = this.Characters.filter(c => c.isFollower).forEach(char => {
             char.follow(this.SelectedCharacter)
         });
@@ -183,7 +188,7 @@ export class GameEngine {
         this.maxZoom = this.cam.GetMaxZoom(this.currentMap);
 
         // Asegurar que el zoom actual esté dentro de los nuevos límites
-        this.cam.zoom = clamp(this.cam.zoom, this.minZoom, this.maxZoom);
+        this.cam.zoom = clamp(this.cam.zoom / this.getScale(this.SelectedCharacter.y), this.minZoom, this.maxZoom);
 
         // Centrar cámara en el jugador
         this.cam.x = this.SelectedCharacter.x;
@@ -358,10 +363,11 @@ export class GameEngine {
             })
             if (dx || dy) {
                 const sp = this.SelectedCharacter.speed * dt;
-                const nx = this.SelectedCharacter.x + dx * sp;
-                const ny = this.SelectedCharacter.y + dy * sp;
+                const scale = this.getScale(this.SelectedCharacter.y) / 2; // 👈
+                const nx = this.SelectedCharacter.x + dx * sp * scale; // 👈
+                const ny = this.SelectedCharacter.y + dy * sp * scale; // 👈
                 // simple collision: check destination tile
-                if (!this.currentMap.isBlocked(Math.floor(nx), Math.floor(ny))) {
+                if (!this.currentMap.isBlocked(Math.floor(nx), Math.floor(ny), scale)) {
                     this.SelectedCharacter.x = nx;
                     this.SelectedCharacter.y = ny;
                     this.updateFollowerState(nx, ny, followers, dt, moving);
@@ -538,15 +544,15 @@ export class GameEngine {
         // 1. Agregar objetos del mapa
         if (this.currentMap?.objects) {
             for (const obj of this.currentMap.objects) {
-                if (obj.icon || (obj.color && obj.color !== '')) {
-                    const scale = this.getScale(obj.y);
-                    renderQueue.push({
-                        type: 'object',
-                        ref: obj,
-                        sortY: obj.y + obj.h / 2,  // Centro del objeto para sorting
-                        scale: scale
-                    });
-                }
+                //if (obj.icon || (obj.color && obj.color !== '')) {
+                const scale = this.getScale(obj.y);
+                renderQueue.push({
+                    type: 'object',
+                    ref: obj,
+                    sortY: obj.y + obj.h / 2,  // Centro del objeto para sorting
+                    scale: scale
+                });
+                //}
             }
         }
         // 2. Agregar NPCs (excluyendo followers)
@@ -644,20 +650,41 @@ export class GameEngine {
             this.hud.innerText = `Time: Hora: ${vnEngine.TimeSystem.getFormattedHour()} | Día: ${vnEngine.TimeSystem.currentTime.day}
                 Pos: ${Character.x.toFixed(2)}, ${Character.y.toFixed(2)}
                 Map: ${this.currentMap?.name} • Zoom: ${this.cam.zoom.toFixed(2)}
-                Overlaps: ${this.overlaps.size}
+                Overlaps: ${this.overlaps.size} | Scale: "${this.getScale(Character.y).toFixed(1)}"
                 ${this.alertVisible ? '💡 Z para interactuar' : ''}`;
         }
+        if (bg.mapOverlay && bg.mapOverlay.complete) {
+            const mapPxW = bg.w * TILE_SIZE;
+            const mapPxH = bg.h * TILE_SIZE;
+            ctx.drawImage(bg.mapOverlay, 0, 0, bg.mapOverlay.naturalWidth, bg.mapOverlay.naturalHeight,
+                offsetX, offsetY, mapPxW * this.cam.zoom, mapPxH * this.cam.zoom);
+        }
+
+        // ✅ AÑADIR ESTA LÍNEA: Dibujar mensajes flotantes (In-World Dialogue)
+        this._drawFloatingMessages(ctx);
 
         this._drawMinimap();
         this._drawAlertIcon(ctx);
+
     }
 
-    getScale = (/** @type {number} */ entityY) => {
+    getScaleOld = (/** @type {number} */ entityY) => {
         if (!this.currentMap?.usarPerspectiva) return 1;
         const normalizedY = Math.max(0, Math.min(1, entityY / this.currentMap.h));
         return 1 + (normalizedY * this.currentMap.factorPerspectiva);
     };
 
+
+    getScale = (/** @type {number} */ entityY) => {
+        //todo
+        if (!this.currentMap?.usarPerspectiva) return 1;
+
+        const minScale = this.currentMap.minScalePerspectiva ?? 0.5;
+        const maxScale = 1 + (this.currentMap.factorPerspectiva ?? 1);
+
+        const normalizedY = Math.max(0, Math.min(1, entityY / this.currentMap.h));
+        return minScale + (normalizedY * (maxScale - minScale));
+    };
 
     /**
      * @param {CanvasRenderingContext2D} ctx
@@ -777,7 +804,13 @@ export class GameEngine {
         } else {
             // Solo dibujar si tiene un color definido
 
-            if (mapObject.color && mapObject.color !== '') {
+            // 🔧 NUEVO: Si es un teleport, dibujarlo con efecto especial
+            // @ts-ignore            
+            if (mapObject.IsTeleport) {
+                this._drawTeleportObject(ctx, mapObject, px, py);
+            }
+            // Solo dibujar si tiene un color definido (fallback normal)
+            else if (mapObject.color && mapObject.color !== '') {
                 ctx.fillStyle = mapObject.color;
                 ctx.fillRect(
                     px,
@@ -955,34 +988,35 @@ export class GameEngine {
         return closestTarget;
     }
 
-    /**
-     * Verifica proximidad para mostrar/ocultar icono de alerta visual
-     * @private
-     */
     _checkAlertProximity() {
         const target = this._findClosestInteractiveTarget(this.alertRadius);
         this.alertVisible = !!target;
         this.alertTarget = target;
 
-        // ✅ SOLO ejecutar si: 
-        //   - Está activo (no en batalla/pausa)
-        //   - Tiene autoTrigger explícitamente true (no undefined)
-        //   - NO se está ejecutando ya una acción
+        // Clave estable basada en posición
+        const targetKey = target ? `${target.x},${target.y}` : null;
+
+        // Si la proximidad se disipó (distinto target o ninguno), liberar
+        if (this._triggeredTargetKey && this._triggeredTargetKey !== targetKey) {
+            this._triggeredTargetKey = null;
+        }
+
         if (target?.autoTrigger === true &&
             target.Action &&
             this.active &&
-            !this._isActionExecuting) {
-
-            this._isActionExecuting = true; // Flag para evitar triggers múltiples
-            this.pause(); // ✅ ¡PAUSAR ANTES DE EJECUTAR!
+            !this._isActionExecuting &&
+            this._triggeredTargetKey !== targetKey  // ← comparación por valor
+        ) {
+            this._triggeredTargetKey = targetKey;   // marcar con la clave
+            this._isActionExecuting = true;
+            this.pause();
 
             try {
                 const result = target.Action(this);
-                // Reanudar después de acción (con delay para diálogos)
+
                 const resumeAfter = (ms = 0) => {
                     setTimeout(() => {
                         this._isActionExecuting = false;
-                        console.log("resume");
                         this.resume();
                     }, ms);
                 };
@@ -996,7 +1030,6 @@ export class GameEngine {
             } catch (err) {
                 console.error('Error en auto-trigger', err);
                 this._isActionExecuting = false;
-                //this.resume();
             }
         }
     }
@@ -1127,6 +1160,206 @@ export class GameEngine {
             ctx.arc(dotX, dotY, dotRadius, 0, Math.PI * 2);
             ctx.fill();
         }
+        ctx.restore();
+    }
+
+    // En GameEngine.js, añade este método a la clase GameEngine:
+
+    /**
+     * Dibuja mensajes de diálogo flotantes sobre los personajes
+     * @param {CanvasRenderingContext2D} ctx 
+     */
+    _drawFloatingMessages(ctx) {
+        // Recopilar todos los personajes que podrían tener un mensaje
+        const allChars = new Set([
+            this.SelectedCharacter,
+            ...this.Characters,
+            ...(this.currentMap?.NPCs || [])
+        ]);
+
+        const now = performance.now();
+
+        for (const char of allChars) {
+            if (!char.floatingMessage) continue;
+
+            const msg = char.floatingMessage;
+            const elapsed = now - msg.startTime;
+
+            // Limpiar mensaje si ya pasó el tiempo
+            if (elapsed > msg.duration) {
+                char.floatingMessage = null;
+                continue;
+            }
+
+            // 1. Calcular posición en pantalla
+            const px = (char.x - this.cam.x) * TILE_SIZE * this.cam.zoom + this.cam.screenW / 2;
+            const py = (char.y - this.cam.y) * TILE_SIZE * this.cam.zoom + this.cam.screenH / 2;
+
+            // 2. Escala según perspectiva 2.5D (para que la burbuja crezca si el personaje está "cerca")
+            const scale = this.getScale(char.y);
+
+            // 3. Posicionar sobre la cabeza del personaje
+            const tileHeight = char.tileHeight ?? 1.5;
+            const charDrawH = TILE_SIZE * this.cam.zoom * tileHeight * scale;
+            const bubbleY = py - charDrawH - 15 * this.cam.zoom; // 15px de margen sobre la cabeza
+
+            // 4. Efecto de desvanecimiento (fade-out) en los últimos 500ms
+            let alpha = 1;
+            const fadeTime = 500;
+            if (elapsed > msg.duration - fadeTime) {
+                alpha = Math.max(0, (msg.duration - elapsed) / fadeTime);
+            }
+
+            ctx.save();
+            ctx.globalAlpha = alpha;
+
+            // 5. Configurar fuente y medir texto para crear la burbuja
+            const fontSize = (msg.fontSize || 14) * this.cam.zoom;
+            ctx.font = `bold ${fontSize}px Arial, sans-serif`;
+            const textWidth = ctx.measureText(msg.text).width;
+            const padding = 10 * this.cam.zoom;
+            const bubbleW = textWidth + padding * 2;
+            const bubbleH = fontSize + padding * 1.5;
+            const bubbleX = px - bubbleW / 2;
+
+            // 6. Dibujar fondo de la burbuja (Rectángulo redondeado)
+            ctx.fillStyle = msg.bgColor || "rgba(0, 0, 0, 0.85)";
+            const r = 6 * this.cam.zoom;
+            ctx.beginPath();
+            ctx.moveTo(bubbleX + r, bubbleY);
+            ctx.lineTo(bubbleX + bubbleW - r, bubbleY);
+            ctx.quadraticCurveTo(bubbleX + bubbleW, bubbleY, bubbleX + bubbleW, bubbleY + r);
+            ctx.lineTo(bubbleX + bubbleW, bubbleY + bubbleH - r);
+            ctx.quadraticCurveTo(bubbleX + bubbleW, bubbleY + bubbleH, bubbleX + bubbleW - r, bubbleY + bubbleH);
+            ctx.lineTo(bubbleX + r, bubbleY + bubbleH);
+            ctx.quadraticCurveTo(bubbleX, bubbleY + bubbleH, bubbleX, bubbleY + bubbleH - r);
+            ctx.lineTo(bubbleX, bubbleY + r);
+            ctx.quadraticCurveTo(bubbleX, bubbleY, bubbleX + r, bubbleY);
+            ctx.closePath();
+            ctx.fill();
+
+            // Borde sutil
+            ctx.strokeStyle = "rgba(255, 255, 255, 0.3)";
+            ctx.lineWidth = 1.5 * this.cam.zoom;
+            ctx.stroke();
+
+            // 7. Dibujar texto con sombra para legibilidad
+            ctx.fillStyle = msg.color || "#FFFFFF";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+
+            ctx.shadowColor = "rgba(0, 0, 0, 0.5)";
+            ctx.shadowBlur = 2 * this.cam.zoom;
+            ctx.shadowOffsetY = 1 * this.cam.zoom;
+
+            ctx.fillText(msg.text, px, bubbleY + bubbleH / 2);
+
+            ctx.restore();
+        }
+    }
+
+
+    /**
+  * Dibuja un objeto de teletransporte con efecto de portal animado (versión transparente)
+  * @param {CanvasRenderingContext2D} ctx
+  * @param {MapObject} mapObject
+  * @param {number} px - Posición X en pantalla
+  * @param {number} py - Posición Y en pantalla
+  * @private
+  */
+    _drawTeleportObject(ctx, mapObject, px, py) {
+        const w = mapObject.w * TILE_SIZE * this.cam.zoom;
+        const h = mapObject.h * TILE_SIZE * this.cam.zoom;
+        const cx = px + w / 2;
+        const cy = py + h / 2;
+        const radiusX = w / 2;
+        const radiusY = h / 2;
+        const time = Date.now() * 0.001;
+
+        ctx.save();
+
+        // === 1. Base sutil (muy transparente) ===
+        ctx.fillStyle = 'rgba(20, 10, 50, 0.25)';
+        ctx.beginPath();
+        ctx.ellipse(cx, cy, radiusX, radiusY, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // === 2. Gradiente radial interior (núcleo del portal - más transparente) ===
+        const innerGradient = ctx.createRadialGradient(cx, cy, 0, cx, cy, Math.max(radiusX, radiusY));
+        innerGradient.addColorStop(0, 'rgba(150, 100, 220, 0.4)');    // Núcleo suave
+        innerGradient.addColorStop(0.3, 'rgba(100, 60, 180, 0.25)');  // Medio
+        innerGradient.addColorStop(0.6, 'rgba(60, 30, 120, 0.15)');   // Transición
+        innerGradient.addColorStop(1, 'rgba(20, 10, 60, 0)');         // Totalmente transparente
+
+        ctx.fillStyle = innerGradient;
+        ctx.beginPath();
+        ctx.ellipse(cx, cy, radiusX * 0.95, radiusY * 0.95, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // === 3. Anillos de energía rotando (más sutiles) ===
+        const ringCount = 3;
+        for (let i = 0; i < ringCount; i++) {
+            const angle = time * (0.8 + i * 0.2) + (i * Math.PI * 2 / ringCount);
+            const ringRadiusX = radiusX * (0.5 + i * 0.2);
+            const ringRadiusY = radiusY * (0.5 + i * 0.2);
+            const alpha = 0.2 + 0.15 * Math.sin(time * 2 + i); // Opacidad reducida
+
+            ctx.strokeStyle = `rgba(180, 220, 255, ${alpha})`;
+            ctx.lineWidth = (1.5 - i * 0.3) * this.cam.zoom;
+            ctx.beginPath();
+            ctx.ellipse(cx, cy, ringRadiusX, ringRadiusY, angle, 0, Math.PI * 2);
+            ctx.stroke();
+        }
+
+        // === 4. Brillo central pulsante (más suave) ===
+        const pulse = 0.6 + 0.4 * Math.sin(time * 2.5);
+        const glowRadius = Math.min(radiusX, radiusY) * 0.35 * pulse;
+        const glowGradient = ctx.createRadialGradient(cx, cy, 0, cx, cy, glowRadius);
+        glowGradient.addColorStop(0, 'rgba(255, 255, 255, 0.5)');
+        glowGradient.addColorStop(0.4, 'rgba(200, 180, 255, 0.3)');
+        glowGradient.addColorStop(1, 'rgba(100, 80, 200, 0)');
+
+        ctx.fillStyle = glowGradient;
+        ctx.beginPath();
+        ctx.ellipse(cx, cy, glowRadius, glowRadius, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // === 5. Partículas orbitando (más tenues) ===
+        const particleCount = 6;
+        for (let i = 0; i < particleCount; i++) {
+            const particleAngle = time * 1.2 + (i * Math.PI * 2 / particleCount);
+            const particleX = cx + Math.cos(particleAngle) * radiusX * 0.75;
+            const particleY = cy + Math.sin(particleAngle) * radiusY * 0.75;
+            const particleSize = (1.5 + Math.sin(time * 3 + i) * 0.8) * this.cam.zoom;
+            const alpha = 0.3 + 0.3 * Math.sin(time * 2.5 + i);
+
+            ctx.fillStyle = `rgba(220, 240, 255, ${alpha})`;
+            ctx.beginPath();
+            ctx.arc(particleX, particleY, particleSize, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        // === 6. Borde brillante del portal (más sutil) ===
+        const borderAlpha = 0.3 + 0.2 * Math.sin(time * 1.8);
+        ctx.strokeStyle = `rgba(180, 160, 255, ${borderAlpha})`;
+        ctx.lineWidth = 1.5 * this.cam.zoom;
+        ctx.beginPath();
+        ctx.ellipse(cx, cy, radiusX, radiusY, 0, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // === 7. Highlight si el jugador está encima (overlap) ===
+        if (this.overlaps.has(mapObject)) {
+            const overlapAlpha = 0.5 + 0.3 * Math.sin(time * 3);
+            ctx.strokeStyle = `rgba(255, 255, 255, ${overlapAlpha})`;
+            ctx.lineWidth = 2 / this.cam.zoom;
+            ctx.shadowColor = 'rgba(200, 180, 255, 0.6)';
+            ctx.shadowBlur = 8 * this.cam.zoom;
+            ctx.beginPath();
+            ctx.ellipse(cx, cy, radiusX + 1, radiusY + 1, 0, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.shadowBlur = 0;
+        }
+
         ctx.restore();
     }
     /**

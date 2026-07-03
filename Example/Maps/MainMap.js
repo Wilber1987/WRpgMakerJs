@@ -2,7 +2,7 @@
 
 import { CharacterModel } from "../../Core/Common/CharacterModel.js";
 import { CharacterRegistry } from "../../Core/Common/CharacterRegistry.js";
-import { SkillModel } from "../../Core/Common/SkillModel.js";
+import { SkillModel, SkillsType } from "../../Core/Common/SkillModel.js";
 import { GameMenu } from "../../Core/Common/UIComponents/GameMenu.js";
 import { GameStartScreen } from "../../Core/Common/UIComponents/GameStartScreen.js";
 import { BlockObject, GameMap } from "../../Core/OppenWorld/OpenWordModules/Models.js";
@@ -49,7 +49,9 @@ const npc1 = new CharacterModel({
         battle: 25,
         attack: 89,
         death: 25
-    },
+    }, Skills: [
+        new SkillModel({ numberTargets: 100 , skillType: SkillsType.LONG_RANGE})
+    ],
     MapData: [
         {
             name: "Ciudad1", posX: 24, posY: 14, action: () => {
@@ -149,7 +151,7 @@ const ciudad1 = new GameMap('Ciudad1', 64, 36, {
     //const ciudad1 = new GameMap('Ciudad1', 46, 27, {
     //const ciudad1 = new GameMap('Ciudad1', 46, 27, {
     spawnX: 23,   // Punto de inicio del jugador
-    spawnY: 16,
+    spawnY: 256,
     battleBackgrond: getAsset("Maps/City1/battleBg.png"),
     bgColor: '#666', // Calle gris
     NPCs: [npc1, DanaCharacter], // <-- Aquí se pasan los NPCs desde la creación
@@ -469,7 +471,7 @@ const battle = () => {
 const screenOptions = [
     {
         name: "New Game", startGame: true, action: () => {
-            oppenWorldEngine.GoToMap("Ciudad1")
+            oppenWorldEngine.GoToMap("Ciudad1", 15, 15)
             new GameMenu().Connect()
         }
     }, {

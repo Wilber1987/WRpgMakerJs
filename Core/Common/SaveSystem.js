@@ -209,6 +209,8 @@ export class SaveSystem {
          */
         this.vnEngine = vnEngine;
 
+        vnEngine.saveSystem = this
+
         /** 
          * @type {OpenWorldEngineView} 
          */
@@ -587,15 +589,17 @@ export class SaveSystem {
             if (state.openWorld && this.openWorldEngine) {
                 await this._restoreOpenWorld(state.openWorld);
             }
+
             // === RESTAURAR VISUAL NOVEL ===
             if (state.visualNovel && this.vnEngine) {
                 await this._restoreVisualNovel(state.visualNovel);
                 if (this.vnEngine.active == true) {
                     // @ts-ignore
                     this.vnEngine.uiElements.background.innerHTML = state.visualNovel.lastBackground
-                
-                    await this.vnEngine.startScene(state.visualNovel.currentScene);
-                    this.vnEngine.waitForClick();
+
+                    // @ts-ignore
+                    this.vnEngine.startScene(state.visualNovel.currentScene);
+                    //this.vnEngine.waitForClick();
                 }
 
             }
@@ -625,6 +629,8 @@ export class SaveSystem {
         engine.history = vnState.history || [];
         engine.currentCommandIndex = vnState.currentCommandIndex || 0;
 
+        engine.variableStore.setMultiple(engine.variables)
+
         // Restaurar personajes activos
         if (vnState.activeCharacters) {
             engine.activeCharacters = new Set(vnState.activeCharacters);
@@ -637,6 +643,7 @@ export class SaveSystem {
 
         // Si hay escena actual, prepararla (no ejecutar automáticamente)
         if (vnState.currentScene && engine.scenes[vnState.currentScene]) {
+            // @ts-ignore
             engine.currentScene = vnState.currentScene;
             engine.currentsBlocks = engine.scenes[vnState.currentScene];
         }
@@ -784,7 +791,7 @@ export class SaveSystem {
 
         // Stats: fusión profunda
         if (savedData.Stats && character.Stats) {
-            Object.assign(character.Stats, savedData.Stats);
+            this._assignSafe(character.Stats, savedData.Stats);
         }
 
         // Inventory: reemplazo completo (objetos planos)
@@ -794,16 +801,17 @@ export class SaveSystem {
 
         // Skills: recrear instancias si es posible
 
-        
+
 
         // MapData: reemplazo completo
         if (savedData.MapData !== undefined) {
-           //character.MapData = JSON.parse(JSON.stringify(savedData.MapData));
+            //character.MapData = JSON.parse(JSON.stringify(savedData.MapData));
         }
 
         // Props personalizadas
         if (savedData.customProps) {
-            Object.assign(character, savedData.customProps);
+            //Object.assign(character, savedData.customProps);
+            this._assignSafe(character, savedData.customProps);
         }
 
         // @ts-ignore
@@ -816,6 +824,27 @@ export class SaveSystem {
         }
         await character.RegisterWordMapCharacter();
         return character;
+    }
+
+    /**
+     * Copia valores de `source` a `target`, evitando pisar métodos,
+     * propiedades internas (_prefijo) y claves ya manejadas explícitamente.
+     * @param {Object} target
+     * @param {Object} source
+     * @param {string[]} [skipKeys] - claves que ya se asignaron manualmente y no deben duplicarse
+     */
+    _assignSafe(target, source, skipKeys = []) {
+        if (!source) return;
+
+        for (const key of Object.keys(source)) {
+            if (skipKeys.includes(key)) continue;
+            if (key.startsWith('_')) continue;
+
+            const val = source[key];
+            if (typeof val === 'function') continue; // nunca pisar métodos del prototipo
+
+            target[key] = val;
+        }
     }
 
     /**
@@ -961,7 +990,7 @@ export class SaveSystem {
         if (success && this.vnEngine) {
             // Reanudar espera de input si está en una escena
             if (this.vnEngine.currentScene) {
-                this.vnEngine.waitForClick?.();
+                //this.vnEngine.waitForClick?.();
             }
         }
 

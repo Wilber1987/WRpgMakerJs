@@ -51,19 +51,21 @@ class OpenWorldEngineView extends HTMLElement {
         this.Draw();
 
         this.character = Config?.character;
+        if (this.character) {
+            this.character.CharacterActive = true;
+        }
         /** @type {CharacterModel[]} */
         this.Characters = Config?.Characters ?? [];
         if (this.character && !this.Characters.includes(this.character)) {
             this.Characters.push(this.character)
-        } else if(!this.character && this.Characters.length > 0) {
+        } else if (!this.character && this.Characters.length > 0) {
             this.character = this.Characters[0];
         }
         if (this.character) {
             CharactersUtil.assignLeader(this.character, this.Characters)
         }
-
         this.GameEngine = new GameEngine(this);
-        
+
         saveSystem.openWorldEngine = this;
         /**@type { GameStartScreen? } */
         this.screenView = null;
@@ -204,7 +206,7 @@ class OpenWorldEngineView extends HTMLElement {
             for (const member of enemies) {
                 await member.ChargeBattleSprites();
             }
-            setTimeout(() => {                
+            setTimeout(() => {
                 this.LoadScreen.hide();
             }, 1000);
             this.GameEngine.battleSystem.startBattle(party, enemies);
@@ -213,7 +215,7 @@ class OpenWorldEngineView extends HTMLElement {
             this.LoadScreen.hide();
             // Fallback: iniciar batalla aunque los sprites no estén completos
             this.GameEngine.battleSystem.startBattle(party, enemies);
-        }        
+        }
     }
 
 
