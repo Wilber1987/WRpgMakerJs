@@ -175,7 +175,12 @@ export class CharacterModel {
          * @type {string[]}
          */
         this.Outfits = [];
+        /**
+         * @type {boolean | undefined}
+         */
         this.CharacterActive = undefined;
+
+        this.floatingMessage = null;
     }
 
     RegisterWordMapCharacter = async (isFullPerspective = this.isFullPerspective) => {
@@ -678,7 +683,7 @@ export class CharacterModel {
  * Muestra un mensaje flotante sobre el personaje en el mundo 2D (In-World)
  * @param {string} text - El texto a mostrar
  * @param {number} [duration=3000] - Duración en milisegundos
- * @param {{ color?: String,bgColor?: String,fontSize?: String,}} [options] - Opciones de estilo (color, bgColor, fontSize)
+ * @param {{ color?: String, bgColor?: String, fontSize?: Number}} [options] - Opciones de estilo (color, bgColor, fontSize)
  */
     SayIW(text, duration = 3000, options = {}) {
         this.floatingMessage = {

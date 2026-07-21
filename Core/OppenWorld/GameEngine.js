@@ -133,6 +133,8 @@ export class GameEngine {
         // 🔧 CORRECCIÓN 4: Agregar gestión de foco (evita bugs con alert())
         this._isActionExecuting = false; // 👈 Flag para evitar reanudar durante diálogos
         this._bindFocusHandlers();
+        /**@type {string?} */
+        this._triggeredTargetKey = null;
     }
 
     /**
@@ -1049,17 +1051,11 @@ export class GameEngine {
         const playerPx = (this.SelectedCharacter.x - this.cam.x) * TILE_SIZE * this.cam.zoom + this.cam.screenW / 2;
         const playerPy = (this.SelectedCharacter.y - this.cam.y) * TILE_SIZE * this.cam.zoom + this.cam.screenH / 2;
 
-        const tileHeight = this.SelectedCharacter.tileHeight ?? 1.5;
-        const baseDrawH = TILE_SIZE * this.cam.zoom * tileHeight;
-        const drawH = TILE_SIZE * this.cam.zoom * tileHeight
-        const drawW = drawH * 0.7;
 
-        // Posicionar icono en esquina superior del sprite
-        const offsetX = -drawW / 2 + 6 * this.cam.zoom;
-        const offsetY = -(drawH + 4 * this.cam.zoom) * this.getScale(playerPy)
-        const px = playerPx + offsetX;
-        const pyBase = (playerPy + offsetY * 0.45)
-        const py = pyBase
+        const py = this.PlayerReferenYPosition(playerPy);
+        
+        const px = playerPx// playerPx + offsetX;
+
 
         // === 🎨 CONFIGURACIÓN VISUAL ===
         const baseRadius = 8 * this.cam.zoom;
@@ -1163,6 +1159,19 @@ export class GameEngine {
         ctx.restore();
     }
 
+    /**
+     * @param {number} playerPy
+     */
+    PlayerReferenYPosition(playerPy) {
+        const scale = this.getScale(this.SelectedCharacter.y);
+        const tileHeight = this.SelectedCharacter.tileHeight ?? 1.5;
+        const baseDrawH = TILE_SIZE * this.cam.zoom * tileHeight;
+        const drawH = baseDrawH * scale;
+
+        const py = playerPy - drawH + (drawH * 0.15);
+        return py;
+    }
+
     // En GameEngine.js, añade este método a la clase GameEngine:
 
     /**
@@ -1195,13 +1204,8 @@ export class GameEngine {
             const px = (char.x - this.cam.x) * TILE_SIZE * this.cam.zoom + this.cam.screenW / 2;
             const py = (char.y - this.cam.y) * TILE_SIZE * this.cam.zoom + this.cam.screenH / 2;
 
-            // 2. Escala según perspectiva 2.5D (para que la burbuja crezca si el personaje está "cerca")
-            const scale = this.getScale(char.y);
-
-            // 3. Posicionar sobre la cabeza del personaje
-            const tileHeight = char.tileHeight ?? 1.5;
-            const charDrawH = TILE_SIZE * this.cam.zoom * tileHeight * scale;
-            const bubbleY = py - charDrawH - 15 * this.cam.zoom; // 15px de margen sobre la cabeza
+            const bubbleY = this.PlayerReferenYPosition(py);        
+            //const bubbleY = py - charDrawH - 15 * this.cam.zoom; // 15px de margen sobre la cabeza
 
             // 4. Efecto de desvanecimiento (fade-out) en los últimos 500ms
             let alpha = 1;
@@ -1214,7 +1218,8 @@ export class GameEngine {
             ctx.globalAlpha = alpha;
 
             // 5. Configurar fuente y medir texto para crear la burbuja
-            const fontSize = (msg.fontSize || 14) * this.cam.zoom;
+            /**@type {Number} */
+            const fontSize = (msg.fontSize ?? 14) * this.cam.zoom;
             ctx.font = `bold ${fontSize}px Arial, sans-serif`;
             const textWidth = ctx.measureText(msg.text).width;
             const padding = 10 * this.cam.zoom;

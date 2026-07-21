@@ -423,7 +423,7 @@ export class MapMaker extends HTMLElement {
 
         this.processBackgroundFile(file);
     }
-    processBackgroundFile = (/** @type {Blob | undefined} */ file) => {
+    processBackgroundFile = ( /** @type {Blob | undefined} */ file) => {
         if (!file) {
             return;
         }
@@ -444,7 +444,9 @@ export class MapMaker extends HTMLElement {
 
             // @ts-ignore
             if (!this.querySelector('#bgPath')?.value) {
+                // @ts-ignore
                 this.AppState.backgroundRelativePath = `/Media/assets/Maps/${this.AppState.mapName}/${file.name}`;
+                // @ts-ignore
                 this.AppState.backgroundRelativePath = `/Media/assets/Maps/mapName/${file.name}`;
 
                 // @ts-ignore
@@ -1874,6 +1876,11 @@ ${mapName}.NPCs.add(${varName});
      * @param {number} height
      */
     placeGenericBlock = (x, y, width, height) => {
+
+        if (this.CellAction) {
+            return;
+        }
+
         // Verificar área disponible
         if (!this.isAreaAvailable(x, y, width, height)) {
             // Feedback visual breve

@@ -66,6 +66,9 @@ class MapMakerManager extends HTMLElement {
             </div>`
         })))
     }
+    /**
+     * @param {{ name: string; }} file
+     */
     ExtractName(file) {
         return file.name.replaceAll(" ", "").replaceAll(".png", "").replaceAll(".jpg", "").replaceAll("(", "_").replaceAll(")", "");
     }
@@ -85,12 +88,13 @@ class MapMakerManager extends HTMLElement {
         });
         OptionContainer.style.display = "flex"
         const MapDiv = WRender.Create({ className: "MapDiv", style: { minHeight: "600px" } });
+        const Manager = new ComponentsManager({  MainContainer: MapDiv});
         const mapOptions = this.Maps.filter(map => map != this.SelectedMap).map(map => {
             return html`<div class="option">
                 <input class="Btn" type="button" id="radio_map${map.id}"
                  value="Map ${map.id}"  
                  onclick="${() => {
-                    this.ProccesGoToMap(map, portal, modal, MapDiv);
+                    this.ProccesGoToMap(map, portal, modal, Manager);
                     //this.Manager.NavigateFunction(map.id)
                 }}" />
             </div>`
@@ -144,7 +148,7 @@ class MapMakerManager extends HTMLElement {
      * @param {MapMaker} map
      * @param {{ actionConfig: any; }} portal
      * @param {WModalForm} modal
-     * @param {HTMLElement} MapDiv
+     * @param {ComponentsManager} MapDiv
      */
     ProccesGoToMap(map, portal, modal, MapDiv) {
         map.CellAction = (cell) => {
@@ -160,7 +164,8 @@ class MapMakerManager extends HTMLElement {
             });
             modal.close();
         };
-        MapDiv.append(map);
+        MapDiv.NavigateFunction( map.mapNameInput.value ,map);
+        
     }
 }
 customElements.define('w-map-mak-component', MapMakerManager);
