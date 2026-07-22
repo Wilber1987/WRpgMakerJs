@@ -39,6 +39,28 @@ export class BlockObject {
      * @param {number} ty
      */
     occupies(tx, ty) {
+        const npcTileX = Math.floor(tx);
+        const npcTileY = Math.floor(ty);
+
+        // Tamaño del NPC en tiles
+        const width = (this.w ?? 1);
+        const height = this.h ?? 1;
+        // 🔄 CORRECCIÓN: El personaje se dibuja hacia ARRIBA desde (posX, posY)
+        // Por lo tanto, ocupa tiles desde Y hacia valores MENORES (hacia arriba en pantalla)
+        const tilesHeight = Math.ceil(height);
+        const occupiedMinY = npcTileY - tilesHeight + 1;  // ⬅️ Tile más alto que ocupa
+        const occupiedMaxY = npcTileY;                     // ⬅️ Tile base (pies)
+
+        const tilesWidth = Math.ceil(width);
+        const occupiedMinX = npcTileX - tilesWidth;
+        const occupiedMaxX = npcTileX;
+
+        // Verificar si el tile (tx, ty) está dentro del área ocupada
+       // return tx >= occupiedMinX && tx <= occupiedMaxX &&
+        //    ty >= occupiedMinY && ty <= occupiedMaxY;
+
+
+
         return tx >= this.x && tx < this.x + this.w && ty >= this.y && ty < this.y + this.h;
     }
 }

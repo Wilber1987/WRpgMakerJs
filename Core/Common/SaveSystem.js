@@ -601,9 +601,7 @@ export class SaveSystem {
                     this.vnEngine.startScene(state.visualNovel.currentScene);
                     //this.vnEngine.waitForClick();
                 }
-
             }
-
             console.log('✅ Estado restaurado correctamente');
             this.SaveLoadView?.close();
             return true;
@@ -829,8 +827,8 @@ export class SaveSystem {
     /**
      * Copia valores de `source` a `target`, evitando pisar métodos,
      * propiedades internas (_prefijo) y claves ya manejadas explícitamente.
-     * @param {Object} target
-     * @param {Object} source
+     * @param {Object<string, any>} target
+     * @param {Object<string, any>} source
      * @param {string[]} [skipKeys] - claves que ya se asignaron manualmente y no deben duplicarse
      */
     _assignSafe(target, source, skipKeys = []) {

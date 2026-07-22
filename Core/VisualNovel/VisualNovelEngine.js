@@ -160,7 +160,7 @@ export class VisualNovelEngine {
      */
     defineScene(sceneName, sceneData) {
         this.scenes[sceneName] = sceneData;
-        console.log(`[VisualNovelEngine] Escena definida: ${sceneName} (${sceneData.length} comandos)`);
+        //console.log(`[VisualNovelEngine] Escena definida: ${sceneName} (${sceneData.length} comandos)`);
     }
 
     /**
@@ -361,8 +361,11 @@ export class VisualNovelEngine {
      */
     evaluateCondition(condition) {
         const value =  this.conditionEvaluator.evaluate(condition)
+        // @ts-ignore
         console.log("IF ====>", condition.var,
+            // @ts-ignore
             condition.operator,
+            // @ts-ignore
             condition.value, "==>",
             value);
         return value;

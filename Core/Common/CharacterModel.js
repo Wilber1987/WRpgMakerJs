@@ -188,9 +188,9 @@ export class CharacterModel {
             return
         }
         this.isFullPerspective = isFullPerspective;
+        this.isNPC = false;
+        this.isBasicRegistered = false;
         this.ChargeBasicSprites(isFullPerspective);
-        console.log("this.Sprites.walk");
-
         this.Sprites.walk = {
             down: await this._loadSpriteSequence(
                 `Media/assets/sprites/${this.SpritesDataAssets}/wd/`, this.SpritesFrames.walk
@@ -227,33 +227,45 @@ export class CharacterModel {
         if (this.isBasicRegistered) {
             return
         }
-        this.Sprites.idle = {
-            down: await this._loadSpriteSequence(
-                `Media/assets/sprites/${this.SpritesDataAssets}/id/`, this.SpritesFrames.idle
-            ),
-            up: await this._loadSpriteSequence(
-                `Media/assets/sprites/${this.SpritesDataAssets}/iu/`, this.SpritesFrames.idle
-            ),
-            left: await this._loadSpriteSequence(
-                `Media/assets/sprites/${this.SpritesDataAssets}/il/`, this.SpritesFrames.idle
-            ),
-            right: await this._loadSpriteSequence(
-                `Media/assets/sprites/${this.SpritesDataAssets}/ir/`, this.SpritesFrames.idle
-            ),
-        };
-        if (isFullPerspective) {
-            this.Sprites.idle.up_left = await this._loadSpriteSequence(
-                `Media/assets/sprites/${this.SpritesDataAssets}/iul/`, this.SpritesFrames.idle
-            );
-            this.Sprites.idle.up_right = await this._loadSpriteSequence(
-                `Media/assets/sprites/${this.SpritesDataAssets}/iur/`, this.SpritesFrames.idle
-            );
-            this.Sprites.idle.down_left = await this._loadSpriteSequence(
-                `Media/assets/sprites/${this.SpritesDataAssets}/idl/`, this.SpritesFrames.idle
-            );
-            this.Sprites.idle.down_right = await this._loadSpriteSequence(
-                `Media/assets/sprites/${this.SpritesDataAssets}/idr/`, this.SpritesFrames.idle
-            );
+
+        if (this.isNPC != true) {
+            this.Sprites.idle = {
+                down: await this._loadSpriteSequence(
+                    `Media/assets/sprites/${this.SpritesDataAssets}/id/`, this.SpritesFrames.idle
+                ),
+                up: await this._loadSpriteSequence(
+                    `Media/assets/sprites/${this.SpritesDataAssets}/iu/`, this.SpritesFrames.idle
+                ),
+                left: await this._loadSpriteSequence(
+                    `Media/assets/sprites/${this.SpritesDataAssets}/il/`, this.SpritesFrames.idle
+                ),
+                right: await this._loadSpriteSequence(
+                    `Media/assets/sprites/${this.SpritesDataAssets}/ir/`, this.SpritesFrames.idle
+                ),
+            };
+            if (isFullPerspective) {
+                this.Sprites.idle.up_left = await this._loadSpriteSequence(
+                    `Media/assets/sprites/${this.SpritesDataAssets}/iul/`, this.SpritesFrames.idle
+                );
+                this.Sprites.idle.up_right = await this._loadSpriteSequence(
+                    `Media/assets/sprites/${this.SpritesDataAssets}/iur/`, this.SpritesFrames.idle
+                );
+                this.Sprites.idle.down_left = await this._loadSpriteSequence(
+                    `Media/assets/sprites/${this.SpritesDataAssets}/idl/`, this.SpritesFrames.idle
+                );
+                this.Sprites.idle.down_right = await this._loadSpriteSequence(
+                    `Media/assets/sprites/${this.SpritesDataAssets}/idr/`, this.SpritesFrames.idle
+                );
+            }
+        } else {
+            this.Sprites.idle = {
+                down: await this._loadSpriteSequence(
+                    `Media/assets/sprites/${this.SpritesDataAssets}/id/`, this.SpritesFrames.idle
+                ),
+                up: undefined,
+                left: undefined,
+                right: undefined,
+            };
         }
         this.isBasicRegistered = true;
     }
@@ -512,7 +524,6 @@ export class CharacterModel {
         // Tamaño del NPC en tiles
         const width = (this.width ?? 1) * this.scale;
         const height = this.height ?? 1.5;
-        console.log(this.Name, width, height);
         // 🔄 CORRECCIÓN: El personaje se dibuja hacia ARRIBA desde (posX, posY)
         // Por lo tanto, ocupa tiles desde Y hacia valores MENORES (hacia arriba en pantalla)
         const tilesHeight = Math.ceil(height);

@@ -103,7 +103,6 @@ export const CharacterRegistry = {
 
         // 🔥 1. PRIORIDAD: Singleton registrado
         const singletonInstance = this._singletons.get(characterName);
-        console.log(singletonInstance);
         
         if (singletonInstance) {           
             return singletonInstance;
