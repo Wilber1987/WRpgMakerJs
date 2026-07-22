@@ -12,6 +12,7 @@ import { CommandProcessor } from './Core/CommandProcessor.js';
 import { VisualNovelView } from './VidualNovelView.js';
 import { TimeSystem } from '../Common/TimeSystem.js';
 import { SaveSystem } from '../Common/SaveSystem.js';
+import { FlowData } from './VisualNovelModules.js';
 
 /**
  * Visual Novel Engine - Con CommandProcessor Separado
@@ -497,7 +498,7 @@ export { vnEngine, saveSystem };
  * @property {number} [ypos] - Posición Y para opciones posicionadas (en porcentaje).
  * @property {number} [heightPercent] - Altura de la opción posicionada (en porcentaje).
  * @property {number} [widthPercent] - Ancho de la opción posicionada (en porcentaje).
- * @property {Condition|Function|Boolean} [render] - Condición para que la opción sea visible.
+ * @property {Condition|Function|Boolean|FlowData} [render] - Condición para que la opción sea visible.
  */
 
 /**

@@ -160,9 +160,6 @@ export class GameEngine {
         const target = this.maps[name];
         if (!target) { console.warn('Mapa no encontrado:', name); return; }
         this.currentMap = target;
-        console.log(pos);
-
-
         if (pos && typeof pos.x === 'number' && typeof pos.y === 'number') {
             this.SelectedCharacter.x = pos.x;
             this.SelectedCharacter.y = pos.y;

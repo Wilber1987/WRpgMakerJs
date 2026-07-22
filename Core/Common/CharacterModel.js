@@ -33,7 +33,7 @@ export class CharacterModel {
         // @ts-ignore
         /**@type {String} */
         this.Name = props?.Name ?? this.constructor.name.replace("Model", "").replace("Character", "");
-        this.SpritesDataAssets = this.Name;
+        this.SpritesDataAssets = this.Name + "/normal";
         // dentro del constructor, después de asignar this.SpritesDataAssets = this.Name;
         this._makeObservable('SpritesDataAssets', this.SpritesDataAssets);
 
@@ -50,10 +50,10 @@ export class CharacterModel {
         //esta propiedad refleja la ruta imagen que debe usar segun cada estado
         /**@type {Object.<string, any>} */
         this.Sprites = {
-            Angry: props?.Sprites?.Angry ?? Array.from({ length: 25 }, (_, i) => `assets/sprites/${this.SpritesDataAssets}/Angry/${i}.png`),
-            Fear: props?.Sprites?.Fear ?? Array.from({ length: 25 }, (_, i) => `assets/sprites/${this.SpritesDataAssets}/Normal/${i}.png`),
-            Happy: props?.Sprites?.Happy ?? Array.from({ length: 25 }, (_, i) => `assets/sprites/${this.SpritesDataAssets}/Normal/${i}.png`),
-            Normal: props?.Sprites?.Normal ?? Array.from({ length: 25 }, (_, i) => `assets/sprites/${this.SpritesDataAssets}/Normal/${i}.png`),
+            Angry: [],
+            Fear: [],
+            Happy: [],
+            Normal: [],
             idle: {
                 down: [], up: [], left: [], right: [],
                 up_left: [], up_right: [], down_left: [], down_right: [],
@@ -69,6 +69,7 @@ export class CharacterModel {
 
         /**@type {Object.<string, any>} */
         this.SpritesFrames = {
+            normal: props?.SpritesFrames?.normal ?? 25,
             idle: props?.SpritesFrames?.idle ?? 25,
             walk: props?.SpritesFrames?.walk ?? 22,
             battle: props?.SpritesFrames?.battle ?? 25,
@@ -224,11 +225,22 @@ export class CharacterModel {
     }
 
     ChargeBasicSprites = async (isFullPerspective = false) => {
+        if (this.SpritesDataAssets == this.Name) {
+            this.SpritesDataAssets = this.Name + "/normal"
+        }
         if (this.isBasicRegistered) {
             return
         }
+        //props?.Sprites?.Normal ?? Array.from({ length: 25 }, (_, i) => `assets/sprites/${this.SpritesDataAssets}/Normal/${i}.png`);
+
 
         if (this.isNPC != true) {
+            //this.Sprites.Angry = props?.Sprites?.Angry ?? Array.from({ length: 25 }, (_, i) => `assets/sprites/${this.SpritesDataAssets}/Angry/${i}.png`);
+            //this.Sprites.Fear = props?.Sprites?.Fear ?? Array.from({ length: 25 }, (_, i) => `assets/sprites/${this.SpritesDataAssets}/Normal/${i}.png`);
+            //this.Sprites.Happy = props?.Sprites?.Happy ?? Array.from({ length: 25 }, (_, i) => `assets/sprites/${this.SpritesDataAssets}/Normal/${i}.png`);
+            this.Sprites.Normal = await this._loadSpriteSequence(
+                `Media/assets/sprites/${this.SpritesDataAssets}/Normal/`, this.SpritesFrames.normal
+            )
             this.Sprites.idle = {
                 down: await this._loadSpriteSequence(
                     `Media/assets/sprites/${this.SpritesDataAssets}/id/`, this.SpritesFrames.idle
@@ -344,7 +356,7 @@ export class CharacterModel {
                     CharacterModel.SpriteCache.set(src, img);
                     resolve(img);
                 };
-                img.onerror = (err) => {
+                img.onerror = (err) => {                    
                     console.warn(`❌ Failed to load sprite: ${src}`, err);
                     CharacterModel.SpriteCache.set(src, img);
                     resolve(img);

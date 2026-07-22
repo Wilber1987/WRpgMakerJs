@@ -87,7 +87,8 @@ export class Dialogue {
 }
 
 
-export class FlowData {  /**@type {String?} */
+export class FlowData {  
+    /**@type {String?} */
     type = null
     /**@type {String?} */
     var = null
@@ -108,8 +109,8 @@ export class Flow {
     * @param {string} text
     * @param {Array<any>} action
     * @param {{ icon?: string, typeMenu?: string, 
-    * render?: { type?: string, var?: string, operator?: string , value?: any } | boolean | Function
-    * , position?: { xpos: number, ypos: number, heightPercent?: number, widthPercent?: number} }} [config] 
+    * render?: FlowData | boolean | Function,
+    * position?: { xpos: number, ypos: number, heightPercent?: number, widthPercent?: number} }} [config] 
     * @returns {import("./VisualNovelEngine").ChoiceOption}
     */
     static Action(text, action, config) {
@@ -213,7 +214,7 @@ export class Flow {
     }
 
     /**
-     * @param {{ type: string; var: string; operator: string; value: any; }} condition
+     * @param {FlowData} condition
      */
     static Not(condition) {
         return { type: "not", condition };
