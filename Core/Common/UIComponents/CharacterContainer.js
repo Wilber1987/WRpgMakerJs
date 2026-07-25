@@ -63,6 +63,7 @@ export class CharacterContainer extends HTMLElement {
      * @param {string} [position]
      */
     Draw = async (character, imageUrl, position = "center") => {
+        // @ts-ignore
         let url = this.isAnimated ? imageUrl.src : imageUrl
         const imgElement = html`<img src="${url}" class="character ${position}" alt="${character}" />`;
         /**@type {HTMLImageElement} */
