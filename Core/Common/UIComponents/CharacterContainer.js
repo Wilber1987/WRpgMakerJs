@@ -63,7 +63,8 @@ export class CharacterContainer extends HTMLElement {
      * @param {string} [position]
      */
     Draw = async (character, imageUrl, position = "center") => {
-        const imgElement = html`<img src="${imageUrl}" class="character ${position}" alt="${character}" />`;
+        let url = this.isAnimated ? imageUrl.src : imageUrl
+        const imgElement = html`<img src="${url}" class="character ${position}" alt="${character}" />`;
         /**@type {HTMLImageElement} */
         // @ts-ignore
         this.imgElement = imgElement;
@@ -216,6 +217,7 @@ export class CharacterContainer extends HTMLElement {
             opacity: 0; 
             transition: all 1s; 
             font-family: system-ui;
+            height: 100%;
         }
         
         w-character-container.visible {
@@ -224,7 +226,6 @@ export class CharacterContainer extends HTMLElement {
         
         .character {
             display: block;
-            image-rendering: pixelated;
             transition: transform 0.3s ease;
         }
         

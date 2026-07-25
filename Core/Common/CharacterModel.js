@@ -75,6 +75,7 @@ export class CharacterModel {
             battle: props?.SpritesFrames?.battle ?? 25,
             attack: props?.SpritesFrames?.attack ?? 25,
             death: props?.SpritesFrames?.death ?? 1,
+            mainSprite: props?.SpritesFrames?.mainSprite ?? 25
         }
         //estado del personaje
         /**@type {Number} */
@@ -175,7 +176,7 @@ export class CharacterModel {
         /**
          * @type {string[]}
          */
-        this.Outfits = [];
+        this.Outfits = props?.Outfits ?? ["Normal"];
         /**
          * @type {boolean | undefined}
          */
@@ -193,31 +194,31 @@ export class CharacterModel {
         this.isBasicRegistered = false;
         this.ChargeBasicSprites(isFullPerspective);
         this.Sprites.walk = {
-            down: await this._loadSpriteSequence(
+            down: await this.loadSpriteSequence(
                 `Media/assets/sprites/${this.SpritesDataAssets}/wd/`, this.SpritesFrames.walk
             ),
-            up: await this._loadSpriteSequence(
+            up: await this.loadSpriteSequence(
                 `Media/assets/sprites/${this.SpritesDataAssets}/wu/`, this.SpritesFrames.walk
             ),
-            left: await this._loadSpriteSequence(
+            left: await this.loadSpriteSequence(
                 `Media/assets/sprites/${this.SpritesDataAssets}/wl/`, this.SpritesFrames.walk
             ),
-            right: await this._loadSpriteSequence(
+            right: await this.loadSpriteSequence(
                 `Media/assets/sprites/${this.SpritesDataAssets}/wr/`, this.SpritesFrames.walk
             ),
         };
 
         if (isFullPerspective) {
-            this.Sprites.walk.up_left = await this._loadSpriteSequence(
+            this.Sprites.walk.up_left = await this.loadSpriteSequence(
                 `Media/assets/sprites/${this.SpritesDataAssets}/wul/`, this.SpritesFrames.walk
             );
-            this.Sprites.walk.up_right = await this._loadSpriteSequence(
+            this.Sprites.walk.up_right = await this.loadSpriteSequence(
                 `Media/assets/sprites/${this.SpritesDataAssets}/wur/`, this.SpritesFrames.walk
             );
-            this.Sprites.walk.down_left = await this._loadSpriteSequence(
+            this.Sprites.walk.down_left = await this.loadSpriteSequence(
                 `Media/assets/sprites/${this.SpritesDataAssets}/wdl/`, this.SpritesFrames.walk
             );
-            this.Sprites.walk.down_right = await this._loadSpriteSequence(
+            this.Sprites.walk.down_right = await this.loadSpriteSequence(
                 `Media/assets/sprites/${this.SpritesDataAssets}/wdr/`, this.SpritesFrames.walk
             );
         }
@@ -238,40 +239,40 @@ export class CharacterModel {
             //this.Sprites.Angry = props?.Sprites?.Angry ?? Array.from({ length: 25 }, (_, i) => `assets/sprites/${this.SpritesDataAssets}/Angry/${i}.png`);
             //this.Sprites.Fear = props?.Sprites?.Fear ?? Array.from({ length: 25 }, (_, i) => `assets/sprites/${this.SpritesDataAssets}/Normal/${i}.png`);
             //this.Sprites.Happy = props?.Sprites?.Happy ?? Array.from({ length: 25 }, (_, i) => `assets/sprites/${this.SpritesDataAssets}/Normal/${i}.png`);
-            this.Sprites.Normal = await this._loadSpriteSequence(
+            this.Sprites.Normal = await this.loadSpriteSequence(
                 `Media/assets/sprites/${this.SpritesDataAssets}/Normal/`, this.SpritesFrames.normal
             )
             this.Sprites.idle = {
-                down: await this._loadSpriteSequence(
+                down: await this.loadSpriteSequence(
                     `Media/assets/sprites/${this.SpritesDataAssets}/id/`, this.SpritesFrames.idle
                 ),
-                up: await this._loadSpriteSequence(
+                up: await this.loadSpriteSequence(
                     `Media/assets/sprites/${this.SpritesDataAssets}/iu/`, this.SpritesFrames.idle
                 ),
-                left: await this._loadSpriteSequence(
+                left: await this.loadSpriteSequence(
                     `Media/assets/sprites/${this.SpritesDataAssets}/il/`, this.SpritesFrames.idle
                 ),
-                right: await this._loadSpriteSequence(
+                right: await this.loadSpriteSequence(
                     `Media/assets/sprites/${this.SpritesDataAssets}/ir/`, this.SpritesFrames.idle
                 ),
             };
             if (isFullPerspective) {
-                this.Sprites.idle.up_left = await this._loadSpriteSequence(
+                this.Sprites.idle.up_left = await this.loadSpriteSequence(
                     `Media/assets/sprites/${this.SpritesDataAssets}/iul/`, this.SpritesFrames.idle
                 );
-                this.Sprites.idle.up_right = await this._loadSpriteSequence(
+                this.Sprites.idle.up_right = await this.loadSpriteSequence(
                     `Media/assets/sprites/${this.SpritesDataAssets}/iur/`, this.SpritesFrames.idle
                 );
-                this.Sprites.idle.down_left = await this._loadSpriteSequence(
+                this.Sprites.idle.down_left = await this.loadSpriteSequence(
                     `Media/assets/sprites/${this.SpritesDataAssets}/idl/`, this.SpritesFrames.idle
                 );
-                this.Sprites.idle.down_right = await this._loadSpriteSequence(
+                this.Sprites.idle.down_right = await this.loadSpriteSequence(
                     `Media/assets/sprites/${this.SpritesDataAssets}/idr/`, this.SpritesFrames.idle
                 );
             }
         } else {
             this.Sprites.idle = {
-                down: await this._loadSpriteSequence(
+                down: await this.loadSpriteSequence(
                     `Media/assets/sprites/${this.SpritesDataAssets}/id/`, this.SpritesFrames.idle
                 ),
                 up: undefined,
@@ -287,26 +288,26 @@ export class CharacterModel {
             return
         }
         this.Sprites.attack = {
-            left: this.isEnemy ? await this._loadSpriteSequence(
+            left: this.isEnemy ? await this.loadSpriteSequence(
                 `Media/assets/sprites/${this.SpritesDataAssets}/al/`, this.SpritesFrames.attack
             ) : [],
-            right: this.isEnemy == false ? await this._loadSpriteSequence(
+            right: this.isEnemy == false ? await this.loadSpriteSequence(
                 `Media/assets/sprites/${this.SpritesDataAssets}/ar/`, this.SpritesFrames.attack
             ) : [],
         };
         this.Sprites.battle = {
-            left: this.isEnemy ? await this._loadSpriteSequence(
+            left: this.isEnemy ? await this.loadSpriteSequence(
                 `Media/assets/sprites/${this.SpritesDataAssets}/bl/`, this.SpritesFrames.battle
             ) : [],
-            right: !this.isEnemy ? await this._loadSpriteSequence(
+            right: !this.isEnemy ? await this.loadSpriteSequence(
                 `Media/assets/sprites/${this.SpritesDataAssets}/br/`, this.SpritesFrames.battle
             ) : [],
         };
         this.Sprites.death = {
-            left: this.isEnemy ? await this._loadSpriteSequence(
+            left: this.isEnemy ? await this.loadSpriteSequence(
                 `Media/assets/sprites/${this.SpritesDataAssets}/dl/`, this.SpritesFrames.death
             ) : [],
-            right: !this.isEnemy ? await this._loadSpriteSequence(
+            right: !this.isEnemy ? await this.loadSpriteSequence(
                 `Media/assets/sprites/${this.SpritesDataAssets}/dr/`, this.SpritesFrames.death
             ) : [],
         };
@@ -325,7 +326,7 @@ export class CharacterModel {
      * @param {number} startIndex Índice inicial (default = 1)
      * @returns {Promise<HTMLImageElement[]>}
      */
-    async _loadSpriteSequence(basePath, frameCount, ext = 'png', startIndex = 0) {
+    async loadSpriteSequence(basePath, frameCount, ext = 'png', startIndex = 0) {
         const frames = [];
         const loadPromises = [];
 

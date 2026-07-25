@@ -176,7 +176,7 @@ export class Flow {
      * @param {string} name
      * @param {string | undefined} [operator]
      * @param {number | boolean | undefined | string} [value]
-      *  @returns {FlowData}
+      *  @returns {import("./VisualNovelEngine").SceneCommand}
      */
     static Var(name, operator, value) {
         return { type: "variable", var: name, operator: operator ?? "==", value: value ?? true };
@@ -186,7 +186,7 @@ export class Flow {
     /**
      * @param {string} name
      * @param {number} [value]
-      *  @returns {FlowData}
+      *  @returns {import("./VisualNovelEngine").SceneCommand}
      */
     static Sum(name, value) {
         return { type: "sum", var: name, operator: "+", value: value ?? 1 };
@@ -194,7 +194,7 @@ export class Flow {
     /**
     * @param {string} name
     * @param {number} [value]
-     *  @returns {FlowData}
+     *  @returns {import("./VisualNovelEngine").SceneCommand}
     */
     static Substract(name, value) {
         return { type: "substrac", var: name, operator: "-", value: value ?? 1 };
@@ -214,7 +214,7 @@ export class Flow {
     }
 
     /**
-     * @param {FlowData} condition
+     * @param {import("./VisualNovelEngine").SceneCommand} condition
      */
     static Not(condition) {
         return { type: "not", condition };

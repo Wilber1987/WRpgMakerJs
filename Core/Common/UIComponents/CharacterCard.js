@@ -28,23 +28,29 @@ class CharacterCard extends HTMLElement {
         }
         this.render();
     }
-    connectedCallback() { }
+    connectedCallback() { 
+    }
 
     // Método para actualizar la tarjeta
     update() {
         this.render();
     }
     render() {
+        this.innerHTML = "";
         if (!this.Character) {
             this.innerHTML = `<div style="color: white; padding: 20px; text-align: center;">Personaje no disponible</div>`;
             return;
         }
-        const { Name, isFemale, Sprites, Stats } = this.Character;        
+        const { Name, isFemale, Sprites, Stats } = this.Character;  
+        const image = Sprites.Normal[0];
+        if (image) {
+            image.onclick = ()=> document.body.append(new CharacterDetailView(this.Character))
+        }
         const card = html`<div class="card">
             ${this.CustomStyle}
             <div class="gender-badge">${isFemale ? '♀' : '♂'}</div>                        
             <div class="image-container">
-                <img src="./Media/${Sprites.Normal[0]}"  onclick="${()=> document.body.append(new CharacterDetailView(this.Character))}">
+               ${image}
             </div>                        
             <div class="info-container">
                 <div class="name">${Name}</div> 
@@ -61,8 +67,8 @@ class CharacterCard extends HTMLElement {
     }
     CustomStyle = css`
          .card {
-            width: 250px;
-            height: 250px;
+            width: 200px;
+            height: 200px;
             background: linear-gradient(145deg, var(--primary-color), var(--secondary-color));
             border-radius: var(--border-radius);
             box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
@@ -72,7 +78,7 @@ class CharacterCard extends HTMLElement {
             position: relative;
             cursor: pointer;
             transition: all 0.5s;
-            border-radius: 40px;
+            border-radius: 12px;
         }
         
         .card:hover {
@@ -144,8 +150,8 @@ class CharacterCard extends HTMLElement {
             display: flex;
             flex-direction: column;
             position: absolute;
-            bottom: 5px;
-            left: 15px;
+            bottom: 0px;
+            left: 0px;
         }
         
         .name {

@@ -486,6 +486,7 @@ export { vnEngine, saveSystem };
  * @property {boolean} [loopScene] - Indica si el video de la escena debe repetirse (para el tipo 'scene').
  * @property {boolean} [isAffectedByTime] - Indica si la imagen de fondo se ve afectada por la hora del día (para el tipo 'scene').
  * @property {string | null} [video] - Ruta al archivo de video de fondo (para el tipo 'scene').
+ * @property {string} [operator] 
  */
 
 /**

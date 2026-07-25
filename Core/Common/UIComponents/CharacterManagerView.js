@@ -6,6 +6,7 @@ import { CharacterCard } from "./CharacterCard.js";
 import { OpenWorldEngineView } from "../../OppenWorld/OpenWorldEngineView.js";
 import { VisualNovelEngine } from "../../VisualNovel/VisualNovelEngine.js";
 import { CharactersUtil } from "../CharactersUtil.js";
+import { CharacterContainer } from "./CharacterContainer.js";
 
 export class CharacterManagerView extends HTMLElement {
 
@@ -35,13 +36,14 @@ export class CharacterManagerView extends HTMLElement {
             ondragleave="${(/** @type {DragEvent} */ e) => this._handleDragLeave(e)}"
             ondrop="${(/** @type {DragEvent} */ e) => this._handleDrop(e, 'party')}">
         </div>`
+        this.CharacterLeaderSprite = html`<div class="character-container"></div>`
         this.Draw();
     }
 
     connectedCallback() {
         ComponentsManager.modalFunction(this);
         this._bindGlobalDragEvents();
-        this.Update();
+        //this.Update();
     }
 
     disconnectedCallback() {
@@ -58,10 +60,11 @@ export class CharacterManagerView extends HTMLElement {
     Draw = async () => {
         // Separar personajes disponibles y del party
         CharactersUtil.verifyLeader(this.Characters);
-        this.Update();
+        await this.Update();
         const content = html`<div class="character-view">
             <div class="close-btn" onclick="${() => this.close()}" id="closeBtn">×</div>
             <div class="main-container">
+                ${this.CharacterLeaderSprite}
                 <!-- Sección: Personajes Disponibles -->
                 <div class="section available-section">
                     <h3>Personajes Disponibles</h3>
@@ -85,7 +88,19 @@ export class CharacterManagerView extends HTMLElement {
         this._setupZoneHighlightListeners();
     }
 
-    Update() {
+    async Update() {
+        
+        if (this.Characters.length > 0) {
+            const leader = this.Characters.find(c => c.partyLeader) ?? this.Characters[0]    
+            const sp = await leader.loadSpriteSequence(
+                `Media/assets/sprites/${leader.Name}/${leader.Outfits[0]}/mainSprite/`, leader.SpritesFrames.mainSprite
+            )       
+            this.CharacterLeaderSprite.innerHTML = "";
+            const characterContainer = new CharacterContainer(leader.Name, sp);
+            this.CharacterLeaderSprite.append(characterContainer)
+        }
+
+
         const partyCharacters = this.Characters
             .filter(c => c.partyPosition !== undefined && c.partyPosition >= 0 && c.partyPosition < this.maxPartySize)
             .sort((a, b) => (a.partyPosition ?? 0) - (b.partyPosition ?? 0));
@@ -442,10 +457,10 @@ export class CharacterManagerView extends HTMLElement {
     registerCharacter(...characters) {
         this.Characters.push(...characters);
         if (this.oppenWorld) {
-            this.Characters.forEach(char =>  this.oppenWorld?.RegisterCharacter(char))
-        } 
+            this.Characters.forEach(char => this.oppenWorld?.RegisterCharacter(char))
+        }
         if (this.vnEngine) {
-            this.Characters.forEach(char =>  this.vnEngine?.RegisterCharacter(char))
+            this.Characters.forEach(char => this.vnEngine?.RegisterCharacter(char))
         }
         this.update();
     }
@@ -457,7 +472,7 @@ export class CharacterManagerView extends HTMLElement {
         this.Draw();
     }
 
-    
+
     // ============ ESTILOS CSS ============
 
     CustomStyle = css`
@@ -468,7 +483,6 @@ export class CharacterManagerView extends HTMLElement {
             top: 0; left: 0; right: 0; bottom: 0;
             z-index: 10002;
             transition: opacity 0.5s ease;
-            background-color: rgba(0,0,0,0.7);
             display: block;
             height: 100vh;            
             font-family: system-ui, -apple-system, sans-serif;
@@ -480,7 +494,7 @@ export class CharacterManagerView extends HTMLElement {
         }
         
         .character-view {  
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            background: linear-gradient(135deg, #fbfbfd 0%, #a2a8b9 50%, #4c5a6b 100%);
             min-height: 100vh;
             padding: 20px;
             box-sizing: border-box;
@@ -489,12 +503,31 @@ export class CharacterManagerView extends HTMLElement {
         
         .main-container {
             display: grid;
+            grid-template-columns: calc(100% - 900px) 900px;
             grid-template-rows: calc(100% - 380px) 360px;
             gap: 24px;
             max-width: 100%;
             margin: 0 auto;
             padding: 20px;
-            height: calc(100vh - 80px)
+            height: calc(100vh - 80px);
+            .available-section {
+                grid-row: span 2;
+                grid-column: 2/3;
+            }
+            .character-container {
+                height: 100%;
+                width: 100%;
+                w-character-container {
+                    img.character {
+                        height: 100vh;
+                        position: relative;
+                        bottom: 0;
+                        object-fit: cover;
+                        width: 100%;
+                    }
+                }
+            }
+           
         }
         
         .section {
@@ -511,6 +544,8 @@ export class CharacterManagerView extends HTMLElement {
             border-radius: 16px;
             padding: 10px;
             flex-direction: column;
+            position: relative;
+            z-index: 10;
         }
         
         .section h3 , .party-section h3 {
@@ -528,13 +563,13 @@ export class CharacterManagerView extends HTMLElement {
             font-size: 0.9em;
         }
         
-        .characters-container {
-            display: flex;
+        .characters-container {            
+            display: grid;
             flex-wrap: wrap;
-            gap: 12px;
+            gap: 10px;
             padding: 10px;
-            min-height: 200px;
-            
+            grid-template-columns: repeat(4, 1fr);
+            grid-template-rows: repeat(4, 1fr);        
         }
         
         .party-slots {
@@ -547,7 +582,6 @@ export class CharacterManagerView extends HTMLElement {
         
        .character-card {
             background: rgba(255,255,255,0.12);
-            border-radius: 40px;
             cursor: grab;
             transition: opacity 0.2s ease, box-shadow 0.2s ease;
             min-width: 140px;

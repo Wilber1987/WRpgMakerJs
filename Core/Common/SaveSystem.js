@@ -809,7 +809,9 @@ export class SaveSystem {
         // Props personalizadas
         if (savedData.customProps) {
             //Object.assign(character, savedData.customProps);
-            this._assignSafe(character, savedData.customProps);
+            this._assignSafe(character, savedData.customProps, [
+                "SpritesFrames", "Outfits"
+            ]);
         }
 
         // @ts-ignore
@@ -835,7 +837,10 @@ export class SaveSystem {
         if (!source) return;
 
         for (const key of Object.keys(source)) {
-            if (skipKeys.includes(key)) continue;
+            if (skipKeys.includes(key)) {
+                continue
+            };
+            if (key.startsWith('_')) continue;
             if (key.startsWith('_')) continue;
 
             const val = source[key];

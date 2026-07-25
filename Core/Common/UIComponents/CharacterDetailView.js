@@ -28,26 +28,39 @@ class CharacterDetailView extends HTMLElement {
             this.remove();
         }, 500);
     }
-    Draw = async () => {        
+    Draw = async () => {
+        const sprites = await this.GetSprites()
         const content = html`<div class="character-detail-view">
                 <div class="close-btn" onclick="${() => this.close()}" id="closeBtn">×</div>
                 <div class="character-sprite">
-                    ${this.GetSprites()}               
+                    ${sprites}               
                 </div>
                 ${this.CharacterDetail(this.Character)}
         </div>`
         this.shadowRoot?.append(content)
     }
 
-    GetSprites() {
-        return new WCarousel(Object.keys(this.Character.Sprites)
-            .filter(prop => prop == "Normal")
-            // @ts-ignore
-            .filter(prop => typeof this.Character.Sprites[prop] === "string" || Array.isArray(this.Character.Sprites[prop]))
+    async GetSprites() {
+        const characterContainer = new CharacterContainer(this.Character.Name, await this.Character.loadSpriteSequence(
+            `Media/assets/sprites/${this.Character.Name}/${this.Character.Outfits[0]}/mainSprite/`, this.Character.SpritesFrames.mainSprite
+        ))
+        return html`<div class="sprite-container">
+                <div class="sprite-oufit-options">
+                    ${this.Character.Outfits.map(oufit => html`<div class="oufit-option">
+                    <label for="outfit${oufit}">${oufit}</label>
+                    <input id="outfit${oufit}" name="oufit" type="radio" onchange="${async () => {
+                        characterContainer.spriteFrames = await this.Character.loadSpriteSequence(
+                            `Media/assets/sprites/${this.Character.Name}/${oufit}/mainSprite/`, this.Character.SpritesFrames.mainSprite
+                        )
+                    }}">                
+                </div>`)}                
+            </div>
+            ${characterContainer}
+        </div>`
+        return new WCarousel(Object.keys(this.Character.Outfits)
             .map(
                 // @ts-ignore
-                prop => new CharacterContainer(this.Character.Name,
-                    this.Character.Sprites[prop].map((/** @type {String} */ img) => `${domainUrl}/${img}`))
+                prop => new CharacterContainer(this.Character.Name, this.Character.Sprites[prop])
             ));
     }
 
@@ -91,7 +104,7 @@ class CharacterDetailView extends HTMLElement {
                     </div>
                 </div>                
             </div>
-        </div>` 
+        </div>`
     }
 
     /**
@@ -142,11 +155,35 @@ class CharacterDetailView extends HTMLElement {
             display: block;
             display: grid;
             position: relative;
-            grid-template-columns:  40% 60%;
+            grid-template-columns:  400px calc(100% - 800px) 400px;
+            background-color: transparent;
+            background-color:#fff;
             .character-sprite {
                 height: 100vh;
                 width: 100%;
-                background-color:#010b10;
+                background-color:transparent;
+                  background: linear-gradient(
+                    120deg,
+                    #eeeeee,
+                    #6bb5da,
+                    #bdbdbd,
+                    #26556e
+                );
+                background-size: 300% 300%;
+                animation: waveBackground 12s ease-in-out infinite;
+            }
+        }
+        @keyframes waveBackground {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
             }
         }
         .character-detail {
@@ -154,6 +191,8 @@ class CharacterDetailView extends HTMLElement {
             flex-direction: column;
             height: -webkit-fill-available;
             border-left: solid 1px #cfcfcf;
+            z-index: 0;
+            grid-column: 1/2;
             h1 {
                 color: #2b6cb0;
                 font-size: 3em;
@@ -325,6 +364,35 @@ class CharacterDetailView extends HTMLElement {
             font-weight: bold;
             font-size: 18px;
             z-index: 10;
+        }
+        .sprite-container {
+            height: 100%;
+        }
+        .character-sprite {
+            position: absolute; 
+            width: 80%;
+            display: flex;
+            align-items: center;
+            justify-content:center;
+            img {
+                height: 100%;
+            }
+        }
+        .sprite-oufit-options {
+            position: absolute;
+            bottom: 0;
+            z-index: 10;
+            background-color: rgba(255, 255, 255, 0.5);
+            border-radius: 0.5cm;
+            display: flex;
+            font-size: 1rem;
+            transform: translateY(-120%) translateX(-50%);
+            left: 50%;
+            padding: 10px;
+            gap:10px;
+            label, input  {
+                cursor: pointer;
+            }
         }
      `
 }
